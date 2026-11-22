@@ -153,11 +153,15 @@ body,
   color: var(--cs50-crimson);
 }
 
-/* Cover + end: a crimson band, like the site's aside */
+/* Cover + end: a crimson band, like the site's aside.
+   The built-in end layout applies bg-black via a scoped rule; match its specificity. */
 .slidev-layout.cover,
-.slidev-layout.end {
-  background: var(--cs50-crimson);
+.slidev-layout.end,
+.slidev-layout.end.end {
+  background: var(--cs50-crimson) !important;
   color: #fff;
+  letter-spacing: normal !important;
+  user-select: text;
 }
 .slidev-layout.cover h1,
 .slidev-layout.end h1 {
