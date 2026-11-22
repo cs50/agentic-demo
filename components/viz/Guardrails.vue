@@ -7,6 +7,7 @@
  */
 import { computed } from 'vue'
 import { useVizSteps } from '../../composables/useVizSteps'
+import { hint } from './config'
 import CodeSnippet from './CodeSnippet.vue'
 import Tip from './Tip.vue'
 
@@ -68,7 +69,7 @@ const merged = computed(() => at(4))
     <section class="viz-card pipeline">
       <div class="viz-label">Two gates</div>
       <div class="lane">
-        <template v-for="(g, i) in gates" :key="g.id">
+        <template v-for="g in gates" :key="g.id">
           <Tip :text="g.tip" side="bottom">
             <div class="gate" :class="[outcome(g.id as 'prompt' | 'scanner'), { soft: g.id === 'prompt' }]">
               <div class="name">{{ g.label }}</div>
@@ -80,12 +81,11 @@ const merged = computed(() => at(4))
               </div>
             </div>
           </Tip>
-          <span v-if="i < gates.length - 1" class="arrow">→</span>
+          <span class="arrow" aria-hidden="true">↓</span>
         </template>
-        <span class="arrow">→</span>
         <div class="gate end" :class="{ on: merged }">
           <div class="name">Merged</div>
-          <div class="status">{{ merged ? '✓' : '' }}</div>
+          <div class="status">{{ merged ? '✓ shipped' : '…' }}</div>
         </div>
       </div>
 
@@ -94,7 +94,7 @@ const merged = computed(() => at(4))
         <template v-else-if="is(2)">The scanner read line 2 and stopped the build. No argument.</template>
         <template v-else-if="is(3)">Version 2 passes the prompt too. The prompt was never the hard part.</template>
         <template v-else-if="is(4)">Version 2 passes the scanner. Merged.</template>
-        <template v-else>Press → to send version 1 through.</template>
+        <template v-else>{{ hint('Press → to send version 1 through.') }}</template>
       </div>
 
       <div class="verdict viz-enter" :class="{ shown: at(4) }">
@@ -142,42 +142,61 @@ const merged = computed(() => at(4))
   color: var(--cs50-crimson);
 }
 .lane {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto auto;
-  align-items: stretch;
-  gap: 0.5rem;
-  min-width: 0;
-}
-.gate {
-  border: 1px solid var(--cs50-border);
-  border-radius: 8px;
-  padding: 0.9rem 0.9rem;
-  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
-  height: 100%;
-  transition: all 250ms;
+  align-items: stretch;
+  gap: 0.15rem;
+  min-width: 0;
+}
+.lane :deep(.tip) {
+  display: block;
+}
+.gate {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas:
+    'name status'
+    'rule rule';
+  align-items: center;
+  column-gap: 0.8rem;
+  row-gap: 0.2rem;
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--cs50-border);
+  border-radius: 8px;
+  padding: 0.6rem 0.9rem;
   background: #fff;
+  transition: all 250ms;
+}
+.gate .name {
+  grid-area: name;
+}
+.gate .rule {
+  grid-area: rule;
+}
+.gate .status {
+  grid-area: status;
 }
 .gate.soft {
   border-style: dashed;
 }
 .gate .name {
   font-weight: 700;
-  font-size: 1.05rem;
+  font-size: 1rem;
 }
 .gate .rule {
   font-size: 0.74rem;
   color: var(--cs50-muted);
   line-height: 1.35;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .gate .status {
-  margin-top: auto;
-  padding-top: 0.6rem;
-  font-size: 0.9rem;
+  font-size: 0.86rem;
   font-weight: 700;
   color: var(--cs50-muted);
+  white-space: nowrap;
+  text-align: right;
 }
 .gate.pass {
   border-color: #a3cfbb;
@@ -193,10 +212,7 @@ const merged = computed(() => at(4))
   color: var(--cs50-crimson);
 }
 .gate.end {
-  min-width: 5rem;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
+  grid-template-areas: 'name status';
 }
 .gate.end.on {
   border-color: #198754;
@@ -204,12 +220,12 @@ const merged = computed(() => at(4))
 }
 .gate.end.on .status {
   color: #198754;
-  font-size: 1.2rem;
 }
 .arrow {
   align-self: center;
   color: var(--cs50-muted);
-  font-size: 1.3rem;
+  font-size: 1.1rem;
+  line-height: 1;
 }
 .caption {
   margin-top: 1.1rem;

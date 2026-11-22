@@ -6,6 +6,7 @@
  */
 import { computed } from 'vue'
 import { useVizSteps } from '../../composables/useVizSteps'
+import { hint } from './config'
 
 const rules = [
   { id: 1, text: 'symbol is non-blank and exists per lookup', tip: 'lookup returns None for an unknown symbol.' },
@@ -56,7 +57,7 @@ const history = computed(() => attempts.slice(0, Math.min(step.value, attempts.l
       <label>Shares <input class="viz-mono" :value="current?.shares ?? ''" readonly placeholder="shares" /></label>
       <button type="button" class="submit" :class="{ pulse: current }" disabled>Buy</button>
       <div class="result" :class="{ ok: current && current.fails === null, bad: current && current.fails !== null }">
-        {{ current ? current.result : 'Press → to submit the first input.' }}
+        {{ current ? current.result : hint('Press → to submit the first input.') }}
       </div>
       <div class="history">
         <span v-for="(a, i) in history" :key="i" class="viz-pill" :class="a.fails === null ? 'ok' : 'bad'">{{ a.symbol }} · {{ a.shares }}</span>

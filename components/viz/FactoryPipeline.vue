@@ -6,6 +6,7 @@
  */
 import { computed } from 'vue'
 import { useVizSteps } from '../../composables/useVizSteps'
+import { hint } from './config'
 import Tip from './Tip.vue'
 
 interface Stage {
@@ -58,7 +59,7 @@ const thisDeck = [
           <span class="k">{{ s.label }}</span>
           <span class="v viz-mono">{{ s.artifact }}</span>
         </li>
-        <li v-if="!reached" class="empty">Press → to file the issue.</li>
+        <li v-if="!reached" class="empty">{{ hint('Press → to file the issue.') }}</li>
       </ol>
 
       <div class="verdict viz-enter" :class="{ shown: at(stages.length) }">

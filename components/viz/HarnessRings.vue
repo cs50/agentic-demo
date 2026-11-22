@@ -7,6 +7,7 @@
  */
 import { computed } from 'vue'
 import { useVizSteps } from '../../composables/useVizSteps'
+import { hint } from './config'
 import Tip from './Tip.vue'
 
 const { step, at, is } = useVizSteps(4)
@@ -34,7 +35,7 @@ const message = computed(() => {
     case 4:
       return { text: 'The model proposes SELECT cash FROM users WHERE id = ?. Read-only, parameterised: through it goes.', tone: 'ok' }
     default:
-      return { text: 'Press → to label the rings.', tone: '' }
+      return { text: hint('Press → to label the rings.'), tone: '' }
   }
 })
 

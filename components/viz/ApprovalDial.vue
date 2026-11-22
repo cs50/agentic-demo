@@ -7,6 +7,7 @@
  */
 import { computed } from 'vue'
 import { useVizSteps } from '../../composables/useVizSteps'
+import { hint } from './config'
 import Tip from './Tip.vue'
 
 const changes = [
@@ -66,7 +67,7 @@ function auto(i: number) {
         </div>
       </div>
       <p class="note" :class="{ bad: started && pos.gate === changes.length }">
-        {{ started ? pos.note : 'Press → to place the gate.' }}
+        {{ started ? pos.note : hint('Press → to place the gate.') }}
       </p>
       <div class="verdict viz-enter" :class="{ shown: at(positions.length) }">
         Autonomy is a dial, not a switch. Where it's set is a design decision, and <b>someone owns it</b>.

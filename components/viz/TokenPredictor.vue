@@ -6,6 +6,7 @@
  */
 import { computed, ref } from 'vue'
 import { useVizSteps } from '../../composables/useVizSteps'
+import { hint, SHOW_HINTS } from './config'
 
 interface Step {
   /** The chunk appended to the code. */
@@ -85,12 +86,12 @@ const lines = computed(() => code.value.trimEnd().split('\n'))
         @mouseenter="i > 0 && (hovered = i - 1)"
         @mouseleave="hovered = null"
       >{{ line }}</span><span v-if="shown < steps.length" class="caret">▌</span></pre>
-      <div class="hint">Hover a line to see what it beat.</div>
+      <div v-if="SHOW_HINTS" class="hint">Hover a line to see what it beat.</div>
     </section>
 
     <section class="viz-card cands">
       <div class="viz-label">What it chose between</div>
-      <div v-if="!candidates.length" class="empty">Press → to predict the first line.</div>
+      <div v-if="!candidates.length" class="empty">{{ hint('Press → to predict the first line.') }}</div>
       <ol v-else class="list">
         <li v-for="(c, i) in candidates" :key="c.text" :class="{ pick: i === 0, lost: c.note }">
           <span class="bar" :style="{ width: `${c.p * 100}%` }" />

@@ -6,6 +6,7 @@
  */
 import { computed } from 'vue'
 import { useVizSteps } from '../../composables/useVizSteps'
+import { hint } from './config'
 import CodeSnippet from './CodeSnippet.vue'
 
 const buyV1 = `@app.route("/buy", methods=["GET", "POST"])
@@ -89,7 +90,7 @@ const bugMark = computed(() => (at(3) ? [6] : []))
             <CodeSnippet v-if="t.code" :code="t.code" lang="python" :mark="i === 1 ? bugMark : []" />
           </div>
         </div>
-        <div v-if="!visible.length" class="empty">Press → to ask.</div>
+        <div v-if="!visible.length" class="empty">{{ hint('Press → to ask.') }}</div>
       </div>
     </section>
 

@@ -36,6 +36,8 @@ Every slide carries presenter notes. On `concept-detail` slides the example appe
 
 Each concept has a full-width visualization slide between its title and its explanation. The presenter's → key drives every one of them, exactly as it drives `v-click` (a component claims its steps from Slidev's clicks context via `composables/useVizSteps.ts`), so the lecture never needs a mouse. Hover and keyboard focus reveal extra detail for students exploring the deck afterwards. Each visualization has a finished state, which is what the PDF export shows.
 
+On-slide cues about what to press ("Press → to ask") are off; the presenter notes carry them. Set `SHOW_HINTS = true` in `components/viz/config.ts` to show them again, e.g. when publishing the deck for students to click through on their own.
+
 | Concept | Component | Steps | What the → does |
 | --- | --- | --- | --- |
 | Hook | `InversionFlip` | 3 | this semester's chain; the new chain; where "you" moved to |
@@ -49,7 +51,7 @@ Each concept has a full-width visualization slide between its title and its expl
 | 8 Multi-agent | `Swimlanes` | 5 | hands the "trade from `index`" feature to the next agent; then one agent with everything |
 | 9 Factory | `FactoryPipeline` | 6 | one stage from issue to pull request; the footer is this repository's own history |
 | 10 Approval gates | `ApprovalDial` | 3 | moves the gate: everything waits, the sensible middle, the dark factory |
-| Synthesis | `EffortChart` | 4 | adds an era to the stacked bars; gray drains, red fills |
+| Synthesis | `EffortChart` | 4 | adds an era to the stacked bars; every segment is labeled, so it reads without colour |
 
 All live in `components/viz/`, share `CodeSnippet` (Shiki, via one highlighter in `highlighter.ts`) and `Tip` (hover/focus tooltip), use only the deck's design tokens, and respect `prefers-reduced-motion`.
 

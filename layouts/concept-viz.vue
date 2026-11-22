@@ -14,12 +14,17 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { SHOW_HINTS } from '../components/viz/config'
 
 const props = defineProps<{
   concept?: number | string
   /** Slidev reserves `title`; read it from the frontmatter object instead. */
   frontmatter?: Record<string, any>
-  /** Small line under the visualization; usually the presenter's cue. */
+  /**
+   * Small line under the visualization with the presenter's cue ("Press →
+   * three times"). Kept in the frontmatter for the record; shown only when
+   * SHOW_HINTS is on (components/viz/config.ts).
+   */
   caption?: string
   /** Overline label when there is no concept number (hook, synthesis). */
   kicker?: string
@@ -27,6 +32,7 @@ const props = defineProps<{
 
 const padded = computed(() => (props.concept != null ? String(props.concept).padStart(2, '0') : null))
 const title = computed(() => props.frontmatter?.title ?? '')
+const showCaption = computed(() => SHOW_HINTS && !!props.caption)
 </script>
 
 <template>
@@ -39,7 +45,7 @@ const title = computed(() => props.frontmatter?.title ?? '')
     <div class="cv-body">
       <slot />
     </div>
-    <footer v-if="caption" class="cv-caption">{{ caption }}</footer>
+    <footer v-if="showCaption" class="cv-caption">{{ caption }}</footer>
   </div>
 </template>
 

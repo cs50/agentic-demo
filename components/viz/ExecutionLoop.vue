@@ -6,6 +6,7 @@
  */
 import { computed } from 'vue'
 import { useVizSteps } from '../../composables/useVizSteps'
+import { hint } from './config'
 import Tip from './Tip.vue'
 
 type Phase = 'think' | 'act' | 'observe'
@@ -84,7 +85,7 @@ const nodes: { id: Phase; label: string; tip: string; cx: number; cy: number }[]
             <pre v-if="e.detail" class="viz-mono" :class="e.status">{{ e.detail }}</pre>
           </div>
         </li>
-        <li v-if="!visible.length" class="empty">Press → to start the loop.</li>
+        <li v-if="!visible.length" class="empty">{{ hint('Press → to start the loop.') }}</li>
       </ol>
       <div class="verdict viz-enter" :class="{ shown: done }">
         Two trips around the loop. It read its own error and fixed it. <b>Nobody pasted anything.</b>
