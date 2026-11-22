@@ -45,25 +45,42 @@ Every slide carries presenter notes taken from the spec's "Presenter Note" and s
 | `demo/mario/world.ts` | Pure placer: ASCII rows from `level.ts` → tile grid, bottom-aligned on the ground and centered. |
 | `demo/mario/engine.ts` | Fixed-timestep 60 FPS loop, AABB tile collision, rendering, `setWorld()` for hot level swaps. Gravity `0.8`, jump `-14`. |
 | `demo/mario/controller.ts` | Gamepad API polling, DualShock 4 "standard" mapping, keyboard fallback. |
-| `demo/mario/liveLevel.ts` | Vite HMR boundary for `level.ts`: rebuilds the world and notifies the running engine; keeps the previous level if the new code throws. |
+| `demo/mario/liveLevel.ts` | Vite HMR boundary for `level.ts`: rebuilds the world and notifies the running engine. Keeps the previous level, and shows why, if the new code throws or doesn't compile. |
 | `demo/mario/liveSource.ts` | HMR boundary for `level.ts?raw`: keeps the source text in a ref so the slide can animate the diff. |
 | `components/MarioGame.vue` | Canvas game embedded in a slide; runs only while its slide is active. `compact` prop for side-by-side layouts. |
-| `components/LiveSource.vue` | Shows `level.ts` with Shiki Magic Move, animating each save. |
+| `components/LiveCode.vue` | The code panel on the demo slide: a **Preview / Edit** toggle over the two components below. |
+| `components/LiveSource.vue` | Preview: shows `level.ts` with Shiki Magic Move, animating each save. |
+| `components/LiveEditor.vue` | Edit: a Monaco editor bound two ways to `level.ts`. Disk changes appear in the editor; edits autosave back to disk. |
+| `demo/mario/editorSync.ts` | The editor's sync bookkeeping (what was sent, what is believed to be on disk), kept pure so `tests/` can cover echo, conflict, and failed-write cases. |
+| `vite.config.ts` | Dev-server channel that writes `level.ts` (and only that file) for the editor, accepting writes only from this machine; turns off Vite's full-screen error overlay in favor of the game's error strip. |
 | `components/ControllerTest.vue` | The "verification first" diagnostic: live button/axis events on a slide. |
 | `styles/index.css` | Design tokens (crimson, Bootstrap neutrals), bundled PT Sans, shared banner/section/table styles. |
 | `pnpm-workspace.yaml` | Allows `playwright-chromium`'s install script (pnpm ≥ 10 blocks build scripts by default) so `pnpm export` works after a fresh install. |
 
 ## Live level editing (the demo)
 
-On the **Step 4 · The Live Climax** slide, ask the agent to change `demo/mario/level.ts`. Prompts that work well:
+On the **Step 4** slide, `demo/mario/level.ts` can be changed two ways, and the level rebuilds under Mario either way, without a reload.
+
+**With the agent.** Leave the code panel in **Preview** so the audience sees each save morph the old code into the new. Prompts that work well:
 
 1. "Make the pyramid 12 tall."
 2. "Invert it, widest row on top." (a ceiling Mario can walk under)
 3. "Make it the Mario *more* version: two half-pyramids with a 2-space gap."
 4. "Add a second, smaller pyramid to the right."
-5. Introduce a bug on purpose (e.g. `.repeat(-1)`): the game keeps the previous level and shows the error; have the agent fix it.
+5. Introduce a bug on purpose (e.g. `.repeat(-1)`, or delete a parenthesis): the game keeps the previous level and shows the error; have the agent fix it.
 
-Rules: `buildLevel()` must return `string[]`; `#` is solid, anything else is air. Levels wider than 30 columns or taller than 15 rows are clipped with a HUD warning.
+**Yourself.** Click **Edit**. The panel becomes a Monaco editor bound two ways to the file:
+
+- Edits autosave about half a second after you stop typing; <kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>S</kbd> saves at once. The status in the panel's title bar reads *unsaved → saving… → saved*.
+- If the agent (or anyone) changes the file on disk while the editor has no unsaved edits, the editor updates in place.
+- If the file changes on disk while you *do* have unsaved edits, a bar asks whether to **Load the file** or **Keep mine**. Autosave stands down until you choose, so neither side silently wins; the **Preview** tab is disabled until you do.
+- Switching to **Preview** saves any pending edit first. If a save is refused (or the dev server doesn't answer), the status reads *write failed* and the edit stays unsaved so the next keystroke or <kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>S</kbd> retries it.
+- Edit mode works only from the machine running `pnpm dev`. With `slidev --remote`, other devices on the network still get the deck, the game, and **Preview**, but their writes to `level.ts` are refused (*write failed*), so nobody in the room can change the level under you.
+
+`pnpm test` runs the unit tests for the sync logic and the syntax-error formatter.
+- Slide shortcuts (Space, arrows) are off while the editor has focus.
+
+Rules: `buildLevel()` must return `string[]`; `#` is solid, anything else is air. Levels wider than 30 columns or taller than 15 rows are clipped with a HUD warning. A runtime error or a syntax error keeps the previous level and names the problem in the strip under the game; this also holds if the deck is refreshed while the file is broken.
 
 ### Known caveats
 

@@ -11,8 +11,8 @@ import { onMounted, shallowRef } from 'vue'
 import { levelSource } from '../demo/mario/liveSource'
 
 const props = withDefaults(
-  defineProps<{ file?: string; duration?: number; stagger?: number }>(),
-  { file: 'demo/mario/level.ts', duration: 700, stagger: 4 },
+  defineProps<{ file?: string; duration?: number; stagger?: number; bare?: boolean }>(),
+  { file: 'demo/mario/level.ts', duration: 700, stagger: 4, bare: false },
 )
 
 const highlighter = shallowRef<HighlighterCore | null>(null)
@@ -27,8 +27,8 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="ls-root">
-    <div class="ls-bar">
+  <div class="ls-root" :class="{ bare }">
+    <div v-if="!bare" class="ls-bar">
       <span class="ls-dot" /><span class="ls-dot" /><span class="ls-dot" />
       <span class="ls-file">{{ props.file }}</span>
       <span class="ls-live">● live</span>
@@ -57,6 +57,10 @@ onMounted(async () => {
   overflow: hidden;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   height: 100%;
+}
+.ls-root.bare {
+  border: 0;
+  border-radius: 0;
 }
 .ls-bar {
   display: flex;
