@@ -1,3 +1,8 @@
+/* Fonts are bundled from npm (Fontsource) so the deck works offline in the
+   lecture hall. No request to Google Fonts is made. */
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/jetbrains-mono';
+
 /* Lecture palette (from spec):
    navy/slate background #0f172a, white #f8fafc, cyan #38bdf8, emerald #34d399 */
 
@@ -146,3 +151,10 @@ body,
   padding-right: 0.5rem;
 }
 
+/* No programming ligatures: students should see `<=` and `->` as typed in C. */
+.slidev-layout code,
+.slidev-layout pre,
+.slidev-layout kbd {
+  font-variant-ligatures: none;
+  font-feature-settings: 'liga' 0, 'calt' 0;
+}
