@@ -11,7 +11,13 @@ pnpm dev          # http://localhost:3030  (presenter view: /presenter)
 pnpm export       # writes slides-export.pdf as an offline backup
 ```
 
-The deck makes no network requests at runtime: fonts (Inter, JetBrains Mono) are bundled from npm.
+The deck makes no network requests at runtime: PT Sans is bundled from npm.
+
+## Design
+
+The deck follows the course website's look: a white page, crimson `#a51c30` as the one accent color, PT Sans, bold headings with a thin rule, bordered code blocks on `#f8f8f8`. Crimson is reserved for the term or sentence that matters on a slide; everything else is body text. The writing follows the site's voice too: second person, plain words, "notice how" and "recall that" rather than jargon.
+
+Every C$50 Finance example is taken from the Problem Set 9 specification (the `buy` rules, the `history` columns, the hints about `?` placeholders, the "Testing" list, the personal touches). The demo's `mario.c` is the CS50 classic; this year's Problem Set 1 used Seats, which the slides and notes acknowledge.
 
 ## Deck structure (36 slides)
 
@@ -33,9 +39,9 @@ Every slide carries presenter notes taken from the spec's "Presenter Note" and s
 | `slides.md` | The deck. Prepared slides live here. |
 | `layouts/concept-title.vue` | "Bold Concept Callout" slide. Frontmatter: `concept`, `sequence`. |
 | `layouts/concept-detail.vue` | Explanation (default slot), `::example::`, `::takeaway::`. Frontmatter: `concept`, `title`, optional `reveal: false`. |
-| `demo/mario.c` | The Week 1 solution shown in Step 1 of the demo. |
+| `demo/mario.c` | The classic CS50 Mario solution shown in Step 1 of the demo. |
 | `demo/live.md` | **Agent-editable** slides pulled in via `src:`. The agent appends here during the demo; Vite HMR patches the deck in place, no reload. |
-| `demo/mario/level.ts` | **Agent-editable** level generator: Week 1's `mario.c` nested loop in TypeScript. Save it and the level rebuilds under Mario, live. |
+| `demo/mario/level.ts` | **Agent-editable** level generator: the classic `mario.c` nested loop in TypeScript. Save it and the level rebuilds under Mario, live. |
 | `demo/mario/world.ts` | Pure placer: ASCII rows from `level.ts` → tile grid, bottom-aligned on the ground and centered. |
 | `demo/mario/engine.ts` | Fixed-timestep 60 FPS loop, AABB tile collision, rendering, `setWorld()` for hot level swaps. Gravity `0.8`, jump `-14`. |
 | `demo/mario/controller.ts` | Gamepad API polling, DualShock 4 "standard" mapping, keyboard fallback. |
@@ -44,7 +50,7 @@ Every slide carries presenter notes taken from the spec's "Presenter Note" and s
 | `components/MarioGame.vue` | Canvas game embedded in a slide; runs only while its slide is active. `compact` prop for side-by-side layouts. |
 | `components/LiveSource.vue` | Shows `level.ts` with Shiki Magic Move, animating each save. |
 | `components/ControllerTest.vue` | The "verification first" diagnostic: live button/axis events on a slide. |
-| `styles/index.css` | Palette (`#0f172a` / `#f8fafc` / `#38bdf8` / `#34d399`), bundled fonts, shared banner/section/table styles. |
+| `styles/index.css` | Design tokens (crimson, Bootstrap neutrals), bundled PT Sans, shared banner/section/table styles. |
 | `pnpm-workspace.yaml` | Allows `playwright-chromium`'s install script (pnpm ≥ 10 blocks build scripts by default) so `pnpm export` works after a fresh install. |
 
 ## Live level editing (the demo)
