@@ -1,23 +1,22 @@
 <!--
-  concept-detail — the "Explanation & CS50 Finance Example" slide of each concept pair.
+  concept-detail — the explanation-and-example slide of each concept pair.
 
   Usage:
   ---
   layout: concept-detail
   concept: 3
-  title: Tool Calling & Execution Loops
+  title: Tool Calling and Execution Loops
   ---
-  Explanation paragraph (default slot).
+  Explanation (default slot).
 
   ::example::
-  - CS50 Finance example bullets
+  - What this looks like in C$50 Finance
 
   ::takeaway::
-  The agent forms a closed feedback loop with the operating environment.
+  One sentence to remember.
 
-  Clicks: the example appears on the first click, the takeaway on the second,
-  so one idea lands at a time. Set `reveal: false` in the frontmatter to show
-  everything at once (useful for the PDF export).
+  Clicks: the example appears on the first click, the takeaway on the second.
+  Set `reveal: false` in the frontmatter to show everything at once.
 -->
 
 <script setup lang="ts">
@@ -32,11 +31,11 @@ const props = withDefaults(
      * which Slidev always provides to layouts.
      */
     frontmatter?: Record<string, any>
-    /** Label on the example panel. Defaults to the lecture's anchor. */
+    /** Label on the example panel. */
     exampleLabel?: string
     reveal?: boolean
   }>(),
-  { exampleLabel: 'CS50 Finance example', reveal: true },
+  { exampleLabel: 'In C$50 Finance', reveal: true },
 )
 
 const padded = String(props.concept).padStart(2, '0')
@@ -52,14 +51,11 @@ const title = computed(() => props.frontmatter?.title ?? '')
 
     <div class="cd-body">
       <section class="cd-explanation">
-        <div class="cd-label">What it is</div>
         <slot />
       </section>
 
-      <section class="cd-example" :class="{ 'cd-static': !reveal }">
-        <div class="cd-label cd-label-example">
-          <span class="cd-badge">{{ exampleLabel }}</span>
-        </div>
+      <section class="cd-example">
+        <div class="cd-example-label">{{ exampleLabel }}</div>
         <div v-if="reveal" v-click>
           <slot name="example" />
         </div>
@@ -70,13 +66,13 @@ const title = computed(() => props.frontmatter?.title ?? '')
     </div>
 
     <footer class="cd-takeaway">
-      <div v-if="reveal" v-click class="cd-takeaway-inner">
-        <span class="cd-takeaway-label">Core takeaway</span>
-        <div class="cd-takeaway-text"><slot name="takeaway" /></div>
+      <div v-if="reveal" v-click class="takeaway-banner">
+        <span class="label">Takeaway</span>
+        <span class="cd-takeaway-text"><slot name="takeaway" /></span>
       </div>
-      <div v-else class="cd-takeaway-inner">
-        <span class="cd-takeaway-label">Core takeaway</span>
-        <div class="cd-takeaway-text"><slot name="takeaway" /></div>
+      <div v-else class="takeaway-banner">
+        <span class="label">Takeaway</span>
+        <span class="cd-takeaway-text"><slot name="takeaway" /></span>
       </div>
     </footer>
   </div>
@@ -95,14 +91,14 @@ const title = computed(() => props.frontmatter?.title ?? '')
   display: flex;
   align-items: baseline;
   gap: 1rem;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
-  padding-bottom: 0.6rem;
+  border-bottom: 1px solid var(--cs50-rule);
+  padding-bottom: 0.5rem;
 }
 .cd-number {
   font-size: 0.75rem;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #38bdf8;
+  color: var(--cs50-crimson);
   font-weight: 700;
   white-space: nowrap;
 }
@@ -110,7 +106,9 @@ const title = computed(() => props.frontmatter?.title ?? '')
   font-size: 1.7rem;
   font-weight: 700;
   margin: 0;
-  color: #f8fafc;
+  padding: 0;
+  border: 0;
+  color: var(--cs50-body);
   line-height: 1.2;
 }
 
@@ -121,47 +119,37 @@ const title = computed(() => props.frontmatter?.title ?? '')
   gap: 1.6rem;
   min-height: 0;
 }
-.cd-label {
-  font-size: 0.7rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: #64748b;
-  margin-bottom: 0.5rem;
-  font-weight: 600;
-}
 .cd-explanation :deep(p) {
-  font-size: 1.05rem;
+  font-size: 1.08rem;
   line-height: 1.55;
-  color: #e2e8f0;
-  margin: 0 0 0.6rem;
-}
-.cd-explanation :deep(strong) {
-  color: #38bdf8;
+  color: var(--cs50-body);
+  margin: 0 0 0.7rem;
 }
 
 .cd-example {
-  align-self: start; /* hug content instead of stretching to the row height */
-  background: rgba(52, 211, 153, 0.06);
-  border: 1px solid rgba(52, 211, 153, 0.25);
-  border-radius: 12px;
-  padding: 0.9rem 1.1rem 1rem;
+  align-self: start;
+  border: 1px solid var(--cs50-border);
+  border-top: 3px solid var(--cs50-crimson);
+  border-radius: 6px;
+  padding: 0.8rem 1.1rem 1rem;
+  background: #fff;
 }
-.cd-badge {
-  display: inline-block;
-  background: #34d399;
-  color: #0f172a;
-  border-radius: 999px;
-  padding: 0.15rem 0.7rem;
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
+.cd-example-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
+  color: var(--cs50-crimson);
+  font-weight: 700;
+  margin-bottom: 0.5rem;
 }
 .cd-example :deep(p),
 .cd-example :deep(li) {
   font-size: 0.95rem;
   line-height: 1.5;
-  color: #e2e8f0;
+  color: var(--cs50-body);
+}
+.cd-example :deep(p) {
+  margin: 0 0 0.4rem;
 }
 .cd-example :deep(ul),
 .cd-example :deep(ol) {
@@ -171,39 +159,13 @@ const title = computed(() => props.frontmatter?.title ?? '')
 .cd-example :deep(li) {
   margin: 0.3rem 0;
 }
-.cd-example :deep(li::marker) {
-  color: #34d399;
-}
-.cd-example :deep(strong) {
-  color: #34d399;
-}
 .cd-example :deep(code) {
   font-size: 0.85em;
 }
 
-/* Takeaway banner */
-.cd-takeaway-inner {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  background: linear-gradient(90deg, rgba(56, 189, 248, 0.14), rgba(52, 211, 153, 0.12));
-  border-left: 4px solid #38bdf8;
-  border-radius: 10px;
-  padding: 0.75rem 1.1rem;
-}
-.cd-takeaway-label {
-  font-size: 0.68rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: #38bdf8;
-  font-weight: 800;
-  white-space: nowrap;
-}
+/* Takeaway */
 .cd-takeaway-text :deep(p) {
+  display: inline;
   margin: 0;
-  font-size: 1.05rem;
-  font-weight: 600;
-  color: #f8fafc;
-  line-height: 1.4;
 }
 </style>

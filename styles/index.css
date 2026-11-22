@@ -1,160 +1,267 @@
-/* Fonts are bundled from npm (Fontsource) so the deck works offline in the
-   lecture hall. No request to Google Fonts is made. */
-@import '@fontsource-variable/inter';
-@import '@fontsource-variable/jetbrains-mono';
+/* ---------------------------------------------------------------------------
+   Lecture theme, aligned with the CS50 course website.
 
-/* Lecture palette (from spec):
-   navy/slate background #0f172a, white #f8fafc, cyan #38bdf8, emerald #34d399 */
+   Tokens mirror the site's theme: crimson #a51c30 as the one accent color,
+   PT Sans for text, Bootstrap's neutral grays for body text and borders, a
+   white page, bold headings with a thin rule beneath. Code uses the system
+   monospace stack, as the site does. Emphasis is reserved for the ideas that
+   matter: crimson for the key term or takeaway, bold for the rest.
+   --------------------------------------------------------------------------- */
+
+/* Bundled from npm so the deck needs no network in the lecture hall. */
+@import '@fontsource/pt-sans/400.css';
+@import '@fontsource/pt-sans/400-italic.css';
+@import '@fontsource/pt-sans/700.css';
 
 :root {
-  --slidev-theme-primary: #38bdf8;
-  --lecture-bg: #0f172a;
-  --lecture-fg: #f8fafc;
-  --lecture-cyan: #38bdf8;
-  --lecture-emerald: #34d399;
+  --cs50-crimson: #a51c30;
+  --cs50-crimson-soft: rgba(165, 28, 48, 0.08);
+  --cs50-body: #212529;      /* Bootstrap body text */
+  --cs50-muted: #6c757d;     /* Bootstrap text-muted */
+  --cs50-border: #dee2e6;    /* Bootstrap border */
+  --cs50-rule: #e9ecef;      /* gray-200, used under h1/h2 on the site */
+  --cs50-code-bg: #f8f8f8;   /* Pygments "default" background on the site */
+  --cs50-bg: #ffffff;
+
+  --slidev-theme-primary: var(--cs50-crimson);
 }
 
 html,
 body,
 #app {
-  background: var(--lecture-bg);
+  background: var(--cs50-bg);
 }
 
 .slidev-layout {
-  background: var(--lecture-bg);
-  color: var(--lecture-fg);
+  background: var(--cs50-bg);
+  color: var(--cs50-body);
+  font-family: 'PT Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.5;
 }
 
-.slidev-layout h1 {
-  color: var(--lecture-fg);
-  font-weight: 700;
-}
-
+/* Headings: bold, with the site's thin rule under h1 */
+.slidev-layout h1,
 .slidev-layout h2,
 .slidev-layout h3 {
-  color: var(--lecture-cyan);
+  color: var(--cs50-body);
+  font-weight: 700;
+  line-height: 1.2;
+}
+.slidev-layout h1 {
+  border-bottom: 1px solid var(--cs50-rule);
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+}
+.slidev-layout.cover h1,
+.slidev-layout.section h1,
+.slidev-layout.end h1,
+.slidev-layout.quote h1 {
+  border-bottom: 0;
+}
+.slidev-layout h2 {
+  font-size: 1.35rem;
+}
+.slidev-layout h3 {
+  font-size: 1.1rem;
 }
 
+/* Emphasis: crimson is reserved for the term that matters on a slide */
 .slidev-layout strong {
-  color: var(--lecture-emerald);
+  color: var(--cs50-crimson);
+  font-weight: 700;
+}
+.slidev-layout em {
+  color: var(--cs50-body);
 }
 
 .slidev-layout a {
-  color: var(--lecture-cyan);
+  color: var(--cs50-crimson);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
 }
 
+/* Inline code, a la the site: bordered, inherits color */
 .slidev-layout code:not(pre code) {
-  color: var(--lecture-emerald);
-  background: rgba(56, 189, 248, 0.08);
+  color: inherit;
+  background: var(--cs50-code-bg);
+  border: 1px solid var(--cs50-border);
   border-radius: 4px;
-  padding: 0.1em 0.35em;
+  padding: 0.05em 0.3em;
+  font-size: 0.9em;
 }
 
+/* Code blocks: light, bordered */
+.slidev-layout pre.shiki,
+.slidev-layout .slidev-code,
+.slidev-layout pre {
+  background: var(--cs50-code-bg) !important;
+  border: 1px solid var(--cs50-border);
+  border-radius: 6px;
+}
+.slidev-layout pre code,
+.slidev-layout pre {
+  font-variant-ligatures: none; /* show <= and -> as typed */
+  font-feature-settings: 'liga' 0, 'calt' 0;
+}
+
+/* Blockquotes, a la the site: thick muted rule, muted text */
 .slidev-layout blockquote {
-  border-left: 4px solid var(--lecture-emerald);
-  background: rgba(52, 211, 153, 0.06);
-  color: var(--lecture-fg);
+  border-left: 4px solid var(--cs50-border);
+  padding-left: 1rem;
+  color: var(--cs50-muted);
+  background: transparent;
+  font-size: 1.15rem;
+  line-height: 1.5;
+}
+.slidev-layout blockquote strong {
+  color: var(--cs50-crimson);
 }
 
 .slidev-layout table th {
-  color: var(--lecture-cyan);
+  color: var(--cs50-body);
 }
 
-/* Progress bar + pagination */
+.slidev-layout li::marker {
+  color: var(--cs50-muted);
+}
+
+/* Progress bar */
 .slidev-page-progress {
-  background: var(--lecture-cyan);
+  background: var(--cs50-crimson);
 }
 
 /* ---- Shared lecture components ------------------------------------------- */
 
-/* "Key Takeaway" banner (opening hook, final-project advice) */
+/* The one banner style used for a slide's key sentence */
 .takeaway-banner {
-  background: linear-gradient(90deg, rgba(56, 189, 248, 0.14), rgba(52, 211, 153, 0.12));
-  border-left: 4px solid var(--lecture-emerald);
-  border-radius: 10px;
+  background: var(--cs50-crimson-soft);
+  border-left: 4px solid var(--cs50-crimson);
+  border-radius: 6px;
   padding: 0.85rem 1.2rem;
   font-size: 1.1rem;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.45;
-  color: var(--lecture-fg);
+  color: var(--cs50-body);
+}
+.takeaway-banner .label {
+  display: inline-block;
+  margin-right: 0.75rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--cs50-crimson);
+}
+
+/* Cover + end: a crimson band, like the site's aside */
+.slidev-layout.cover,
+.slidev-layout.end {
+  background: var(--cs50-crimson);
+  color: #fff;
+}
+.slidev-layout.cover h1,
+.slidev-layout.end h1 {
+  color: #fff;
+  font-size: 3rem;
+}
+.slidev-layout.cover .cover-sub {
+  margin-top: 1rem;
+  font-size: 1.25rem;
+  color: rgba(255, 255, 255, 0.85);
+}
+.slidev-layout.cover .cover-meta,
+.slidev-layout.end .end-meta {
+  margin-top: 3rem;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+.slidev-layout.end code {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #fff;
 }
 
 /* Section dividers */
 .slidev-layout.section .section-kicker {
   font-size: 0.8rem;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--lecture-cyan);
+  color: var(--cs50-crimson);
   font-weight: 700;
-  margin-bottom: 0.8rem;
+  margin-bottom: 0.6rem;
 }
 .slidev-layout.section h1 {
-  font-size: 2.8rem;
-  line-height: 1.15;
+  font-size: 2.6rem;
   max-width: 22ch;
   margin: 0 auto;
+  padding-bottom: 0;
 }
 .slidev-layout.section .section-sub {
-  margin-top: 1rem;
+  margin-top: 0.9rem;
   font-size: 1.1rem;
-  color: #94a3b8;
+  color: var(--cs50-muted);
 }
 
-/* Two-column header layout spacing (opening hook) */
+/* Two-column header layout (opening hook) */
 .slidev-layout.two-cols-header {
   column-gap: 1.5rem;
   padding-top: 2.4rem;
 }
 .slidev-layout.two-cols-header h2 {
   font-size: 1.25rem;
-  margin-top: 0.6rem;
+  margin-top: 0.5rem;
+  color: var(--cs50-crimson);
 }
 .slidev-layout.two-cols-header li {
-  font-size: 0.98rem;
+  font-size: 1rem;
   line-height: 1.5;
+}
+.slidev-layout.two-cols-header .col-right {
+  border-left: 1px solid var(--cs50-rule);
 }
 .slidev-layout.two-cols-header .col-bottom {
   padding-bottom: 0.4rem;
 }
 
-/* Synthesis table */
+/* Synthesis table, a la the site's tables */
 .slidev-layout.synthesis table {
   width: 100%;
-  font-size: 0.9rem;
-  border-collapse: separate;
-  border-spacing: 0;
+  font-size: 0.92rem;
+  border-collapse: collapse;
   margin-top: 1rem;
 }
 .slidev-layout.synthesis th,
 .slidev-layout.synthesis td {
   text-align: left;
   vertical-align: top;
-  padding: 0.7rem 0.9rem;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid var(--cs50-border);
 }
 .slidev-layout.synthesis th {
-  font-size: 0.7rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--lecture-cyan);
+  border-bottom: 2px solid var(--cs50-body);
 }
 .slidev-layout.synthesis tbody tr:last-child td {
-  background: rgba(52, 211, 153, 0.06);
-  border-bottom: none;
+  background: var(--cs50-crimson-soft);
 }
 .slidev-layout.synthesis td:first-child {
   white-space: nowrap;
+  font-weight: 700;
 }
 
-/* Demo: Step 1 split */
-.slidev-layout.demo-nostalgia .col-left {
-  padding-right: 0.5rem;
+/* Demo: Step 1 split. Slidev applies the slide's `class` to the columns, not the root.
+   min-width: 0 keeps a wide code line from stealing the right column. */
+.slidev-layout.two-cols-header .col-left.demo-nostalgia,
+.slidev-layout.two-cols-header .col-right.demo-nostalgia {
+  min-width: 0;
+}
+.slidev-layout.two-cols-header .col-left.demo-nostalgia {
+  padding-right: 0.75rem;
 }
 
-/* No programming ligatures: students should see `<=` and `->` as typed in C. */
-.slidev-layout code,
-.slidev-layout pre,
-.slidev-layout kbd {
-  font-variant-ligatures: none;
-  font-feature-settings: 'liga' 0, 'calt' 0;
+/* Muted helper text under slide titles */
+.slidev-layout .lede {
+  color: var(--cs50-muted);
+  font-size: 0.95rem;
+  margin-top: -0.4rem;
+  margin-bottom: 0.9rem;
 }

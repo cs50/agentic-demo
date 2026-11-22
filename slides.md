@@ -4,17 +4,20 @@ title: The Agentic Software Engineer
 titleTemplate: '%s — CS50'
 info: |
   Systems, Specifications, and Autonomous Software Factories Beyond CS50.
-  A CS50 lecture for students who have just finished Finance and submitted
-  final project proposals.
+  A CS50 lecture for students who have just finished C$50 Finance and
+  submitted final project proposals.
 author: CS50
-colorSchema: dark
-transition: slide-left
+colorSchema: light
+transition: fade
 aspectRatio: 16/9
 canvasWidth: 980
 fonts:
   provider: none
-  sans: "'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif"
-  mono: "'JetBrains Mono Variable', ui-monospace, SFMono-Regular, Menlo, monospace"
+  sans: "'PT Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif"
+  mono: "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"
+highlighter: shiki
+shiki:
+  theme: github-light
 drawings:
   persist: false
 mdc: true
