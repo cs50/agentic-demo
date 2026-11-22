@@ -1,0 +1,7 @@
+# pnpm settings (pnpm >= 10 reads these here, not from package.json#pnpm).
+#
+# playwright-chromium's postinstall downloads the Chromium build used by
+# `pnpm export` to produce the PDF backup of the deck. Allowing it here means
+# a fresh `pnpm install` works without an interactive `pnpm approve-builds`.
+allowBuilds:
+  playwright-chromium: true

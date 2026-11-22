@@ -124,31 +124,35 @@ const buttonOrder = [0, 1, 2, 3, 4, 5, 6, 7, 12, 13, 14, 15, 8, 9, 16]
 .ct-root {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.78rem;
-  color: #f8fafc;
+  color: #212529;
 }
 .ct-status {
   display: flex;
   align-items: center;
   gap: 0.6rem;
   padding: 0.5rem 0.8rem;
-  border-radius: 8px;
-  background: rgba(56, 189, 248, 0.08);
-  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 6px;
+  background: #fff3cd; /* Bootstrap alert-warning while waiting */
+  border: 1px solid #ffe69c;
+  color: #664d03;
   margin-bottom: 0.8rem;
+}
+.ct-status.ok {
+  background: #d1e7dd; /* Bootstrap alert-success once connected */
+  border-color: #a3cfbb;
+  color: #0a3622;
 }
 .ct-status .dot {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #f59e0b;
-  box-shadow: 0 0 10px #f59e0b;
+  background: #ffc107;
 }
 .ct-status.ok .dot {
-  background: #34d399;
-  box-shadow: 0 0 10px #34d399;
+  background: #198754;
 }
 .muted {
-  color: #94a3b8;
+  color: #6c757d;
 }
 .ct-grid {
   display: grid;
@@ -157,15 +161,15 @@ const buttonOrder = [0, 1, 2, 3, 4, 5, 6, 7, 12, 13, 14, 15, 8, 9, 16]
 }
 .ct-panel {
   min-width: 0; /* allow grid children to shrink below content width */
-  background: rgba(15, 23, 42, 0.6);
-  border: 1px solid rgba(148, 163, 184, 0.15);
-  border-radius: 10px;
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
   padding: 0.7rem 0.8rem;
 }
 .ct-title {
-  color: #38bdf8;
+  color: #a51c30;
   font-weight: 700;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   font-size: 0.65rem;
   margin-bottom: 0.5rem;
@@ -183,23 +187,23 @@ const buttonOrder = [0, 1, 2, 3, 4, 5, 6, 7, 12, 13, 14, 15, 8, 9, 16]
   flex-direction: column;
   align-items: center;
   padding: 0.25rem 0;
-  border-radius: 6px;
-  border: 1px solid rgba(148, 163, 184, 0.25);
-  color: #94a3b8;
+  border-radius: 4px;
+  border: 1px solid #dee2e6;
+  color: #6c757d;
+  background: #f8f9fa;
   transition: all 60ms linear;
 }
 .btn .idx {
   font-size: 0.6rem;
-  opacity: 0.6;
+  opacity: 0.7;
 }
 .btn .name {
   font-size: 0.55rem;
 }
 .btn.on {
-  background: #34d399;
-  border-color: #34d399;
-  color: #0f172a;
-  box-shadow: 0 0 14px rgba(52, 211, 153, 0.7);
+  background: #a51c30;
+  border-color: #a51c30;
+  color: #fff;
 }
 .axis {
   display: grid;
@@ -209,13 +213,13 @@ const buttonOrder = [0, 1, 2, 3, 4, 5, 6, 7, 12, 13, 14, 15, 8, 9, 16]
   margin-bottom: 0.35rem;
 }
 .axis .label {
-  color: #94a3b8;
+  color: #6c757d;
   font-size: 0.65rem;
 }
 .axis .track {
   position: relative;
   height: 10px;
-  background: rgba(148, 163, 184, 0.15);
+  background: #e9ecef;
   border-radius: 5px;
 }
 .axis .center {
@@ -224,7 +228,7 @@ const buttonOrder = [0, 1, 2, 3, 4, 5, 6, 7, 12, 13, 14, 15, 8, 9, 16]
   top: 0;
   bottom: 0;
   width: 1px;
-  background: rgba(248, 250, 252, 0.3);
+  background: #adb5bd;
 }
 .axis .thumb {
   position: absolute;
@@ -233,13 +237,12 @@ const buttonOrder = [0, 1, 2, 3, 4, 5, 6, 7, 12, 13, 14, 15, 8, 9, 16]
   height: 16px;
   margin-left: -8px;
   border-radius: 50%;
-  background: #38bdf8;
-  box-shadow: 0 0 8px rgba(56, 189, 248, 0.8);
+  background: #a51c30;
   transition: left 40ms linear;
 }
 .axis .val {
   text-align: right;
-  color: #38bdf8;
+  color: #212529;
 }
 .ct-log {
   margin: 0;
@@ -247,13 +250,13 @@ const buttonOrder = [0, 1, 2, 3, 4, 5, 6, 7, 12, 13, 14, 15, 8, 9, 16]
   background: transparent;
   line-height: 1.5;
   min-height: 15rem;
-  color: #cbd5e1;
+  color: #495057;
   white-space: pre-wrap;
   word-break: break-word;
   overflow: hidden;
 }
 .ct-log .newest {
-  color: #34d399;
+  color: #a51c30;
   font-weight: 700;
 }
 </style>

@@ -1,28 +1,16 @@
-# Live Build Log
+# Step 2 · Just Ask
 
-<div class="text-sm text-slate-400 mb-4">This slide is sourced from <code>demo/live.md</code>. The agent edits that file; the deck updates without reloading.</div>
+<div class="lede">This slide is <code>demo/live.md</code>. The agent writes to it as it works; the deck updates without a reload.</div>
 
-- Step 1 — Nostalgia anchor: Week 1 `mario.c` prints `#` pyramids
-- Step 2 — Naive prompt: *"Write a Mario game with a PS4 controller"* → **monolithic script, wrong axis IDs, crashes on disconnect**
-- Step 3 — Spec-driven: split into `controller.ts` · `engine.ts` · `world.ts`, verification harness **first**
-
-```ts
-// invariants the agent must satisfy
-export const FPS = 60
-export const GRAVITY = 0.8        // px/frame²
-export const JUMP_VELOCITY = -14  // px/frame
-export const PYRAMID_HEIGHT = 8   // CS50 Week 1
-```
+- You type: *"Make me a Mario game in Python that works with a PS4 controller."*
 
 <!--
-Presenter: this slide is a placeholder. During the demo the agent appends steps here.
+Step 2 (2–3 min), the naive prompt. Type the vague prompt into the agent and let it
+work. Have it log what it's doing here so the audience sees a single long file take
+shape. Then run it and point out what went wrong:
+  - it never initialized the joystick properly
+  - it hard-coded axis numbers that don't match a DualShock 4
+  - it's one file, and it fails silently when the controller disconnects
+Takeaway for the room: "A vague request gets you fragile code. We have to engineer
+the system, not just ask for it."
 -->
-
----
-
-# Step 4 — Verification passed ✅
-
-<div class="text-slate-300">
-<code>test_controller</code> registered <b class="text-emerald-400">Button 0 (CROSS): DOWN</b>.
-The input layer is proven. Now — and only now — we launch the game.
-</div>

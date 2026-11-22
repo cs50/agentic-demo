@@ -6,12 +6,14 @@
   "scripts": {
     "dev": "slidev --open",
     "build": "slidev build",
-    "export": "slidev export"
+    "export": "slidev export --output slides-export.pdf"
   },
   "devDependencies": {
+    "@fontsource/pt-sans": "^5.3.0",
     "@shikijs/magic-move": "4.6.0",
     "@slidev/cli": "^53.1.0",
     "@slidev/theme-default": "^0.25.0",
+    "playwright-chromium": "^1.65.1",
     "shiki": "4.6.0",
     "vue": "^3.5.46"
   }

@@ -21,13 +21,16 @@ const PLAYER_W = 24
 const PLAYER_H = 30
 
 const COLORS = {
-  bg: '#0f172a',
-  fg: '#f8fafc',
-  cyan: '#38bdf8',
-  emerald: '#34d399',
-  ground: '#1e293b',
-  groundTop: '#334155',
-  muted: '#64748b',
+  bg: '#ffffff',
+  grid: 'rgba(33, 37, 41, 0.06)',
+  ground: '#e9ecef',
+  groundTop: '#adb5bd',
+  blockFill: 'rgba(165, 28, 48, 0.08)',
+  blockStroke: '#a51c30',
+  blockGlyph: '#a51c30',
+  player: '#212529',
+  playerCap: '#a51c30',
+  playerEye: '#ffffff',
 }
 
 interface Player {
@@ -265,7 +268,7 @@ export class Engine {
     ctx.fillRect(0, 0, W, H)
 
     // Subtle grid to echo the terminal origin
-    ctx.strokeStyle = 'rgba(148,163,184,0.06)'
+    ctx.strokeStyle = COLORS.grid
     ctx.lineWidth = 1
     for (let c = 0; c <= cols; c++) {
       ctx.beginPath()
@@ -295,13 +298,13 @@ export class Engine {
           ctx.fillStyle = COLORS.groundTop
           ctx.fillRect(x, y, TILE, 4)
         } else {
-          // Pyramid block: a '#' glyph on an emerald tile
-          ctx.fillStyle = 'rgba(52,211,153,0.18)'
+          // Pyramid block: a '#' glyph on a crimson-tinted tile
+          ctx.fillStyle = COLORS.blockFill
           ctx.fillRect(x + 1, y + 1, TILE - 2, TILE - 2)
-          ctx.strokeStyle = COLORS.emerald
+          ctx.strokeStyle = COLORS.blockStroke
           ctx.lineWidth = 1.5
           ctx.strokeRect(x + 1.5, y + 1.5, TILE - 3, TILE - 3)
-          ctx.fillStyle = COLORS.emerald
+          ctx.fillStyle = COLORS.blockGlyph
           ctx.fillText('#', x + TILE / 2, y + TILE / 2 + 1)
         }
       }
@@ -309,13 +312,13 @@ export class Engine {
 
     // Player
     const p = this.player
-    ctx.fillStyle = COLORS.cyan
+    ctx.fillStyle = COLORS.player
     ctx.fillRect(Math.round(p.x), Math.round(p.y), PLAYER_W, PLAYER_H)
     // Cap
-    ctx.fillStyle = '#0ea5e9'
+    ctx.fillStyle = COLORS.playerCap
     ctx.fillRect(Math.round(p.x) - 2, Math.round(p.y), PLAYER_W + 4, 6)
     // Eye (shows facing direction)
-    ctx.fillStyle = COLORS.bg
+    ctx.fillStyle = COLORS.playerEye
     const eyeX = p.facing === 1 ? p.x + PLAYER_W - 8 : p.x + 4
     ctx.fillRect(Math.round(eyeX), Math.round(p.y) + 10, 4, 4)
   }

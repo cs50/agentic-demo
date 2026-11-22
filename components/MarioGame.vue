@@ -118,22 +118,22 @@ onBeforeUnmount(stop)
 .mg-frame {
   position: relative;
   max-width: 100%;
-  border-radius: 10px;
-  border: 2px solid rgba(56, 189, 248, 0.25);
+  border-radius: 6px;
+  border: 1px solid #dee2e6;
   overflow: hidden;
   line-height: 0;
   transition: border-color 120ms, box-shadow 120ms;
 }
 .mg-frame.focused {
-  border-color: #34d399;
-  box-shadow: 0 0 24px rgba(52, 211, 153, 0.35);
+  border-color: #a51c30;
+  box-shadow: 0 0 0 3px rgba(165, 28, 48, 0.15);
 }
 .mg-frame.flash {
-  border-color: #38bdf8;
-  box-shadow: 0 0 32px rgba(56, 189, 248, 0.7);
+  border-color: #a51c30;
+  box-shadow: 0 0 0 4px rgba(165, 28, 48, 0.35);
 }
 .mg-frame.broken {
-  border-color: #f87171;
+  border-color: #dc3545;
 }
 .mg-canvas {
   /* Intrinsic 960×544; scale to fit both the column width and the slide height. */
@@ -155,8 +155,9 @@ onBeforeUnmount(stop)
   line-height: 1.4;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.7rem;
-  color: #fecaca;
-  background: rgba(127, 29, 29, 0.85);
+  color: #58151c;
+  background: #f8d7da; /* Bootstrap alert-danger */
+  border-top: 1px solid #f1aeb5;
 }
 .mg-hud {
   display: flex;
@@ -165,18 +166,18 @@ onBeforeUnmount(stop)
   gap: 0.6rem 1.2rem;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.7rem;
-  color: #cbd5e1;
+  color: #6c757d;
 }
 .mg-hud b {
-  color: #38bdf8;
+  color: #212529;
 }
 .mg-hud .ok {
-  color: #34d399;
+  color: #198754; /* Bootstrap success */
 }
 .mg-hud .warn {
-  color: #f59e0b;
+  color: #a51c30;
 }
 .mg-hud .muted {
-  color: #64748b;
+  color: #adb5bd;
 }
 </style>
