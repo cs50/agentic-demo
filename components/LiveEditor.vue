@@ -18,12 +18,28 @@
 import type * as Monaco from 'monaco-editor'
 import { useSlideContext } from '@slidev/client'
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import {
+  acceptExternal,
+  initialSyncState,
+  isDirty as syncIsDirty,
+  keepLocal,
+  markSent,
+  reconcile,
+  rollbackFailedWrite,
+  type SyncState,
+} from '../demo/mario/editorSync'
 import { levelSource } from '../demo/mario/liveSource'
 
-const props = withDefaults(defineProps<{ autosave?: boolean; autosaveDelay?: number }>(), {
-  autosave: true,
-  autosaveDelay: 600,
-})
+const props = withDefaults(
+  defineProps<{ autosave?: boolean; autosaveDelay?: number; autofocus?: boolean; writeTimeout?: number }>(),
+  {
+    autosave: true,
+    autosaveDelay: 600,
+    autofocus: false,
+    /** How long to wait for the dev server to answer a write before treating it as failed. */
+    writeTimeout: 3000,
+  },
+)
 const emit = defineEmits<{ (e: 'status', s: EditorStatus): void }>()
 
 export type EditorStatus = 'ready' | 'dirty' | 'saving' | 'saved' | 'error' | 'conflict'
@@ -40,9 +56,10 @@ const pendingExternal = ref<string | null>(null)
 let monaco: typeof Monaco | null = null
 let editor: Monaco.editor.IStandaloneCodeEditor | null = null
 let model: Monaco.editor.ITextModel | null = null
-/** The last text known to match the file on disk. */
-let lastSynced = levelSource.value
+/** What the editor believes about the file on disk; see editorSync.ts. */
+let sync: SyncState = initialSyncState(levelSource.value)
 let saveTimer = 0
+let writeTimer = 0
 let offResult: (() => void) | null = null
 
 function setStatus(s: EditorStatus) {
@@ -51,7 +68,20 @@ function setStatus(s: EditorStatus) {
 }
 
 function isDirty() {
-  return !!model && model.getValue() !== lastSynced
+  return !!model && syncIsDirty(sync, model.getValue())
+}
+
+/**
+ * The dev server refused a write, or never answered: roll the sync state back
+ * so the editor is dirty again and the next keystroke or Cmd+S re-sends it.
+ * (No automatic retry loop: if the file is unwritable, retrying every 600 ms
+ * would only hammer the server.)
+ */
+function failWrite(message: string) {
+  clearTimeout(writeTimer)
+  sync = rollbackFailedWrite(sync)
+  errorMessage.value = message
+  setStatus('error')
 }
 
 /** Replace the whole document while keeping the undo stack and cursor sane. */
@@ -71,14 +101,19 @@ function save(force = false) {
   // ("Keep mine", or Cmd+S) may write; a pending autosave must not win by default.
   if (pendingExternal.value !== null && !force) return
   const content = model.getValue()
-  if (content === lastSynced) {
-    setStatus('ready')
+  if (!syncIsDirty(sync, content)) {
+    // Nothing new to write. Keep 'saving' (a write is in flight) and 'error'
+    // (the last write failed) visible rather than claiming to be in sync.
+    if (status.value !== 'error' && status.value !== 'saving') setStatus('ready')
     return
   }
   setStatus('saving')
   import.meta.hot.send('lecture:write-level', { content })
-  // Optimistic: the HMR echo via levelSource will confirm; the result event reports failures.
-  lastSynced = content
+  // Optimistic: the HMR echo via levelSource confirms the write; the result
+  // event (or the timeout below, if the socket swallowed the send) reports failure.
+  sync = markSent(sync, content)
+  clearTimeout(writeTimer)
+  writeTimer = window.setTimeout(() => failWrite('no response from dev server'), props.writeTimeout)
 }
 
 function scheduleSave() {
@@ -92,14 +127,18 @@ function loadExternal() {
   if (pendingExternal.value === null) return
   clearTimeout(saveTimer)
   applyText(pendingExternal.value)
-  lastSynced = pendingExternal.value
+  sync = acceptExternal(pendingExternal.value)
   pendingExternal.value = null
   setStatus('ready')
 }
 
 /** Disk changed while we had unsaved edits: keep ours and write it back. */
 function keepMine() {
+  if (pendingExternal.value === null) return
   clearTimeout(saveTimer)
+  // Disk now holds the other version; measure our text against *that*, so an
+  // undo back to the old text still counts as different and gets written.
+  sync = keepLocal(sync, pendingExternal.value)
   pendingExternal.value = null
   save(true)
 }
@@ -107,26 +146,35 @@ function keepMine() {
 // disk → editor
 watch(levelSource, (disk) => {
   if (!model) {
-    lastSynced = disk
+    sync = initialSyncState(disk)
     return
   }
-  const current = model.getValue()
-  if (disk === current) {
-    // Echo of our own save, or an identical write. We're in sync.
-    lastSynced = disk
-    pendingExternal.value = null
-    setStatus(status.value === 'saving' ? 'saved' : 'ready')
-    return
+  const { state, result } = reconcile(sync, disk, model.getValue())
+  sync = state
+  switch (result.kind) {
+    case 'echo':
+      // Our own write came back. If the presenter kept typing meanwhile, the
+      // editor is simply dirty again (its autosave is already scheduled); it is
+      // not a conflict.
+      if (sync.inflight.length === 0) clearTimeout(writeTimer)
+      errorMessage.value = null
+      setStatus(result.dirty ? 'dirty' : 'saved')
+      return
+    case 'identical':
+      clearTimeout(writeTimer)
+      pendingExternal.value = null
+      setStatus(status.value === 'saving' ? 'saved' : 'ready')
+      return
+    case 'apply':
+      applyText(disk)
+      setStatus('ready')
+      return
+    case 'conflict':
+      // Someone else (the agent) changed the file under our unsaved edits.
+      pendingExternal.value = disk
+      setStatus('conflict')
+      return
   }
-  if (!isDirty()) {
-    applyText(disk)
-    lastSynced = disk
-    setStatus('ready')
-    return
-  }
-  // Someone else (the agent) changed the file under our unsaved edits.
-  pendingExternal.value = disk
-  setStatus('conflict')
 })
 
 onMounted(async () => {
@@ -144,7 +192,7 @@ onMounted(async () => {
     'typescript',
     monaco.Uri.parse('file:///demo/mario/level.ts'),
   )
-  lastSynced = levelSource.value
+  sync = initialSyncState(levelSource.value)
 
   editor = monaco.editor.create(container.value, {
     model,
@@ -193,8 +241,7 @@ onMounted(async () => {
         errorMessage.value = null
         // 'saved' is set when the HMR echo arrives; nothing to do here.
       } else {
-        errorMessage.value = r.error ?? 'write failed'
-        setStatus('error')
+        failWrite(r.error ?? 'write failed')
       }
     }
     import.meta.hot.on('lecture:write-level:result', onResult)
@@ -202,6 +249,9 @@ onMounted(async () => {
   }
 
   setStatus('ready')
+  // Focus only once the editor exists; a parent calling focus() right after
+  // mounting would run before the async Monaco setup above has finished.
+  if (props.autofocus) editor.focus()
   // Expose for on-stage diagnostics (e.g. from DevTools): window.__levelEditor.getValue()
   if (import.meta.env.DEV) (window as any).__levelEditor = editor
 })
@@ -218,6 +268,12 @@ function trapKeys(e: KeyboardEvent) {
 
 onBeforeUnmount(() => {
   clearTimeout(saveTimer)
+  // Leaving Edit mode (e.g. switching to Preview) must not drop a pending
+  // autosave. The send is fire-and-forget, so it is safe during teardown. A
+  // conflict is never flushed silently; LiveCode keeps the editor open until
+  // the presenter has chosen.
+  if (model && pendingExternal.value === null && isDirty()) save(true)
+  clearTimeout(writeTimer) // nobody is left to show a failure to
   offResult?.()
   editor?.dispose()
   model?.dispose()
@@ -226,7 +282,7 @@ onBeforeUnmount(() => {
   if (import.meta.env.DEV) delete (window as any).__levelEditor
 })
 
-defineExpose({ focus: () => editor?.focus(), save })
+defineExpose({ focus: () => editor?.focus(), save, isDirty })
 </script>
 
 <template>

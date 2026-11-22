@@ -9,7 +9,7 @@
  *            in the editor, and edits autosave back to disk, which rebuilds
  *            the level under Mario. Best when you want to type on stage.
  */
-import { nextTick, ref } from 'vue'
+import { ref } from 'vue'
 import LiveEditor, { type EditorStatus } from './LiveEditor.vue'
 import LiveSource from './LiveSource.vue'
 
@@ -31,12 +31,13 @@ const statusLabel: Record<EditorStatus, string> = {
   conflict: 'changed on disk',
 }
 
-async function setMode(m: 'preview' | 'edit') {
+function setMode(m: 'preview' | 'edit') {
+  // While the conflict bar is up neither version has been chosen; leaving Edit
+  // now would discard the presenter's text without a word. Make them choose first.
+  if (m === 'preview' && mode.value === 'edit' && status.value === 'conflict') return
   mode.value = m
-  if (m === 'edit') {
-    await nextTick()
-    editorRef.value?.focus()
-  }
+  // In Edit mode the editor focuses itself once Monaco has loaded (`autofocus`);
+  // any pending autosave is flushed by the editor as it unmounts.
 }
 </script>
 
@@ -55,6 +56,8 @@ async function setMode(m: 'preview' | 'edit') {
           role="tab"
           :aria-selected="mode === 'preview'"
           :class="{ on: mode === 'preview' }"
+          :disabled="mode === 'edit' && status === 'conflict'"
+          :title="mode === 'edit' && status === 'conflict' ? 'Choose Load the file or Keep mine first' : undefined"
           @click="setMode('preview')"
         >
           Preview
@@ -73,7 +76,7 @@ async function setMode(m: 'preview' | 'edit') {
 
     <div class="lc-body">
       <LiveSource v-if="mode === 'preview'" :file="file" bare />
-      <LiveEditor v-else ref="editorRef" @status="status = $event" />
+      <LiveEditor v-else ref="editorRef" autofocus @status="status = $event" />
     </div>
   </div>
 </template>
@@ -146,6 +149,10 @@ async function setMode(m: 'preview' | 'edit') {
 }
 .lc-toggle button + button {
   border-left: 1px solid #dee2e6;
+}
+.lc-toggle button:disabled {
+  color: #adb5bd;
+  cursor: not-allowed;
 }
 .lc-toggle button.on {
   background: #a51c30;

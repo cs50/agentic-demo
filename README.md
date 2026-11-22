@@ -51,6 +51,7 @@ Every slide carries presenter notes taken from the spec's "Presenter Note" and s
 | `components/LiveCode.vue` | The code panel on the demo slide: a **Preview / Edit** toggle over the two components below. |
 | `components/LiveSource.vue` | Preview: shows `level.ts` with Shiki Magic Move, animating each save. |
 | `components/LiveEditor.vue` | Edit: a Monaco editor bound two ways to `level.ts`. Disk changes appear in the editor; edits autosave back to disk. |
+| `demo/mario/editorSync.ts` | The editor's sync bookkeeping (what was sent, what is believed to be on disk), kept pure so `tests/` can cover echo, conflict, and failed-write cases. |
 | `vite.config.ts` | Dev-server channel that writes `level.ts` (and only that file) for the editor; turns off Vite's full-screen error overlay in favor of the game's error strip. |
 | `components/ControllerTest.vue` | The "verification first" diagnostic: live button/axis events on a slide. |
 | `styles/index.css` | Design tokens (crimson, Bootstrap neutrals), bundled PT Sans, shared banner/section/table styles. |
@@ -72,7 +73,10 @@ On the **Step 4** slide, `demo/mario/level.ts` can be changed two ways, and the 
 
 - Edits autosave about half a second after you stop typing; <kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>S</kbd> saves at once. The status in the panel's title bar reads *unsaved → saving… → saved*.
 - If the agent (or anyone) changes the file on disk while the editor has no unsaved edits, the editor updates in place.
-- If the file changes on disk while you *do* have unsaved edits, a bar asks whether to **Load the file** or **Keep mine**. Autosave stands down until you choose, so neither side silently wins.
+- If the file changes on disk while you *do* have unsaved edits, a bar asks whether to **Load the file** or **Keep mine**. Autosave stands down until you choose, so neither side silently wins; the **Preview** tab is disabled until you do.
+- Switching to **Preview** saves any pending edit first. If a save is refused (or the dev server doesn't answer), the status reads *write failed* and the edit stays unsaved so the next keystroke or <kbd>Cmd</kbd>+<kbd>S</kbd> retries it.
+
+`pnpm test` runs the unit tests for the sync logic and the syntax-error formatter.
 - Slide shortcuts (Space, arrows) are off while the editor has focus.
 
 Rules: `buildLevel()` must return `string[]`; `#` is solid, anything else is air. Levels wider than 30 columns or taller than 15 rows are clipped with a HUD warning. A runtime error or a syntax error keeps the previous level and names the problem in the strip under the game; this also holds if the deck is refreshed while the file is broken.

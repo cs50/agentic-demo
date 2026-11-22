@@ -11,11 +11,11 @@
  * compile, Vite reports that as `vite:error`, which we surface the same way.
  */
 
+import { describeTransformError } from './transformError'
 import { buildWorld, type World } from './world'
 
 export interface LevelUpdate {
   world: World
-  source: string | null
   error: string | null
 }
 
@@ -24,15 +24,14 @@ type Listener = (update: LevelUpdate) => void
 const listeners = new Set<Listener>()
 
 // Start from a safe fallback (ground only). The real level is loaded below.
-let current: LevelUpdate = { world: buildWorld([]), source: null, error: null }
+let current: LevelUpdate = { world: buildWorld([]), error: null }
 
 function safeBuild(fn: () => string[]): LevelUpdate {
   try {
-    return { world: buildWorld(fn()), source: null, error: null }
+    return { world: buildWorld(fn()), error: null }
   } catch (e) {
     return {
       world: current.world,
-      source: null,
       error: e instanceof Error ? `${e.name}: ${e.message}` : String(e),
     }
   }
@@ -50,16 +49,6 @@ export function onLevelChange(fn: Listener): () => void {
 function publish(update: LevelUpdate) {
   current = update
   for (const fn of listeners) fn(update)
-}
-
-/** Turn esbuild's multi-line transform error into one readable line. */
-function describeTransformError(err: any): string {
-  const where = err?.loc ? ` (line ${err.loc.line}, column ${err.loc.column})` : ''
-  // esbuild's message is "Transform failed with 1 error:\n<file>:<line>:<col>: ERROR: <reason>".
-  const raw: string = err?.message ?? 'syntax error'
-  const reason = raw.split('\n').map((l: string) => l.replace(/^.*?ERROR:\s*/, '').trim())
-    .find((l: string) => l && !/^Transform failed/.test(l)) ?? raw.split('\n')[0]
-  return `SyntaxError${where}: ${reason}`
 }
 
 if (import.meta.hot) {
