@@ -10,7 +10,7 @@
 import { useIsSlideActive, useSlideContext } from '@slidev/client'
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { Engine, FPS, GRAVITY, JUMP_VELOCITY, type EngineStats } from '../demo/mario/engine'
-import { currentLevel, onLevelChange } from '../demo/mario/liveLevel'
+import { currentLevel, levelReady, onLevelChange } from '../demo/mario/liveLevel'
 
 const props = withDefaults(defineProps<{ compact?: boolean }>(), { compact: false })
 
@@ -28,9 +28,16 @@ let engine: Engine | null = null
 let unsubscribe: (() => void) | null = null
 let flashTimer = 0
 
-function start() {
+let startToken = 0
+
+async function start() {
   if (!isLive || !canvas.value) return
   stop()
+  // Wait for level.ts to load (it's imported dynamically so a broken file can't
+  // take the slide down). Bail if the slide was left while we waited.
+  const token = ++startToken
+  await levelReady
+  if (token !== startToken || !canvas.value) return
   // We were unsubscribed while inactive, so resync both world and error state.
   const level = currentLevel()
   levelError.value = level.error
@@ -49,6 +56,7 @@ function start() {
 }
 
 function stop() {
+  startToken++ // cancel any start() still awaiting levelReady
   unsubscribe?.()
   unsubscribe = null
   engine?.stop()
