@@ -27,18 +27,18 @@ class: text-center
 
 # The Agentic Software Engineer
 
-<div class="text-xl text-slate-300 mt-4">
+<div class="cover-sub">
 Systems, Specifications, and Autonomous Software Factories Beyond CS50
 </div>
 
-<div class="mt-16 text-sm text-slate-500">
-CS50 · after Finance, before the final project
+<div class="cover-meta">
+CS50 · Week 10
 </div>
 
 <!--
-Welcome students back. Acknowledge that they recently completed CS50 Finance and
-submitted final project proposals. This lecture introduces what happens when writing
-syntax is no longer the bottleneck.
+Welcome back. You've just finished C$50 Finance and submitted your final project
+proposals. Today's lecture is about what happens when writing the code itself is no
+longer the hard part.
 -->
 
 ---
@@ -46,18 +46,18 @@ layout: two-cols-header
 class: px-2
 ---
 
-# The CS50 Contract: An Inversion
+# An Inversion
 
 ::left::
 
 <div class="pr-6">
 
-## The Traditional Semester
+## This semester
 
 <v-clicks>
 
-- Problem sets handed down exact, step-by-step specifications: exact hash counts in Mario, predetermined routes and database schemas in Finance.
-- Your primary job was acting as a **human compiler**, translating English requirements into C, Python, and SQL.
+- Each problem set handed you a precise specification: print exactly this seating chart; render an apology if `shares` isn't a positive integer; redirect to `/` when done.
+- Your job was to translate that English into C, Python, and SQL. You were, in a sense, the **compiler**.
 
 </v-clicks>
 
@@ -65,14 +65,14 @@ class: px-2
 
 ::right::
 
-<div class="pl-6 border-l border-slate-700">
+<div class="pl-6">
 
-## The Modern Agentic Era
+## From here on
 
 <v-clicks>
 
-- AI models can generate boilerplate syntax in seconds.
-- The job flips: humans **define the goal**, establish hard **acceptance criteria**, design **system boundaries**, and **verify** the outcome.
+- A model can produce that code in seconds.
+- So the job flips. You decide **what** to build, you write down what **correct** means, you draw the **boundaries** between pieces, and you **verify** the result.
 
 </v-clicks>
 
@@ -81,25 +81,25 @@ class: px-2
 ::bottom::
 
 <div v-click class="takeaway-banner">
-"Syntax is commoditized. Problem formulation, specification, and verification are now your superpowers."
+Writing code is no longer the bottleneck. Formulating the problem, specifying it, and verifying the result are.
 </div>
 
 <!--
-The opening hook. Walk the left column first: every pset they did this semester gave
-them an exact spec and their job was translation. Then the right column: with models
-generating syntax in seconds, the job flips to the parts of engineering that were
-previously hidden behind the pset spec. Land on the banner.
+Start on the left. Every pset this term gave them an exact spec, down to the names of
+form fields, and their job was translation. Then the right: once a model can do the
+translation, what's left is everything the pset spec used to do for them. Land on the
+banner. This is the thesis; everything else is detail.
 -->
 
 ---
 layout: section
 ---
 
-<div class="section-kicker">Sequence 1</div>
+<div class="section-kicker">Part 1</div>
 
 # The Chatbot Era
 
-<div class="section-sub">Text In, Text Out</div>
+<div class="section-sub">Text in, text out</div>
 
 ---
 layout: concept-title
@@ -107,31 +107,31 @@ concept: 1
 sequence: The Chatbot Era
 ---
 
-# Large Language Model (LLM)
+# Large Language Model
 
 ---
 layout: concept-detail
 concept: 1
-title: Large Language Model (LLM)
+title: Large Language Model
 ---
 
-A high-dimensional statistical engine trained to predict the **most probable next token** in a sequence.
+A large language model (LLM) is a program that, given some text, predicts the **most likely next token** (i.e., word or piece of a word), over and over.
 
-It does not possess intent or verify facts; it performs advanced pattern matching across code and natural language.
+It has no intent and checks no facts. It has seen a great deal of code and prose, and it continues patterns it has seen.
 
 ::example::
 
-- You provide the function signature `def quote():`.
-- The model predicts the most probable Flask route syntax, form parsing logic, and `lookup()` call, based on patterns in open-source Python repositories.
+- Recall `quote` in `app.py`. You type `def quote():` and a model completes it: a form that takes a `symbol`, a call to `lookup`, a template rendered with the result.
+- It's right because thousands of Flask apps look like that, not because it knows what `lookup` returns.
 
 ::takeaway::
 
-The model operates on probability, not ground truth.
+A model gives you the probable, not the correct.
 
 <!--
-Concept 1. Keep this grounded: when they typed `def quote():` and a model completed it,
-nothing "understood" Finance. It had seen thousands of Flask routes. That is why it is
-so good at boilerplate and so unreliable about whether the result is correct.
+Keep this concrete. When they typed `def quote():` and a model finished the route,
+nothing "understood" Finance. It had seen many Flask routes shaped like that. That's
+why models are so good at boilerplate and so unreliable about correctness.
 -->
 
 ---
@@ -140,158 +140,163 @@ concept: 2
 sequence: The Chatbot Era
 ---
 
-# Chatbot Interface & Turn-by-Turn Prompting
+# Chatbots and Turn-by-Turn Prompting
 
 ---
 layout: concept-detail
 concept: 2
-title: Chatbot Interface & Turn-by-Turn Prompting
+title: Chatbots and Turn-by-Turn Prompting
 ---
 
-A conversational UI (such as ChatGPT) layered over an LLM.
+A chatbot (e.g., ChatGPT) puts a conversation on top of a model. You ask, it answers, you read the answer, you ask again.
 
-The developer works in a **synchronous, manual feedback loop**: prompt → inspect generated code → spot bugs → prompt again to patch the flaw.
+Notice who's doing the work in that loop: **you** read the code, **you** run it, **you** find the bug, **you** type the fix.
 
 ::example::
 
-- You ask: *"Write the `/buy` route for my Flask app."*
-- The model outputs code that updates the cash balance, but **forgets to validate that `shares` is a positive integer**.
-- You correct it in the next turn: *"Fix this so users cannot purchase negative shares."*
+- You ask: "Write `/buy` for my Flask app."
+- It comes back with a route that calls `lookup`, checks the user's cash, and inserts a row. But it forgot that `shares` must be a **positive integer**, so `-5` goes through.
+- You type: "Render an apology if `shares` isn't a positive integer." And so on.
 
 ::takeaway::
 
-The human remains the manual debugger, runtime tester, and integration glue.
+The chatbot writes; you remain the debugger, the tester, and the glue.
 
 <!--
-Concept 2. Most students used exactly this loop during Finance. Name what the human is
-doing in that loop: reading, running, catching, re-prompting. Every one of those steps
-is about to be handed to the machine, one concept at a time.
+Most of them used exactly this loop during Finance. Name each step the human performs:
+reading, running, catching, re-prompting. Over the next few concepts, each of those
+steps gets handed to the machine.
 -->
 
 ---
 layout: section
 ---
 
-<div class="section-kicker">Sequence 2</div>
+<div class="section-kicker">Part 2</div>
 
-# Tool Use & The Single Agent
+# Tool Use and the Single Agent
 
-<div class="section-sub">The model gets hands</div>
+<div class="section-sub">The model gets a terminal</div>
 
 ---
 layout: concept-title
 concept: 3
-sequence: Tool Use & The Single Agent
+sequence: Tool Use and the Single Agent
 ---
 
-# Tool Calling & Execution Loops
+# Tool Calling and Execution Loops
 
 ---
 layout: concept-detail
 concept: 3
-title: Tool Calling & Execution Loops
+title: Tool Calling and Execution Loops
 ---
 
-Extending the model with **external tools**. Instead of emitting passive text for a human to copy and paste, the model outputs structured instructions to run shell commands, query databases, or execute linters.
+Give the model **tools**: a shell, a file editor, a database client. Instead of printing code for you to paste, it emits a command, reads the output, and decides what to do next.
 
-It reads the output and **iterates autonomously** until a goal is achieved.
+That loop, run by the model rather than by you, is what makes it an **agent**.
 
 ::example::
 
-- You instruct the agent: *"Implement the `/sell` route."*
-- The agent edits `app.py`, runs the local server, sends a test `POST`, hits an **HTTP 500** from a missing SQL column, inspects the trace, adjusts its query, and iterates until the route returns **HTTP 200 OK**.
+- You say: "Implement `/sell`."
+- The agent edits `app.py`, runs `flask run`, submits the form, and gets a **500**: it queried a `shares` column that doesn't exist in the table *you* designed for `buy`.
+- It runs `.schema` in `sqlite3`, fixes the query, and resubmits until it redirects to `/`.
 
 ::takeaway::
 
-The agent forms a closed feedback loop directly with the operating environment.
+The agent closes the loop with the computer directly.
 
 <!--
-Concept 3. This is the step from chatbot to agent. The loop from Concept 2 is the same,
-but the machine runs it. Preview the demo: later tonight an agent will do exactly this
-with the Mario game, including hitting an error and reading it.
+This is the step from chatbot to agent: the same loop as Concept 2, run by the machine.
+Preview the demo: later tonight an agent will do exactly this with the game, including
+hitting an error and reading it.
 -->
 
 ---
 layout: concept-title
 concept: 4
-sequence: Tool Use & The Single Agent
+sequence: Tool Use and the Single Agent
 ---
 
-# Agent Harness
+# The Agent Harness
 
 ---
 layout: concept-detail
 concept: 4
-title: Agent Harness
+title: The Agent Harness
 ---
 
-The surrounding **runtime framework, security sandbox, and context coordinator**.
+The **harness** is everything around the model: which files it may touch, which commands it may run, and what it gets told about your project before it starts.
 
-The harness isolates file permissions, enforces security boundaries, and injects project context into the model's environment.
+The model proposes. The harness decides what's allowed and what's visible.
 
 ::example::
 
-- When an agent touches `finance.db`, the harness **intercepts destructive operations** (such as an accidental database reset).
-- It **injects the SQLite table schemas** into context, so the agent knows exact column types instead of hallucinating them.
+- Before the agent touches `finance.db`, the harness puts the output of `.schema` into its context, so it knows `users` has `id`, `username`, `hash`, and `cash`, rather than guessing.
+- And when the agent tries to `DROP TABLE users` to "start fresh," the harness stops and asks you first.
 
 ::takeaway::
 
-Autonomous capability depends heavily on the robust design of the surrounding harness.
+How well an agent works depends as much on its harness as on its model.
 
 <!--
-Concept 4. Students tend to credit or blame "the model" for everything. Separate the
-two: the model proposes, the harness decides what it is allowed to do and what it gets
-to see. Much of the engineering in agentic tools lives here, not in the model.
+Students credit or blame "the model" for everything. Separate the two. Much of the
+engineering in agentic tools is in the harness: permissions, sandboxing, and what
+context gets injected. The duck in their codespace is a harness too.
 -->
 
 ---
 layout: section
 ---
 
-<div class="section-kicker">Sequence 3</div>
+<div class="section-kicker">Part 3</div>
 
-# Engineering with Autonomous Agents
+# Engineering with Agents
 
-<div class="section-sub">Where the human effort goes now</div>
+<div class="section-sub">Where your effort goes now</div>
 
 ---
 layout: concept-title
 concept: 5
-sequence: Engineering with Autonomous Agents
+sequence: Engineering with Agents
 ---
 
-# Executable Specification & Acceptance Criteria
+# Specifications and Acceptance Criteria
 
 ---
 layout: concept-detail
 concept: 5
-title: Executable Specification & Acceptance Criteria
+title: Specifications and Acceptance Criteria
 ---
 
-Shifting human effort from dictating step-by-step implementation code to establishing **unambiguous invariants** and **functional acceptance criteria** that any correct implementation must satisfy.
+Rather than dictate the code, write down what **correct** means: the inputs, the outputs, and the conditions that must always hold.
+
+If that sounds like a problem set, it should. You've been reading specifications all semester. Now you write them.
 
 ::example::
 
-Rather than dictating raw SQL, you define an invariant specification:
+The `buy` section of the Finance spec, as acceptance criteria:
 
-1. Cash balance must **never drop below 0.00**, even during concurrent transactions.
-2. Share counts must be strictly **positive, non-zero integers**.
-3. Invalid stock symbols must **fail gracefully before** any database transaction begins.
+1. `symbol` must be non-blank and must exist per `lookup`; otherwise, render an apology.
+2. `shares` must be a **positive integer**; otherwise, render an apology.
+3. If the user can't afford the shares at the current price, render an apology **without** completing the purchase.
+4. On success, redirect to `/`.
 
 ::takeaway::
 
-If you cannot specify what correctness means, an agent cannot build it reliably.
+If you can't say what correct means, an agent can't build it.
 
 <!--
-Concept 5. Point back to the pset spec they were handed for Finance: it already looked
-like this. The difference is that now they are the ones writing it, and the agent is the
-one implementing against it.
+Point back to the Finance spec they were handed. It already reads like this. The
+difference is that now they write it and the agent implements against it. Note what
+the spec deliberately leaves out: it says you needn't worry about race conditions.
+A good spec is as precise about what doesn't matter as about what does.
 -->
 
 ---
 layout: concept-title
 concept: 6
-sequence: Engineering with Autonomous Agents
+sequence: Engineering with Agents
 ---
 
 # Deterministic Guardrails
@@ -302,28 +307,29 @@ concept: 6
 title: Deterministic Guardrails
 ---
 
-**Non-negotiable structural constraints** enforced by compilers, linters, type checkers, and security scanners.
+Some rules are too important to ask for politely. Enforce them with tools that can't be talked out of it: compilers, linters, type checkers, tests, `check50`.
 
-Rather than politely asking the agent in natural language to follow best practices, automated programmatic barriers **immediately reject** non-compliant code.
+A prompt is a request. A failing check is a **wall**.
 
 ::example::
 
-- Not: *"Please avoid SQL injection vulnerabilities."*
-- Instead: a security scanner in the build pipeline **blocks any commit** where SQL queries are assembled with raw string concatenation instead of parameterized queries.
+- The Finance hints warn: use `?` placeholders in `db.execute`; do **not** build queries with f-strings or `+`, lest you invite SQL injection.
+- Rather than remind the agent of that in every prompt, add a check that **fails the build** whenever a string is concatenated into a query. Now the agent can't ship it.
 
 ::takeaway::
 
-English prompts are soft suggestions; compilers, linters, and type checkers are hard boundaries.
+English is a suggestion. A failing check is a boundary.
 
 <!--
-Concept 6. The contrast to draw: a prompt is a request, a linter is a law. Anything that
-truly must hold should be enforced by a tool that cannot be talked out of it.
+The contrast: a prompt is a request, a linter is a law. Anything that must hold should
+be enforced by something that can't be persuaded. They've been living with this all
+term: check50 and style50 don't negotiate.
 -->
 
 ---
 layout: concept-title
 concept: 7
-sequence: Engineering with Autonomous Agents
+sequence: Engineering with Agents
 ---
 
 # Verification Artifacts
@@ -334,39 +340,40 @@ concept: 7
 title: Verification Artifacts
 ---
 
-Objective, visual, or programmatic **proof** that an autonomous system behaves correctly.
+When an agent writes a thousand lines, you won't read them all. So don't review the code. Review the **evidence** that it works: test output, a diff of the database, a screenshot, a recording.
 
-When agents generate thousands of lines, humans cannot review every line. Instead they inspect **artifacts**: test logs, database state diffs, browser screenshots, UI recordings.
+The question shifts from "is this code right?" to "does this proof convince me?"
 
 ::example::
 
-- To verify `/history`, you don't read the raw Jinja template.
-- You review an **automated browser recording**: a mock user buys 10 shares of NFLX, sells 4, and both transactions render with exact timestamps and formatted currency.
+- To check `history`, don't read the Jinja template.
+- Run the spec's own test plan, recorded: register, buy 10 shares of NFLX, sell 4, and open `/history`. Two rows, each with the symbol, the price, the shares, and the date and time, in that order.
+- If the recording shows that, `history` works, whatever the template looks like.
 
 ::takeaway::
 
-Verification is the primary bottleneck in autonomous software engineering.
+Verification, not writing, is now the bottleneck.
 
 <!--
-Concept 7. This is the one to slow down on. Reading code does not scale; evidence does.
-Tonight's demo will show a verification artifact (the controller test) before the game is
-ever launched.
+Slow down here. Reading code doesn't scale; evidence does. The Finance spec's
+"Testing" section is already a list of verification artifacts. Tonight's demo will
+produce one before the game is ever launched.
 -->
 
 ---
 layout: section
 ---
 
-<div class="section-kicker">Sequence 4</div>
+<div class="section-kicker">Part 4</div>
 
-# Multi-Agent Systems & Software Factories
+# Many Agents and Software Factories
 
 <div class="section-sub">From one agent to a pipeline</div>
 
 ---
 layout: concept-title
 concept: 8
-sequence: Multi-Agent Systems & Software Factories
+sequence: Many Agents and Software Factories
 ---
 
 # Multi-Agent Orchestration
@@ -377,93 +384,90 @@ concept: 8
 title: Multi-Agent Orchestration
 ---
 
-Dividing complex development across **specialized, cooperating agents** with isolated responsibilities and decoupled state.
+Split the work across **several agents**, each with one job and only the context it needs. One agent with everything in its head gets confused, just as one function that does everything does.
 
-This avoids the memory bloat and confusion of a single monolithic prompt.
+Deciding where to split is your job, and it's the same skill as decomposing a program.
 
 ::example::
 
-Feature request: *"Add a portfolio breakdown pie chart."*
+The spec's "personal touch": let users buy and sell from `index` itself.
 
-- **Spec Agent** analyzes the request and defines the schema.
-- **Backend Agent** implements the `/chart-data` JSON endpoint in Flask.
-- **Frontend Agent** embeds the charting library into `index.html`.
-- **QA Agent** runs end-to-end tests across mobile and desktop viewports.
+- One agent reads the spec and writes down what changes: a form per row, posting to `/buy` and `/sell`.
+- One agent changes `index.html` and the routes.
+- One agent runs the spec's test plan, including the "unexpected usage" cases: letters, zero, negatives, decimals, more shares than the user owns.
 
 ::takeaway::
 
-Modularity in agent architecture mirrors modularity in sound software engineering.
+Good agent architecture looks like good software architecture.
 
 <!--
-Concept 8. Same principle as decomposing a program into functions: each agent gets a
-clear interface and a small context. Note that the decomposition is a human design
-decision, just like in Concept 5.
+Same principle as functions: each agent gets a clear interface and a small context.
+The decomposition is a human design decision, just as in Concept 5.
 -->
 
 ---
 layout: concept-title
 concept: 9
-sequence: Multi-Agent Systems & Software Factories
+sequence: Many Agents and Software Factories
 ---
 
-# Software Factory
+# The Software Factory
 
 ---
 layout: concept-detail
 concept: 9
-title: Software Factory
+title: The Software Factory
 ---
 
-An automated, cloud-hosted engineering environment covering the **complete software lifecycle**.
+Put all of it in the cloud and connect it to your repository. An issue comes in; a sandbox spins up; agents plan, implement, and test; a **pull request** comes out, with a summary of what changed and why.
 
-It ingests issues, provisions ephemeral sandboxes, coordinates specialized agents, runs automated test suites, and opens **production-ready pull requests** with zero local setup.
+No one's laptop is involved.
 
 ::example::
 
-Issue filed: *"Support limit orders that execute when a stock hits a target price."*
-
-- The factory provisions a cloud sandbox, applies database migrations, builds the background order worker, runs stress tests, and submits a **GitHub pull request** summarizing the architectural changes.
+- Someone files an issue: "Let users add cash to their account" (another of the spec's personal touches).
+- The factory checks out the repo, adds a route and a form, writes a test that a `$500` deposit raises `cash` by exactly `500.00`, runs `check50`, and opens a PR for you to review.
 
 ::takeaway::
 
-Software engineering bifurcates into product design (what to build) and factory engineering (building the harness and pipelines).
+Software engineering splits in two: deciding what to build, and building the factory that builds it.
 
 <!--
-Concept 9. Connect to the repository this deck lives in: it was built this way, issue
-to PR. Point students at the git history later; each commit explains what the agent did
-and what the human decided.
+Connect this to the repository this deck lives in. It was built this way: issue to
+branch to PR, by an agent, with a human deciding and reviewing. Point them at the git
+history later; each commit says what was done and what was learned.
 -->
 
 ---
 layout: concept-title
 concept: 10
-sequence: Multi-Agent Systems & Software Factories
+sequence: Many Agents and Software Factories
 ---
 
-# Human Approval Gates & The "Dark Factory" Debate
+# Human Approval Gates
 
 ---
 layout: concept-detail
 concept: 10
-title: Human Approval Gates & The "Dark Factory" Debate
+title: Human Approval Gates
 ---
 
-The architectural boundary determining **where human judgment must sign off** versus where autonomous execution is permitted.
+Where must a person sign off, and where may the machine proceed on its own? A "dark factory" is one with no people in it at all. Most engineers think that's a mistake for anything that matters.
 
-A "Dark Factory" operates completely lights-out, with no human intervention. Industry consensus maintains that critical boundaries require strict human approval gates.
+Drawing that line is a design decision, and someone is **accountable** for it.
 
 ::example::
 
-- The factory autonomously writes, tests, and deploys **CSS tweaks and layout improvements** to staging.
-- An explicit **Human Approval Gate** halts the pipeline before any change touching **password hashing, session cookies, or balance deduction** reaches production.
+- Let the factory restyle `layout.html` or fix a typo in `apology.html` on its own.
+- But anything that touches `generate_password_hash`, `session`, or the `UPDATE users SET cash` in `buy` and `sell` waits for a human to read the diff and approve.
 
 ::takeaway::
 
-Humans remain solely accountable for system security, ethics, and reliability.
+The machine can do the work. You remain responsible for it.
 
 <!--
-Concept 10. End the concept sequence on responsibility. Autonomy is a dial, not a switch,
-and where it is set is an engineering decision someone is accountable for.
+End the concepts on responsibility. Autonomy is a dial, not a switch, and where it's
+set is an engineering decision someone owns.
 -->
 
 ---
@@ -471,57 +475,62 @@ layout: default
 class: synthesis
 ---
 
-# The Evolution of Human Effort
+# Where the Effort Goes
 
-| Era | Primary interface | What AI does | Where human effort goes |
+| | You interact with | The AI does | You do |
 | :-- | :-- | :-- | :-- |
-| **Chatbot** | Text chat window (ChatGPT) | Generates code snippets on demand | Manually reading and patching code turn-by-turn |
-| **Agent / IDE** | Editor & terminal harness | Executes tools, edits files, iterates | Crafting prompt context, guiding task steps, reviewing local diffs |
-| **Software Factory** | Cloud orchestrator & CI/CD | Full-lifecycle autonomous PR generation | <span class="text-emerald-400 font-bold">Designing specifications, configuring deterministic guardrails, inspecting verification artifacts</span> |
+| **Chatbot** | A chat window | Writes snippets on request | Read, run, and patch, turn by turn |
+| **Agent** | Your editor and terminal | Runs tools, edits files, iterates | Supply context, steer, review diffs |
+| **Factory** | Issues and pull requests | Takes an issue to a tested PR | <span class="text-crimson">Write the spec, set the guardrails, judge the evidence</span> |
+
+<style>
+.text-crimson { color: var(--cs50-crimson); font-weight: 700; }
+</style>
 
 <!--
-Synthesis 1. Read the rightmost column top to bottom: the human's job moves up the
-abstraction ladder. The bolded row is the thesis of the lecture.
+Read the rightmost column top to bottom: your job moves up a level each row. The
+last row is the lecture in one line.
 -->
 
 ---
 layout: default
 ---
 
-# What Remains Indispensable Beyond CS50
+# What Doesn't Go Away
 
 <v-clicks>
 
-- **Computational intuition.** You cannot evaluate whether an agent's SQL transaction or memory allocation is correct without understanding ACID properties, pointers, and time complexity.
-- **Architectural taste.** Knowing how to decompose large systems into clean, decoupled interfaces.
-- **Skeptical verification.** Designing ruthless testing harnesses and anticipating the edge cases that models overlook.
+- **Understanding.** You can't judge whether an agent's SQL or its memory management is right without knowing how databases and memory work. That's Weeks 4 and 7.
+- **Design.** Deciding how to split a system into pieces that don't know too much about each other. That's every pset since Week 1.
+- **Skepticism.** Writing the tests the agent didn't think of. That's the "unexpected usage" list in every spec.
 
 </v-clicks>
 
 <div v-click class="takeaway-banner mt-8">
-<span class="text-cyan-400 font-bold uppercase tracking-widest text-xs mr-3">Final project advice</span>
-Don't just use AI to write code faster. Use agents to build more ambitious, reliable systems, while maintaining complete mastery over your architecture.
+<span class="label">For your final project</span>
+Don't use AI to write the same project faster. Use it to build something more ambitious, and make sure you could still explain every piece of it.
 </div>
 
 <!--
-Synthesis 2. Everything on this slide is something they learned this semester. The
-lecture is not "CS50 was unnecessary", it is "CS50 is what lets you supervise the
-machine." Then the final-project advice.
+Everything on this slide is something they learned this term. The point is not "CS50
+was unnecessary" but "CS50 is what lets you supervise the machine." Then the final
+project advice, which is also the course's academic honesty policy in one sentence:
+you must understand what you submit.
 -->
 
 ---
 layout: section
 ---
 
-<div class="section-kicker">Live demonstration</div>
+<div class="section-kicker">Demonstration</div>
 
-# From ASCII Pyramids to a Hardware-Controlled Arcade Game
+# From Nested Loops to a Game Controller
 
-<div class="section-sub">CS50 Mario, Week 1 → tonight</div>
+<div class="section-sub">Week 1's loops, played with a PlayStation controller</div>
 
 <!--
-Stage setup check before this slide: controller on and paired, agent CLI/editor open
-on the second display, this deck in presenter mode.
+Before this slide: controller on and paired, agent open on the other display, this
+deck in presenter mode.
 -->
 
 ---
@@ -529,13 +538,13 @@ layout: two-cols-header
 class: demo-nostalgia
 ---
 
-# Step 1 · The Nostalgia Anchor
+# Step 1 · Week 1
 
 ::left::
 
-<div class="text-sm text-slate-400 mb-2">Week 1, <code>mario.c</code></div>
+<div class="lede">Mario, a CS50 classic (and Seats, which you wrote, uses the same loops)</div>
 
-<<< ./demo/mario.c c {15-26}{maxHeight:'330px'}
+<<< ./demo/mario.c c {16-28}{maxHeight:'330px'}
 
 ::right::
 
@@ -553,17 +562,17 @@ Height: 8
 ########
 ```
 
-<div class="text-slate-400 text-sm mt-4">
-Nested loops. Count the spaces, count the hashes.
+<div class="lede mt-4">
+A loop inside a loop. Count the spaces, then the hashes.
 </div>
 
 </div>
 
 <!--
-Step 1 (1–2 min). Display the original mario.c solution. "In Week 1, your challenge was
-figuring out how many spaces and hashes to print per row using nested loops in C. Today,
-we're going to turn that very pyramid into a real-time, playable game driven by a
-physical PS4 controller."
+Step 1 (1–2 min). This year's Problem Set 1 was Seats, not Mario, so say so: "Many of
+you wrote a loop inside a loop in Seats to print a seating chart. The classic CS50
+version prints a pyramid instead. Tonight we turn that pyramid into something you can
+run and jump across, with a real controller."
 -->
 
 ---
@@ -574,31 +583,31 @@ src: ./demo/live.md
 layout: default
 ---
 
-# Step 3 · Spec-Driven Delegation
+# Step 3 · Say What You Mean
 
 <div class="grid grid-cols-2 gap-6 mt-2">
 <div>
 
-### Modular architecture
+### Draw the boundaries
 
 <v-clicks>
 
-- `controller.ts` — encapsulates gamepad polling; normalizes DualShock 4 buttons (**Cross** = jump, **left stick / D-pad** = move)
-- `engine.ts` — 60 FPS game loop, tile collision, physics constants (gravity `0.8 px/frame²`, jump `-14 px/frame`)
-- `level.ts` + `world.ts` — generate the exact 8-step CS50 pyramid on a tile grid
+- `controller.ts`: reads the gamepad. Knows that **Cross** means jump and the **left stick** means move. Knows nothing about Mario.
+- `engine.ts`: 60 frames per second, collisions, gravity of `0.8 px/frame²`, a jump of `-14 px/frame`. Knows nothing about controllers.
+- `level.ts`: the pyramid, as a loop inside a loop. The one file we'll keep editing.
 
 </v-clicks>
 
 </div>
 <div>
 
-### Verification harness first
+### Verify before you build
 
 <v-clicks>
 
-- Request `test_controller` **before** any game logic: a diagnostic that prints real-time axis values and button events.
-- Run it on stage, press **✕**, and watch for `Button 0 (CROSS): DOWN`.
-- Only once that is confirmed do we launch the game.
+- Ask for `test_controller` **first**: a program that prints every button and stick event as it happens.
+- Run it. Press **✕**. Look for `Button 0 (CROSS): DOWN`.
+- Only then ask for the game.
 
 </v-clicks>
 
@@ -606,37 +615,36 @@ layout: default
 </div>
 
 <!--
-Step 3 (4–5 min). Pass the explicit architectural specification to the agent. Contrast
-with Step 2: same goal, but now we hand over module boundaries, numeric invariants, and
-a verification step. The next slide is the verification artifact.
+Step 3 (4–5 min). Hand the agent the actual specification. Contrast with Step 2: same
+goal, but now we give it module boundaries, numbers, and a verification step. The next
+slide is the verification artifact.
 -->
 
 ---
 layout: default
 ---
 
-# Verification First: `test_controller`
+# Verify First: `test_controller`
 
-<div class="text-sm text-slate-400 mb-3">
-Press <b class="text-emerald-400">✕ Cross</b> and watch for <code>Button 0 (CROSS): DOWN</code>.
+<div class="lede">
+Press <b>✕</b> on the controller and look for <code>Button 0 (CROSS): DOWN</code>.
 </div>
 
 <ControllerTest />
 
 <!--
-Run the diagnostic, press X, show the terminal registering "Button 0 (CROSS): DOWN".
-Verification confirmed. This is Concept 7 made physical: nobody read the controller
-code; everybody saw the evidence.
+Run the diagnostic, press ✕, show the log. Nobody has read the controller code; everybody
+has seen it work. That's Concept 7.
 -->
 
 ---
 layout: default
 ---
 
-# Step 4 · The Live Climax
+# Step 4 · Play, Then Change the Level
 
-<div class="text-sm text-slate-400 -mt-2 mb-3">
-Ask the agent to change <code>level.ts</code>. The code morphs, the level rebuilds under Mario — no reload, no respawn.
+<div class="lede">
+Ask the agent to edit <code>level.ts</code>. The code on the left changes; the level on the right rebuilds under Mario, without a reload.
 </div>
 
 <div class="grid grid-cols-[1.05fr_1fr] gap-4 items-start" style="height: 400px">
@@ -645,19 +653,17 @@ Ask the agent to change <code>level.ts</code>. The code morphs, the level rebuil
 </div>
 
 <!--
-Step 4 (2 min). Launch the assembled game. Pick up the controller and guide Mario onto
-and over the 8-block pyramid.
+Step 4 (2 min). Pick up the controller and run Mario up and over the pyramid.
 
-Then, with the game running, ask the agent to change level.ts. Prompts in increasing
-ambition:
-  1. "Make the pyramid 12 tall."
-  2. "Invert it — widest row on top."
-  3. "Make it the Mario 'more' version: two half-pyramids with a 2-space gap."
+Then, with the game running, ask the agent to change level.ts:
+  1. "Make it 12 tall."
+  2. "Flip it: widest row on top."
+  3. "Make it the Mario 'more' version: two half-pyramids with a gap of two."
   4. "Add a second, smaller pyramid to the right."
-  5. Deliberately introduce a bug to show the error strip: the previous level is kept,
-     the HUD explains why, and the agent reads the error and fixes it (Concept 3, live).
+  5. Break it on purpose so the error strip appears: the old level stays, the message
+     says why, and the agent reads the error and fixes it. That's Concept 3, live.
 
-If the controller isn't detected, click the canvas and use arrow keys + space.
+If the controller isn't detected, click the canvas and use the arrow keys and space.
 -->
 
 ---
@@ -667,19 +673,19 @@ class: text-center
 
 <div class="max-w-3xl mx-auto">
 
-> "The agent wrote the boilerplate and rendering loops. But this game worked because **we** designed the modular boundaries, specified the physics constraints, and built a verification step. That is the essence of modern software engineering."
+> The agent wrote the rendering loop and the boilerplate. The game works because **we** drew the boundaries, **we** wrote down the physics, and **we** checked the controller before trusting it. That's the job now.
 
 </div>
 
 <!--
-Concluding quote. Let it sit. Then: the repository this deck lives in was built the same
-way, and its git history is the receipt.
+Let it sit. Then: the repository this deck lives in was built the same way, and its
+git history is the receipt.
 -->
 
 ---
 layout: end
 ---
 
-# Thank you
+# That's It
 
-<div class="text-slate-400 mt-4">This deck, the game, and its history: <code>github.com/cs50/agentic-demo</code></div>
+<div class="end-meta">The deck, the game, and how both were built: <code>github.com/cs50/agentic-demo</code></div>

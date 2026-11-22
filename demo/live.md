@@ -1,16 +1,16 @@
-# Live Build Log
+# Step 2 · Just Ask
 
-<div class="text-sm text-slate-400 mb-4">This slide is sourced from <code>demo/live.md</code>. The agent appends to it during the demo; the deck updates without reloading.</div>
+<div class="lede">This slide is <code>demo/live.md</code>. The agent writes to it as it works; the deck updates without a reload.</div>
 
-- Prompt: *"Create a playable Mario game in Python with a PS4 controller."*
+- You type: *"Make me a Mario game in Python that works with a PS4 controller."*
 
 <!--
-Step 2, the naive prompt trap. Type the vague prompt into the agent and let it work.
-As the agent writes, have it log what it is doing here so the audience sees the
-monolithic script taking shape. Then run it and point out the failure modes:
-  - fails to initialize the joystick subsystem properly
-  - hardcodes axis IDs that don't match the DualShock 4 layout
-  - lacks modularity and fails silently when the controller disconnects
-Key takeaway for the class: "Vague prompts produce fragile code. We must engineer
-the system, not just prompt the model."
+Step 2 (2–3 min), the naive prompt. Type the vague prompt into the agent and let it
+work. Have it log what it's doing here so the audience sees a single long file take
+shape. Then run it and point out what went wrong:
+  - it never initialized the joystick properly
+  - it hard-coded axis numbers that don't match a DualShock 4
+  - it's one file, and it fails silently when the controller disconnects
+Takeaway for the room: "A vague request gets you fragile code. We have to engineer
+the system, not just ask for it."
 -->

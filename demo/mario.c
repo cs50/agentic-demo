@@ -1,4 +1,5 @@
-// Week 1, CS50 Mario (less comfortable): print a right-aligned pyramid of '#'
+// Mario (less comfortable), a CS50 classic: print a right-aligned pyramid of height 1 to 8.
+// Notice how it's a loop inside a loop, just like Seats in this year's Problem Set 1.
 #include <cs50.h>
 #include <stdio.h>
 
@@ -12,7 +13,7 @@ int main(void)
     }
     while (height < 1 || height > 8);
 
-    // One row per iteration: (height - i) spaces, then i hashes
+    // Each row: (height - i) spaces, then i hashes
     for (int i = 1; i <= height; i++)
     {
         for (int j = 0; j < height - i; j++)

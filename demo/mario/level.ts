@@ -1,6 +1,6 @@
 /**
  * level.ts — THIS is the file the agent edits live.
- * It is Week 1's mario.c in TypeScript: each string is one row,
+ * It is CS50's classic mario.c in TypeScript: each string is one row,
  * each '#' becomes a solid block. Rows sit on the ground, centered.
  */
 
