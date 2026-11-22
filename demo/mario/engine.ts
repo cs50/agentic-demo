@@ -74,8 +74,26 @@ export class Engine {
     this.player = this.spawnPlayer()
   }
 
+  /**
+   * Find the lowest free standing position at column `x` whose feet are at or
+   * above `y`, checking the player's full bounding box. Returns null only if
+   * every row up to and including the top row is blocked (buildWorld always
+   * keeps the top row free, so in practice this always succeeds).
+   */
+  private findFreeYAbove(x: number, y: number): number | null {
+    let feetRow = Math.ceil((y + PLAYER_H) / TILE) - 1
+    for (; feetRow >= 0; feetRow--) {
+      const candidate = (feetRow + 1) * TILE - PLAYER_H
+      if (!this.collides(x, candidate)) return candidate
+    }
+    return null
+  }
+
   private spawnPlayer(): Player {
-    return { x: this.world.spawn.x, y: this.world.spawn.y, vx: 0, vy: 0, onGround: false, facing: 1 }
+    const { x, y } = this.world.spawn
+    // A tall level can bury the fixed spawn point; lift it to the first free row.
+    const safeY = this.collides(x, y) ? (this.findFreeYAbove(x, y) ?? 0) : y
+    return { x, y: safeY, vx: 0, vy: 0, onGround: false, facing: 1 }
   }
 
   /**
@@ -88,10 +106,9 @@ export class Engine {
     this.levelVersion++
     const p = this.player
     if (this.collides(p.x, p.y)) {
-      let row = Math.floor(p.y / TILE)
-      while (row > 0 && this.collides(p.x, row * TILE - PLAYER_H)) row--
-      if (row > 0) {
-        p.y = row * TILE - PLAYER_H
+      const y = this.findFreeYAbove(p.x, p.y)
+      if (y !== null) {
+        p.y = y
         p.vy = 0
       } else {
         this.player = this.spawnPlayer()
