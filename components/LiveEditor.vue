@@ -81,7 +81,9 @@ function failWrite(message: string) {
   clearTimeout(writeTimer)
   sync = rollbackFailedWrite(sync)
   errorMessage.value = message
-  setStatus('error')
+  // A pending conflict still needs its decision; the write error is shown in
+  // its own strip. Only an ordinary failed save becomes 'error'.
+  setStatus(pendingExternal.value !== null ? 'conflict' : 'error')
 }
 
 /** Replace the whole document while keeping the undo stack and cursor sane. */
@@ -98,7 +100,7 @@ function applyText(text: string) {
 function save(force = false) {
   if (!model || !import.meta.hot) return
   // While a disk change is waiting for a decision, only an explicit choice
-  // ("Keep mine", or Cmd+S) may write; a pending autosave must not win by default.
+  // ("Keep mine", which Cmd+S also means) may write; a pending autosave must not win by default.
   if (pendingExternal.value !== null && !force) return
   const content = model.getValue()
   if (!syncIsDirty(sync, content)) {
@@ -141,6 +143,24 @@ function keepMine() {
   sync = keepLocal(sync, pendingExternal.value)
   pendingExternal.value = null
   save(true)
+}
+
+/**
+ * Save now if there is anything unsaved. During a conflict this is the
+ * presenter choosing their own text, so it goes through keepMine(): writing
+ * without rebasing would leave the conflict bar up and autosave suspended.
+ */
+function saveNow() {
+  clearTimeout(saveTimer)
+  if (pendingExternal.value !== null) keepMine()
+  else save(true)
+}
+
+/** Write a pending autosave without waiting for the debounce (e.g. when the editor is hidden). */
+function flush() {
+  if (pendingExternal.value !== null) return // undecided; LiveCode keeps the editor visible
+  clearTimeout(saveTimer)
+  if (isDirty()) save()
 }
 
 // disk → editor
@@ -229,10 +249,7 @@ onMounted(async () => {
     id: 'lecture-save-level',
     label: 'Save level.ts',
     keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS],
-    run: () => {
-      clearTimeout(saveTimer)
-      save(true) // Cmd+S is an explicit choice, even during a conflict
-    },
+    run: saveNow, // during a conflict this is "Keep mine"
   })
 
   if (import.meta.hot) {
@@ -267,11 +284,10 @@ function trapKeys(e: KeyboardEvent) {
 }
 
 onBeforeUnmount(() => {
+  // LiveCode keeps this component mounted across Preview/Edit toggles, so this
+  // runs only when the slide itself goes away. A last-ditch flush is still
+  // worth sending; a conflict is never flushed silently.
   clearTimeout(saveTimer)
-  // Leaving Edit mode (e.g. switching to Preview) must not drop a pending
-  // autosave. The send is fire-and-forget, so it is safe during teardown. A
-  // conflict is never flushed silently; LiveCode keeps the editor open until
-  // the presenter has chosen.
   if (model && pendingExternal.value === null && isDirty()) save(true)
   clearTimeout(writeTimer) // nobody is left to show a failure to
   offResult?.()
@@ -282,7 +298,7 @@ onBeforeUnmount(() => {
   if (import.meta.env.DEV) delete (window as any).__levelEditor
 })
 
-defineExpose({ focus: () => editor?.focus(), save, isDirty })
+defineExpose({ focus: () => editor?.focus(), save, saveNow, flush, isDirty })
 </script>
 
 <template>

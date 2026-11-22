@@ -9,7 +9,7 @@
  *            in the editor, and edits autosave back to disk, which rebuilds
  *            the level under Mario. Best when you want to type on stage.
  */
-import { ref } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 import LiveEditor, { type EditorStatus } from './LiveEditor.vue'
 import LiveSource from './LiveSource.vue'
 
@@ -21,6 +21,8 @@ const props = withDefaults(defineProps<{ file?: string; mode?: 'preview' | 'edit
 const mode = ref<'preview' | 'edit'>(props.mode)
 const status = ref<EditorStatus>('ready')
 const editorRef = ref<InstanceType<typeof LiveEditor> | null>(null)
+/** Once Edit has been opened the editor stays mounted (hidden behind Preview), so a draft is never destroyed by a toggle. */
+const editorOpened = ref(props.mode === 'edit')
 
 const statusLabel: Record<EditorStatus, string> = {
   ready: 'in sync',
@@ -31,13 +33,32 @@ const statusLabel: Record<EditorStatus, string> = {
   conflict: 'changed on disk',
 }
 
+/**
+ * Preview must not hide a draft whose fate is undecided: a conflict waiting
+ * for a choice, or a write that failed and has not been retried. (A write still
+ * in flight is fine; the editor stays mounted and will report the outcome.)
+ */
+const previewBlocked = computed(
+  () => mode.value === 'edit' && (status.value === 'conflict' || status.value === 'error'),
+)
+const previewBlockedReason = computed(() =>
+  status.value === 'conflict'
+    ? 'Choose Load the file or Keep mine first'
+    : 'The last save failed; fix it or press Cmd/Ctrl+S to retry',
+)
+
 function setMode(m: 'preview' | 'edit') {
-  // While the conflict bar is up neither version has been chosen; leaving Edit
-  // now would discard the presenter's text without a word. Make them choose first.
-  if (m === 'preview' && mode.value === 'edit' && status.value === 'conflict') return
+  if (m === 'preview' && previewBlocked.value) return
+  if (m === 'edit') editorOpened.value = true
   mode.value = m
-  // In Edit mode the editor focuses itself once Monaco has loaded (`autofocus`);
-  // any pending autosave is flushed by the editor as it unmounts.
+  if (m === 'edit') {
+    // Returning from Preview: the editor is already mounted, focus it once it is
+    // visible again. On first open it focuses itself after Monaco loads (`autofocus`).
+    nextTick(() => editorRef.value?.focus())
+  } else {
+    // Hiding the editor writes any pending autosave now rather than after the debounce.
+    editorRef.value?.flush()
+  }
 }
 </script>
 
@@ -47,7 +68,7 @@ function setMode(m: 'preview' | 'edit') {
       <span class="lc-dot" /><span class="lc-dot" /><span class="lc-dot" />
       <span class="lc-file">{{ file }}</span>
 
-      <span v-if="mode === 'edit'" class="lc-status" :class="status">{{ statusLabel[status] }}</span>
+      <span v-if="mode === 'edit' || status === 'error' || status === 'conflict'" class="lc-status" :class="status">{{ statusLabel[status] }}</span>
       <span v-else class="lc-status ready">● live</span>
 
       <div class="lc-toggle" role="tablist" aria-label="Code panel mode">
@@ -56,8 +77,8 @@ function setMode(m: 'preview' | 'edit') {
           role="tab"
           :aria-selected="mode === 'preview'"
           :class="{ on: mode === 'preview' }"
-          :disabled="mode === 'edit' && status === 'conflict'"
-          :title="mode === 'edit' && status === 'conflict' ? 'Choose Load the file or Keep mine first' : undefined"
+          :disabled="previewBlocked"
+          :title="previewBlocked ? previewBlockedReason : undefined"
           @click="setMode('preview')"
         >
           Preview
@@ -76,7 +97,16 @@ function setMode(m: 'preview' | 'edit') {
 
     <div class="lc-body">
       <LiveSource v-if="mode === 'preview'" :file="file" bare />
-      <LiveEditor v-else ref="editorRef" autofocus @status="status = $event" />
+      <!-- Mounted once and then only hidden, so a draft, an in-flight write, or
+           a conflict survives a trip to Preview; the status badge above is
+           hidden in Preview but the editor keeps tracking disk underneath. -->
+      <LiveEditor
+        v-if="editorOpened"
+        v-show="mode === 'edit'"
+        ref="editorRef"
+        autofocus
+        @status="status = $event"
+      />
     </div>
   </div>
 </template>

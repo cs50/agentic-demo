@@ -31,12 +31,17 @@ function liveLevelWriter() {
     configureServer(server: any) {
       const target = resolve(server.config.root, WRITABLE_FILE)
       const localClients = new WeakSet<object>()
+      // Writes are queued so two saves arriving within one write's latency
+      // (autosave then Cmd+S, or the slide and presenter views) cannot
+      // interleave on disk or land out of order. A failed write does not
+      // block the ones behind it.
+      let queue: Promise<unknown> = Promise.resolve()
 
       server.ws.on('connection', (socket: object, req: { socket?: { remoteAddress?: string } }) => {
         if (isLoopback(req?.socket?.remoteAddress)) localClients.add(socket)
       })
 
-      server.ws.on('lecture:write-level', async (data: { content?: unknown }, client: any) => {
+      server.ws.on('lecture:write-level', (data: { content?: unknown }, client: any) => {
         if (!localClients.has(client.socket)) {
           client.send('lecture:write-level:result', {
             ok: false,
@@ -48,12 +53,15 @@ function liveLevelWriter() {
           client.send('lecture:write-level:result', { ok: false, error: 'content must be a string' })
           return
         }
-        try {
-          await fs.writeFile(target, data.content, 'utf8')
-          client.send('lecture:write-level:result', { ok: true })
-        } catch (e) {
-          client.send('lecture:write-level:result', { ok: false, error: String(e) })
-        }
+        const content = data.content
+        queue = queue.then(async () => {
+          try {
+            await fs.writeFile(target, content, 'utf8')
+            client.send('lecture:write-level:result', { ok: true })
+          } catch (e) {
+            client.send('lecture:write-level:result', { ok: false, error: String(e) })
+          }
+        })
       })
     },
   }
