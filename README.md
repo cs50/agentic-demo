@@ -8,15 +8,33 @@ Spec: [`agentic-coding-lecture-spec.md`](./agentic-coding-lecture-spec.md).
 ```sh
 pnpm install
 pnpm dev          # http://localhost:3030  (presenter view: /presenter)
-pnpm export       # PDF backup (first run downloads Playwright Chromium)
+pnpm export       # writes slides-export.pdf as an offline backup
 ```
+
+The deck makes no network requests at runtime: fonts (Inter, JetBrains Mono) are bundled from npm.
+
+## Deck structure (36 slides)
+
+| Slides | Content | Layout |
+| --- | --- | --- |
+| 1–2 | Title; opening hook "The CS50 Contract: An Inversion" | `cover`, `two-cols-header` |
+| 3, 8, 13, 20 | Sequence dividers | `section` |
+| 4–7, 9–12, 14–19, 21–26 | Ten concept pairs: title slide + explanation/Finance example/takeaway | `concept-title`, `concept-detail` |
+| 27–28 | Synthesis: evolution of human effort; what remains indispensable | `default` |
+| 29–35 | Live demo: `mario.c` → naive prompt → spec-driven → `test_controller` → live game → closing quote | mixed |
+| 36 | End | `end` |
+
+Every slide carries presenter notes taken from the spec's "Presenter Note" and stage directions. On `concept-detail` slides the example appears on the first click and the takeaway on the second.
 
 ## Layout
 
 | Path | Purpose |
 | --- | --- |
 | `slides.md` | The deck. Prepared slides live here. |
-| `demo/live.md` | **Agent-editable** slides pulled in via `src:`. The agent appends here during the live demo; Vite HMR patches the deck in place, no reload. |
+| `layouts/concept-title.vue` | "Bold Concept Callout" slide. Frontmatter: `concept`, `sequence`. |
+| `layouts/concept-detail.vue` | Explanation (default slot), `::example::`, `::takeaway::`. Frontmatter: `concept`, `title`, optional `reveal: false`. |
+| `demo/mario.c` | The Week 1 solution shown in Step 1 of the demo. |
+| `demo/live.md` | **Agent-editable** slides pulled in via `src:`. The agent appends here during the demo; Vite HMR patches the deck in place, no reload. |
 | `demo/mario/level.ts` | **Agent-editable** level generator: Week 1's `mario.c` nested loop in TypeScript. Save it and the level rebuilds under Mario, live. |
 | `demo/mario/world.ts` | Pure placer: ASCII rows from `level.ts` → tile grid, bottom-aligned on the ground and centered. |
 | `demo/mario/engine.ts` | Fixed-timestep 60 FPS loop, AABB tile collision, rendering, `setWorld()` for hot level swaps. Gravity `0.8`, jump `-14`. |
@@ -26,11 +44,12 @@ pnpm export       # PDF backup (first run downloads Playwright Chromium)
 | `components/MarioGame.vue` | Canvas game embedded in a slide; runs only while its slide is active. `compact` prop for side-by-side layouts. |
 | `components/LiveSource.vue` | Shows `level.ts` with Shiki Magic Move, animating each save. |
 | `components/ControllerTest.vue` | The "verification first" diagnostic: live button/axis events on a slide. |
-| `styles/index.css` | Palette: `#0f172a` / `#f8fafc` / `#38bdf8` / `#34d399`. |
+| `styles/index.css` | Palette (`#0f172a` / `#f8fafc` / `#38bdf8` / `#34d399`), bundled fonts, shared banner/section/table styles. |
+| `pnpm-workspace.yaml` | Allows `playwright-chromium`'s install script (pnpm ≥ 10 blocks build scripts by default) so `pnpm export` works after a fresh install. |
 
 ## Live level editing (the demo)
 
-On the **Live Level Editor** slide, ask the agent to change `demo/mario/level.ts`. Prompts that work well:
+On the **Step 4 · The Live Climax** slide, ask the agent to change `demo/mario/level.ts`. Prompts that work well:
 
 1. "Make the pyramid 12 tall."
 2. "Invert it, widest row on top." (a ceiling Mario can walk under)
@@ -40,9 +59,10 @@ On the **Live Level Editor** slide, ask the agent to change `demo/mario/level.ts
 
 Rules: `buildLevel()` must return `string[]`; `#` is solid, anything else is air. Levels wider than 30 columns or taller than 15 rows are clipped with a HUD warning.
 
-### Known caveat
+### Known caveats
 
-If you insert or remove a slide *before* a slide that uses `<<<` snippet imports, Slidev 53.1 can render that snippet as raw text until the dev server restarts. Finalize slide order before the lecture, or restart `pnpm dev` once after reordering.
+- If you insert or remove a slide *before* a slide that uses `<<<` snippet imports, Slidev 53.1 can render that snippet as raw text until the dev server restarts. Finalize slide order before the lecture, or restart `pnpm dev` once after reordering.
+- Slidev reserves `title` in slide frontmatter (it drives the table of contents), so layouts read it from the `frontmatter` prop rather than as a direct prop.
 
 ## Controller notes
 
