@@ -109,6 +109,31 @@ If the controller isn't detected, click the canvas and use arrow keys + space as
 layout: default
 ---
 
+# Live Level Editor
+
+<div class="text-sm text-slate-400 -mt-2 mb-3">
+Ask the agent to change <code>level.ts</code>. The code morphs, the level rebuilds under Mario — no reload, no respawn.
+</div>
+
+<div class="grid grid-cols-[1.05fr_1fr] gap-4 items-start" style="height: 400px">
+  <LiveSource />
+  <MarioGame compact />
+</div>
+
+<!--
+Prompts to try on stage, in increasing ambition:
+  1. "Make the pyramid 12 tall."
+  2. "Invert it — widest row on top."  (a floating ceiling; Mario walks under it)
+  3. "Make it the Mario 'more' version: two half-pyramids with a 2-space gap."
+  4. "Add a second, smaller pyramid 6 columns to the right."
+  5. Deliberately introduce a bug (e.g. return a number) to show the red error strip:
+     the previous level is kept, the HUD explains why, the agent fixes it.
+-->
+
+---
+layout: default
+---
+
 # The slide shows the file on disk
 
 <div class="text-sm text-slate-400 mb-2">
