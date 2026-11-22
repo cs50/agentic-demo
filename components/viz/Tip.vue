@@ -37,8 +37,13 @@ defineProps<{ text: string; side?: 'top' | 'bottom' }>()
   text-align: left;
   white-space: normal;
   pointer-events: none;
-  opacity: 0;
-  transition: opacity 120ms, transform 120ms;
+  display: none; /* out of layout (and scroll size) until shown */
+}
+@keyframes tip-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(4px);
+  }
 }
 .tip-bubble.top {
   bottom: calc(100% + 6px);
@@ -48,7 +53,8 @@ defineProps<{ text: string; side?: 'top' | 'bottom' }>()
 }
 .tip:hover .tip-bubble,
 .tip:focus-visible .tip-bubble {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
+  display: block;
+  transform: translateX(-50%);
+  animation: tip-in 120ms ease;
 }
 </style>

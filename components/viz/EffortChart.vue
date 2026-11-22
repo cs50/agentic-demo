@@ -5,6 +5,7 @@
  * so the chart reads without relying on colour; the legend repeats the
  * grouping (human-compiler work vs. engineering work) in words.
  */
+import { ref } from 'vue'
 import { useVizSteps } from '../../composables/useVizSteps'
 import Tip from './Tip.vue'
 
@@ -40,6 +41,9 @@ const eras: { name: string; sub: string; shares: Shares }[] = [
 
 const { at } = useVizSteps(eras.length)
 
+/** Category under the pointer (or keyboard focus): lights up its legend entry and its segment in every bar. */
+const hovered = ref<string | null>(null)
+
 /** Enough room for a word? Otherwise show just the number; below that, nothing (tooltip still works). */
 function labelFor(c: Category, pct: number) {
   if (pct >= 14) return `${c.short} ${pct}%`
@@ -57,10 +61,7 @@ function total(e: { shares: Shares }, group: Category['group']) {
     <section class="viz-card chart">
       <div class="head">
         <span class="viz-label">Where a person's effort goes</span>
-        <span class="groups">
-          <span class="group"><span class="swatch compiler" />Translating, by hand or by patching</span>
-          <span class="group"><span class="swatch engineering" />Engineering: specify, guard, judge</span>
-        </span>
+        <span class="totals-head"><span>translating</span><span>engineering</span></span>
       </div>
 
       <div class="bars">
@@ -73,8 +74,12 @@ function total(e: { shares: Shares }, group: Category['group']) {
             <Tip v-for="c in categories" :key="c.id" :text="`${c.label}: ${e.shares[c.id]}%. ${c.tip}`" side="bottom">
               <span
                 class="seg"
-                :class="[c.group, { empty: !e.shares[c.id] }]"
+                :class="[c.group, { empty: !e.shares[c.id], lit: hovered === c.id, dim: hovered && hovered !== c.id }]"
                 :style="{ width: `${e.shares[c.id]}%`, background: c.shade, color: c.ink }"
+                @mouseenter="hovered = c.id"
+                @mouseleave="hovered = null"
+                @focusin="hovered = c.id"
+                @focusout="hovered = null"
               >
                 <span class="seg-label">{{ labelFor(c, e.shares[c.id]) }}</span>
               </span>
@@ -88,7 +93,14 @@ function total(e: { shares: Shares }, group: Category['group']) {
       </div>
 
       <div class="legend">
-        <span v-for="c in categories" :key="c.id" class="key">
+        <span
+          v-for="c in categories"
+          :key="c.id"
+          class="key"
+          :class="[c.group, { lit: hovered === c.id, dim: hovered && hovered !== c.id }]"
+          @mouseenter="hovered = c.id"
+          @mouseleave="hovered = null"
+        >
           <span class="swatch" :style="{ background: c.shade }" />{{ c.label }}
         </span>
       </div>
@@ -112,28 +124,25 @@ function total(e: { shares: Shares }, group: Category['group']) {
   gap: 1rem;
   flex-wrap: wrap;
 }
-.groups {
-  display: flex;
-  gap: 1.2rem;
-  font-size: 0.74rem;
-  color: var(--cs50-muted);
-}
-.group {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-}
 .swatch {
   width: 0.8rem;
   height: 0.8rem;
   border-radius: 3px;
   flex: none;
 }
-.swatch.compiler {
-  background: linear-gradient(90deg, #ced4da, #495057);
+.totals-head {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: flex-end;
+  width: 6.5rem;
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--cs50-muted);
+  font-weight: 700;
 }
-.swatch.engineering {
-  background: linear-gradient(90deg, #a51c30, #efb3bd);
+.totals-head span:last-child {
+  color: var(--cs50-crimson);
 }
 .bars {
   display: flex;
@@ -184,6 +193,14 @@ function total(e: { shares: Shares }, group: Category['group']) {
 .seg.empty {
   border-right: 0;
 }
+.seg.lit {
+  outline: 2px solid var(--cs50-body);
+  outline-offset: -2px;
+  z-index: 1;
+}
+.seg.dim {
+  opacity: 0.35;
+}
 .seg-label {
   font-size: 0.72rem;
   font-weight: 700;
@@ -222,6 +239,20 @@ function total(e: { shares: Shares }, group: Category['group']) {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  cursor: default;
+  transition: all 150ms;
+}
+.key.lit {
+  color: var(--cs50-body);
+  font-weight: 700;
+  border-color: var(--cs50-body);
+  background: #fff;
+}
+.key.dim {
+  opacity: 0.45;
 }
 .verdict {
   margin-top: 0.6rem;

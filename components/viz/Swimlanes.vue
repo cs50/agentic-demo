@@ -6,7 +6,6 @@
  */
 import { computed } from 'vue'
 import { useVizSteps } from '../../composables/useVizSteps'
-import Tip from './Tip.vue'
 
 interface Agent {
   name: string
@@ -42,11 +41,9 @@ const agents: Agent[] = [
   },
 ]
 
-const { step, at } = useVizSteps(agents.length + 1)
+const { step, at } = useVizSteps(agents.length)
 const active = computed(() => Math.min(step.value, agents.length))
-const contrast = computed(() => at(agents.length + 1))
-
-const everything = [...new Set(agents.flatMap((a) => a.context))]
+const done = computed(() => at(agents.length))
 </script>
 
 <template>
@@ -56,8 +53,8 @@ const everything = [...new Set(agents.flatMap((a) => a.context))]
       <span>Let users buy more shares, or sell shares they own, from <span class="viz-mono">index</span> itself, without typing a symbol.</span>
     </div>
 
-    <div class="grid" :class="{ contrast }">
-      <section v-for="(a, i) in agents" :key="a.name" class="lane viz-card" :class="{ done: active > i, now: active === i + 1 && !contrast, idle: active <= i }">
+    <div class="grid">
+      <section v-for="(a, i) in agents" :key="a.name" class="lane viz-card" :class="{ done: active > i, now: active === i + 1, idle: active <= i }">
         <div class="head">
           <span class="n">{{ i + 1 }}</span>
           <div>
@@ -75,28 +72,10 @@ const everything = [...new Set(agents.flatMap((a) => a.context))]
         </div>
         <span v-if="i < agents.length - 1" class="handoff" :class="{ shown: active > i }">→</span>
       </section>
-
-      <section class="mono viz-card viz-enter" :class="{ shown: contrast }">
-        <div class="head">
-          <span class="n">1</span>
-          <div>
-            <div class="name">One agent</div>
-            <div class="job">Does all four jobs.</div>
-          </div>
-        </div>
-        <div class="viz-label">Sees</div>
-        <ul class="ctx big">
-          <li v-for="c in everything" :key="c">{{ c }}</li>
-          <li>…everything it wrote</li>
-        </ul>
-        <Tip text="Longer context: more to attend to, more to confuse, and the QA step is biased by having written the code." side="top">
-          <p class="warn">Same model. Four times the context, no fresh eyes for testing.</p>
-        </Tip>
-      </section>
     </div>
 
-    <div class="verdict viz-enter" :class="{ shown: contrast }">
-      Four small contexts beat one large one, for the same reason four functions beat one. <b>You</b> decided where to cut.
+    <div class="verdict viz-enter" :class="{ shown: done }">
+      Each agent saw <b>three things</b> and produced one. Nobody held the whole project in their head. Where to cut was <b>your</b> decision.
     </div>
   </div>
 </template>
@@ -120,13 +99,12 @@ const everything = [...new Set(agents.flatMap((a) => a.context))]
   position: relative;
   transition: grid-template-columns 400ms;
 }
-.grid.contrast {
-  grid-template-columns: repeat(4, 1fr) 1.3fr;
-}
 .lane {
   position: relative;
   padding: 0.6rem 0.7rem;
   transition: all 300ms;
+  min-height: 0;
+  overflow: hidden;
 }
 .lane.idle {
   opacity: 0.45;
@@ -183,22 +161,6 @@ const everything = [...new Set(agents.flatMap((a) => a.context))]
   border-radius: 4px;
   background: var(--cs50-code-bg);
 }
-.ctx.big {
-  flex-direction: row;
-  flex-wrap: wrap;
-  gap: 0.2rem;
-  font-size: 0.62rem;
-}
-.ctx.big li {
-  border-color: #f1aeb5;
-  background: #fdf1f2;
-  padding: 0.08rem 0.3rem;
-}
-.lane,
-.mono {
-  min-height: 0;
-  overflow: hidden;
-}
 .out {
   margin-top: auto;
 }
@@ -221,24 +183,6 @@ const everything = [...new Set(agents.flatMap((a) => a.context))]
 .handoff.shown {
   opacity: 1;
   color: var(--cs50-crimson);
-}
-.mono {
-  display: none;
-  border-color: #f1aeb5;
-  padding: 0.6rem 0.7rem;
-}
-.grid.contrast .mono {
-  display: flex;
-}
-.mono .n {
-  background: #dc3545;
-}
-.warn {
-  margin: auto 0 0;
-  font-size: 0.76rem;
-  color: #58151c;
-  font-weight: 700;
-  line-height: 1.35;
 }
 .verdict {
   font-size: 0.86rem;

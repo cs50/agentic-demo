@@ -19,16 +19,16 @@ The deck follows the course website's look: a white page, crimson `#a51c30` as t
 
 Every C$50 Finance example is taken from the Problem Set 9 specification (the `buy` rules, the `history` columns, the hints about `?` placeholders, the "Testing" list, the personal touches). The demo's `mario.c` is the CS50 classic; this year's Problem Set 1 used Seats, which the slides and notes acknowledge.
 
-## Deck structure (48 slides)
+## Deck structure (50 slides)
 
 | Slides | Content | Layout |
 | --- | --- | --- |
 | 1–3 | Title; "An Inversion"; the same inversion as a picture | `cover`, `two-cols-header`, `concept-viz` |
-| 4, 10, 16, 24 | Part dividers | `section` |
-| 5–9, 11–15, 17–23, 25–38 | Ten concept triples: title → visualization → explanation / Finance example / takeaway | `concept-title`, `concept-viz`, `concept-detail` |
-| 39–41 | Synthesis: effort table; the same as a chart; what doesn't go away | `default`, `concept-viz`, `default` |
-| 42–47 | Live demo: `mario.c` → just ask → say what you mean → `test_controller` → play and change the level → closing quote | mixed |
-| 48 | End | `end` |
+| 4, 10, 17, 25 | Part dividers | `section` |
+| 5–9, 11–16, 18–24, 26–40 | Ten concepts: title → visualization(s) → explanation / Finance example / takeaway. Concepts 4 and 8 have two visualization slides | `concept-title`, `concept-viz`, `concept-detail` |
+| 41–43 | Synthesis: effort table; the same as a chart; what doesn't go away | `default`, `concept-viz`, `default` |
+| 44–49 | Live demo: `mario.c` → just ask → say what you mean → `test_controller` → play and change the level → closing quote | mixed |
+| 50 | End | `end` |
 
 Every slide carries presenter notes. On `concept-detail` slides the example appears on the first click and the takeaway on the second.
 
@@ -45,13 +45,15 @@ On-slide cues about what to press ("Press → to ask") are off; the presenter no
 | 2 Chatbot | `ChatSim` | 5 | one turn of the `/buy` conversation; a ledger tallies who did the work |
 | 3 Tool calling | `ExecutionLoop` | 8 | one event in the `/sell` think → act → observe loop |
 | 4 Harness | `HarnessRings` | 4 | labels the ring; injects `.schema`; blocks `DROP TABLE`; passes a `SELECT` |
+| 4 Harness | `HarnessFiles` | 4 | a real harness as files: `AGENTS.md` and `SKILL.md` (the model reads them), `settings.json` permissions, `hooks.json`, `sandbox.json` (the harness enforces them). Formats checked against the Cursor, Claude Code and Agent Skills docs, November 2026 |
 | 5 Specifications | `SpecChecks` | 6 | submits one input to `buy`; the rule that catches it lights up |
 | 6 Guardrails | `Guardrails` | 4 | version 1 through the prompt and the scanner; then version 2 |
 | 7 Verification | `VerifyArtifact` | 4 | tries reading 1,000 lines; then checks `/history` against the spec |
-| 8 Multi-agent | `Swimlanes` | 5 | hands the "trade from `index`" feature to the next agent; then one agent with everything |
-| 9 Factory | `FactoryPipeline` | 6 | one stage from issue to pull request; the footer is this repository's own history |
+| 8 Multi-agent | `Swimlanes` | 4 | hands the "trade from `index`" feature to the next agent |
+| 8 Multi-agent | `ContextStacks` | 6 | one agent's context grows through the four jobs (13 things, testing its own work); then four agents with 3 each |
+| 9 Factory | `FactoryPipeline` | 6 | one Finance issue ("add cash") from issue to pull request, one stage per press |
 | 10 Approval gates | `ApprovalDial` | 3 | moves the gate: everything waits, the sensible middle, the dark factory |
-| Synthesis | `EffortChart` | 4 | adds an era to the stacked bars; every segment is labeled, so it reads without colour |
+| Synthesis | `EffortChart` | 4 | adds an era to the stacked bars; every segment is labeled; hovering a segment or legend entry lights that category in every bar |
 
 All live in `components/viz/`, share `CodeSnippet` (Shiki, via one highlighter in `highlighter.ts`) and `Tip` (hover/focus tooltip), use only the deck's design tokens, and respect `prefers-reduced-motion`.
 

@@ -1,8 +1,7 @@
 <script setup lang="ts">
 /**
  * FactoryPipeline — Concept 9. An issue travels issue → sandbox → plan →
- * implement → test → PR, one stage per step. The footer shows that this very
- * deck was built the same way, from the repository's own issues and PRs.
+ * implement → test → PR, one stage per step, for a Finance 'personal touch'.
  */
 import { computed } from 'vue'
 import { useVizSteps } from '../../composables/useVizSteps'
@@ -29,13 +28,6 @@ const stages: Stage[] = [
 const { step, at } = useVizSteps(stages.length)
 const reached = computed(() => step.value)
 
-/** This repository, as of writing. A static snapshot: the lecture is offline. */
-const thisDeck = [
-  { kind: 'PR', n: 1, title: 'Prototype: live-edited slides and an embedded controller-driven game' },
-  { kind: 'Issue', n: 2, title: 'Phase 2: build the lecture deck from the spec' },
-  { kind: 'PR', n: 3, title: 'Build the lecture deck from the spec, in the course\u2019s style' },
-  { kind: 'PR', n: 4, title: 'Make the demo\u2019s code panel editable, synced both ways' },
-]
 </script>
 
 <template>
@@ -43,15 +35,13 @@ const thisDeck = [
     <section class="viz-card line">
       <div class="viz-label">The pipeline</div>
       <div class="stages">
-        <template v-for="(s, i) in stages" :key="s.id">
-          <Tip :text="s.tip" side="bottom">
-            <div class="stage" :class="{ done: reached > i + 1, now: reached === i + 1, idle: reached <= i }">
-              <span class="dot" />
-              <span class="label">{{ s.label }}</span>
-            </div>
-          </Tip>
-          <span v-if="i < stages.length - 1" class="link" :class="{ on: reached > i + 1 }" />
-        </template>
+        <div class="track"><span class="progress" :style="{ width: `${(Math.max(reached, 1) - 1) / (stages.length - 1) * 100}%` }" /></div>
+        <Tip v-for="(s, i) in stages" :key="s.id" :text="s.tip" side="bottom">
+          <div class="stage" :class="{ done: reached > i + 1, now: reached === i + 1, idle: reached <= i }">
+            <span class="dot" />
+            <span class="label">{{ s.label }}</span>
+          </div>
+        </Tip>
       </div>
 
       <ol class="artifacts">
@@ -67,34 +57,41 @@ const thisDeck = [
       </div>
     </section>
 
-    <section class="viz-card meta">
-      <div class="viz-label accent">This deck, built the same way</div>
-      <ul>
-        <li v-for="item in thisDeck" :key="item.n" :class="item.kind.toLowerCase()">
-          <span class="viz-pill" :class="{ crimson: item.kind === 'Issue' }">{{ item.kind }} #{{ item.n }}</span>
-          <span>{{ item.title }}</span>
-        </li>
-      </ul>
-      <p class="note">Each commit's message says what was done and what was learned. The history is the receipt.</p>
-    </section>
   </div>
 </template>
 
 <style scoped>
 .factory {
-  grid-template-columns: 1.6fr 1fr;
+  grid-template-columns: 1fr;
 }
 .stages {
+  position: relative;
   display: flex;
-  align-items: center;
+  justify-content: space-between;
   margin: 0.2rem 0 0.8rem;
+  padding: 0 1rem;
+}
+.track {
+  position: absolute;
+  left: 3.5rem;
+  right: 3.5rem;
+  top: 0.55rem;
+  height: 2px;
+  background: var(--cs50-border);
+}
+.progress {
+  display: block;
+  height: 100%;
+  background: #198754;
+  transition: width 400ms ease;
 }
 .stage {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.3rem;
-  min-width: 5rem;
+  width: 5rem;
   transition: opacity 250ms;
 }
 .stage.idle {
@@ -124,33 +121,23 @@ const thisDeck = [
 .stage.now .label {
   color: var(--cs50-crimson);
 }
-.link {
-  flex: 1;
-  height: 2px;
-  background: var(--cs50-border);
-  margin: 0 -1.2rem 1.2rem;
-  transition: background-color 250ms;
-}
-.link.on {
-  background: #198754;
-}
 .artifacts {
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 0.4rem;
   flex: 1;
   min-height: 0;
 }
 .artifacts li {
   display: grid;
-  grid-template-columns: 5.5rem 1fr;
-  gap: 0.6rem;
-  padding: 0.3rem 0.5rem;
+  grid-template-columns: 6.5rem 1fr;
+  gap: 0.8rem;
+  padding: 0.5rem 0.7rem;
   border-radius: 6px;
-  font-size: 0.78rem;
+  font-size: 0.92rem;
   animation: rise 280ms ease both;
 }
 @keyframes rise {
@@ -170,39 +157,13 @@ const thisDeck = [
   color: var(--cs50-crimson);
 }
 .v {
-  font-size: 0.7rem;
-  line-height: 1.4;
+  font-size: 0.82rem;
+  line-height: 1.45;
 }
 .empty {
   color: var(--cs50-muted);
   display: block !important;
   text-align: center;
-}
-.meta ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
-  font-size: 0.78rem;
-}
-.meta li {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 0.5rem;
-  align-items: start;
-  line-height: 1.35;
-}
-.meta .viz-pill {
-  white-space: nowrap;
-}
-.note {
-  margin: auto 0 0;
-  padding-top: 0.6rem;
-  border-top: 1px solid var(--cs50-rule);
-  font-size: 0.78rem;
-  color: var(--cs50-muted);
 }
 .verdict {
   margin-top: 0.5rem;

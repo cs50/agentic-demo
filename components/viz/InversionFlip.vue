@@ -38,7 +38,6 @@ const after = [
           <span v-if="i < before.length - 1" class="arrow">→</span>
         </template>
       </div>
-      <div class="note" :class="{ dimmed: at(2) }">Your job was the arrow in the middle: translation.</div>
     </section>
 
     <section class="row viz-enter" :class="{ shown: at(2) }">
@@ -54,9 +53,6 @@ const after = [
           <span v-if="i < after.length - 1" class="arrow">→</span>
         </template>
       </div>
-      <div class="note viz-enter" :class="{ shown: at(3) }">
-        You appear <b>three times</b>, and none of them is "type the code".
-      </div>
     </section>
   </div>
 </template>
@@ -70,6 +66,7 @@ const after = [
   display: flex;
   flex-direction: column;
   justify-content: center;
+  padding-bottom: 1.4rem; /* room for the role labels under the boxes */
 }
 .chain {
   display: flex;
@@ -116,18 +113,5 @@ const after = [
 .arrow {
   color: var(--cs50-muted);
   font-size: 1.4rem;
-}
-.note {
-  margin-top: 1.4rem;
-  text-align: center;
-  color: var(--cs50-muted);
-  font-size: 0.95rem;
-  transition: opacity 300ms;
-}
-.note.dimmed {
-  opacity: 0.5;
-}
-.note b {
-  color: var(--cs50-crimson);
 }
 </style>

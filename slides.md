@@ -296,6 +296,28 @@ knows the columns rather than guessing), and DROP TABLE being stopped on the way
 press: a harmless SELECT goes through. Same model all three times; the harness made the
 difference.
 -->
+
+---
+layout: concept-viz
+concept: 4
+title: "The Agent Harness, as files on disk"
+caption: "Four presses: context, permissions, sandbox, then the line between them."
+---
+
+<HarnessFiles />
+
+<!--
+What a harness is, concretely. These are real file formats, current as of this
+lecture: AGENTS.md and SKILL.md (the model reads them; skill libraries like pstack and
+Compound Engineering's ce-* skills are collections of SKILL.md files), settings.json
+permissions (deny, then ask, then allow), hooks.json, sandbox.json.
+
+Press three times to reveal the columns; narrate each as the question at the top.
+Fourth press tags every file: "model reads it" or "harness enforces it". The quote at
+the bottom is from the Claude Code docs, verbatim. That line is the concept: an
+instruction is something the model may follow; a permission is something it cannot
+change.
+-->
 ---
 layout: concept-detail
 concept: 4
@@ -505,15 +527,33 @@ sequence: Many Agents and Software Factories
 layout: concept-viz
 concept: 8
 title: Multi-Agent Orchestration
-caption: "Each → hands the work to the next agent. Last press: the same job as one agent."
+caption: "Each → hands the work to the next agent."
 ---
 
 <Swimlanes />
 
 <!--
-Four agents, four small contexts. Point at what each one sees: never the whole project. The
-last press adds the alternative, one agent with everything in its head and no fresh eyes
-for testing. Where to cut was a human decision, same as deciding your functions.
+Four presses, one handoff each. Point at what each agent sees: three things, never the
+whole project. The last agent tests code it did not write. Where to cut was a human
+decision, the same decision as splitting a program into functions. The next slide shows
+why it matters.
+-->
+
+---
+layout: concept-viz
+concept: 8
+title: "One agent or four?"
+caption: "Four presses grow one agent's context; the fifth brings in the team; the sixth is the verdict."
+---
+
+<ContextStacks />
+
+<!--
+Same four jobs. Presses 1 to 4: one agent does them in order and everything it reads and
+writes piles up; by the end it is carrying thirteen things and testing its own code.
+Press 5: the four agents from the previous slide, three things each. Press 6: the
+verdict. The point is not that one agent cannot do it; it is that a shorter context and
+fresh eyes are the same reasons we write small functions.
 -->
 ---
 layout: concept-detail
@@ -561,9 +601,10 @@ caption: "Each → is one stage. Hover a stage for what it is."
 <FactoryPipeline />
 
 <!--
-Six presses from issue to pull request. The issue is one of the spec's personal touches.
-Nobody's laptop is involved until the last box. Then the right panel: this deck was built
-exactly this way; the repository's history is the receipt. Invite them to read it.
+Six presses from issue to pull request. The issue is one of the spec's personal touches
+(let users add cash). Hover a stage for what it is. Nobody's laptop is involved until
+the last box: a person files the issue, a person reviews the pull request, and the
+machine does the rest.
 -->
 ---
 layout: concept-detail
