@@ -1,0 +1,61 @@
+/* Lecture palette (from spec):
+   navy/slate background #0f172a, white #f8fafc, cyan #38bdf8, emerald #34d399 */
+
+:root {
+  --slidev-theme-primary: #38bdf8;
+  --lecture-bg: #0f172a;
+  --lecture-fg: #f8fafc;
+  --lecture-cyan: #38bdf8;
+  --lecture-emerald: #34d399;
+}
+
+html,
+body,
+#app {
+  background: var(--lecture-bg);
+}
+
+.slidev-layout {
+  background: var(--lecture-bg);
+  color: var(--lecture-fg);
+}
+
+.slidev-layout h1 {
+  color: var(--lecture-fg);
+  font-weight: 700;
+}
+
+.slidev-layout h2,
+.slidev-layout h3 {
+  color: var(--lecture-cyan);
+}
+
+.slidev-layout strong {
+  color: var(--lecture-emerald);
+}
+
+.slidev-layout a {
+  color: var(--lecture-cyan);
+}
+
+.slidev-layout code:not(pre code) {
+  color: var(--lecture-emerald);
+  background: rgba(56, 189, 248, 0.08);
+  border-radius: 4px;
+  padding: 0.1em 0.35em;
+}
+
+.slidev-layout blockquote {
+  border-left: 4px solid var(--lecture-emerald);
+  background: rgba(52, 211, 153, 0.06);
+  color: var(--lecture-fg);
+}
+
+.slidev-layout table th {
+  color: var(--lecture-cyan);
+}
+
+/* Progress bar + pagination */
+.slidev-page-progress {
+  background: var(--lecture-cyan);
+}
