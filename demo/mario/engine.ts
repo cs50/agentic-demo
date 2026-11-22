@@ -43,11 +43,14 @@ export interface EngineStats {
   fps: number
   frames: number
   controller: ControllerState
+  /** Incremented every time the level is hot-swapped. */
+  levelVersion: number
+  levelWarnings: string[]
 }
 
 export class Engine {
   readonly controller = new Controller()
-  readonly world: World
+  world: World
   private player: Player
   private ctx: CanvasRenderingContext2D | null = null
   private raf = 0
@@ -55,6 +58,7 @@ export class Engine {
   private acc = 0
   private running = false
   private frames = 0
+  private levelVersion = 0
   private fpsCounter = { t: 0, n: 0, value: 0 }
   private lastState: ControllerState = {
     connected: false,
@@ -72,6 +76,27 @@ export class Engine {
 
   private spawnPlayer(): Player {
     return { x: this.world.spawn.x, y: this.world.spawn.y, vx: 0, vy: 0, onGround: false, facing: 1 }
+  }
+
+  /**
+   * Hot-swap the level while the game is running. The player keeps their
+   * position unless the new level puts a block where they are standing, in
+   * which case they are lifted to the nearest free row above (or respawned).
+   */
+  setWorld(world: World) {
+    this.world = world
+    this.levelVersion++
+    const p = this.player
+    if (this.collides(p.x, p.y)) {
+      let row = Math.floor(p.y / TILE)
+      while (row > 0 && this.collides(p.x, row * TILE - PLAYER_H)) row--
+      if (row > 0) {
+        p.y = row * TILE - PLAYER_H
+        p.vy = 0
+      } else {
+        this.player = this.spawnPlayer()
+      }
+    }
   }
 
   /** Read-only snapshot for diagnostics / tests. */
@@ -129,7 +154,13 @@ export class Engine {
     }
 
     this.render()
-    this.onStats?.({ fps: this.fpsCounter.value, frames: this.frames, controller: this.lastState })
+    this.onStats?.({
+      fps: this.fpsCounter.value,
+      frames: this.frames,
+      controller: this.lastState,
+      levelVersion: this.levelVersion,
+      levelWarnings: this.world.warnings,
+    })
   }
 
   // ---------------------------------------------------------------- physics
