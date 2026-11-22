@@ -59,3 +59,90 @@ body,
 .slidev-page-progress {
   background: var(--lecture-cyan);
 }
+
+/* ---- Shared lecture components ------------------------------------------- */
+
+/* "Key Takeaway" banner (opening hook, final-project advice) */
+.takeaway-banner {
+  background: linear-gradient(90deg, rgba(56, 189, 248, 0.14), rgba(52, 211, 153, 0.12));
+  border-left: 4px solid var(--lecture-emerald);
+  border-radius: 10px;
+  padding: 0.85rem 1.2rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--lecture-fg);
+}
+
+/* Section dividers */
+.slidev-layout.section .section-kicker {
+  font-size: 0.8rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--lecture-cyan);
+  font-weight: 700;
+  margin-bottom: 0.8rem;
+}
+.slidev-layout.section h1 {
+  font-size: 2.8rem;
+  line-height: 1.15;
+  max-width: 22ch;
+  margin: 0 auto;
+}
+.slidev-layout.section .section-sub {
+  margin-top: 1rem;
+  font-size: 1.1rem;
+  color: #94a3b8;
+}
+
+/* Two-column header layout spacing (opening hook) */
+.slidev-layout.two-cols-header {
+  column-gap: 1.5rem;
+  padding-top: 2.4rem;
+}
+.slidev-layout.two-cols-header h2 {
+  font-size: 1.25rem;
+  margin-top: 0.6rem;
+}
+.slidev-layout.two-cols-header li {
+  font-size: 0.98rem;
+  line-height: 1.5;
+}
+.slidev-layout.two-cols-header .col-bottom {
+  padding-bottom: 0.4rem;
+}
+
+/* Synthesis table */
+.slidev-layout.synthesis table {
+  width: 100%;
+  font-size: 0.9rem;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-top: 1rem;
+}
+.slidev-layout.synthesis th,
+.slidev-layout.synthesis td {
+  text-align: left;
+  vertical-align: top;
+  padding: 0.7rem 0.9rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+}
+.slidev-layout.synthesis th {
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--lecture-cyan);
+}
+.slidev-layout.synthesis tbody tr:last-child td {
+  background: rgba(52, 211, 153, 0.06);
+  border-bottom: none;
+}
+.slidev-layout.synthesis td:first-child {
+  white-space: nowrap;
+}
+
+/* Demo: Step 1 split */
+.slidev-layout.demo-nostalgia .col-left {
+  padding-right: 0.5rem;
+}
+
