@@ -644,24 +644,31 @@ layout: default
 # Step 4 · Play, Then Change the Level
 
 <div class="lede">
-Ask the agent to edit <code>level.ts</code>. The code on the left changes; the level on the right rebuilds under Mario, without a reload.
+Ask the agent to edit <code>level.ts</code>, or click <b>Edit</b> and type. Either way, the level rebuilds under Mario without a reload.
 </div>
 
 <div class="grid grid-cols-[1.05fr_1fr] gap-4 items-start" style="height: 400px">
-  <LiveSource />
+  <LiveCode />
   <MarioGame compact />
 </div>
 
 <!--
 Step 4 (2 min). Pick up the controller and run Mario up and over the pyramid.
 
-Then, with the game running, ask the agent to change level.ts:
+Then change level.ts, two ways:
+
+  With the agent (leave the panel in Preview so the audience sees the diff animate):
   1. "Make it 12 tall."
   2. "Flip it: widest row on top."
   3. "Make it the Mario 'more' version: two half-pyramids with a gap of two."
   4. "Add a second, smaller pyramid to the right."
   5. Break it on purpose so the error strip appears: the old level stays, the message
      says why, and the agent reads the error and fixes it. That's Concept 3, live.
+
+  Yourself (click Edit): change HEIGHT, pause, and watch the level rebuild. Edits
+  autosave after you stop typing; Cmd+S saves at once. If the agent edits the file
+  while you have unsaved changes, a bar asks whether to load theirs or keep yours.
+  Slide shortcuts are off while the editor has focus.
 
 If the controller isn't detected, click the canvas and use the arrow keys and space.
 -->
