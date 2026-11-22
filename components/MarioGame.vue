@@ -31,7 +31,10 @@ let flashTimer = 0
 function start() {
   if (!isLive || !canvas.value) return
   stop()
-  engine = new Engine(currentLevel().world)
+  // We were unsubscribed while inactive, so resync both world and error state.
+  const level = currentLevel()
+  levelError.value = level.error
+  engine = new Engine(level.world)
   engine.start(canvas.value, (s) => (stats.value = s))
   unsubscribe = onLevelChange((update) => {
     levelError.value = update.error
