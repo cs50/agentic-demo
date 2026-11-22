@@ -23,14 +23,18 @@ type Listener = (update: LevelUpdate) => void
 
 const listeners = new Set<Listener>()
 
-let current: LevelUpdate = safeBuild(() => buildLevel())
+// Initialize with a safe fallback *before* evaluating the generator, so that a
+// broken level.ts at first load (e.g. refreshing mid-demo) degrades to an empty
+// level instead of throwing inside safeBuild's catch (temporal dead zone).
+let current: LevelUpdate = { world: buildWorld([]), source: null, error: null }
+current = safeBuild(() => buildLevel())
 
 function safeBuild(fn: () => string[]): LevelUpdate {
   try {
     return { world: buildWorld(fn()), source: null, error: null }
   } catch (e) {
     return {
-      world: current?.world ?? buildWorld([]),
+      world: current.world,
       source: null,
       error: e instanceof Error ? `${e.name}: ${e.message}` : String(e),
     }
