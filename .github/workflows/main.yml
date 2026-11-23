@@ -2,8 +2,10 @@
 # CS50 apps do (cs50/deploy-to-eb): zip the working directory, upload it, and
 # update the environment, which builds the Dockerfile on the instance.
 #
-# Every push installs, tests and builds. Only main (or a manual run of any
-# branch: `gh workflow run main.yml --ref my-branch`) deploys.
+# Every push and every pull request installs, tests and builds. Only a push to
+# main (or a manual run of any branch: `gh workflow run main.yml --ref
+# my-branch`) deploys; pull requests, including from forks, never do, and
+# GitHub gives fork pull requests no access to the secrets anyway.
 #
 # The deck is built here, not in the Dockerfile: the image then needs no
 # toolchain, and the instance never compiles Monaco. node_modules is removed
@@ -11,11 +13,15 @@
 
 on:
   push:
+  pull_request:
   workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # Branches in this repository are already tested by their push; run the
+    # pull_request event only for forks, which have no push event here.
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.repository }}
     # Queue deployments rather than cancel them: cancelling the job would not cancel the Elastic Beanstalk update
     concurrency:
       group: deploy-agentic-cs50-io-staging
@@ -45,11 +51,11 @@ jobs:
         run: pnpm build
 
       - name: trim the bundle
-        if: ${{ github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' }}
+        if: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch' }}
         run: rm -rf node_modules server/node_modules
 
       - name: deploy
-        if: ${{ github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' }}
+        if: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch' }}
         uses: cs50/deploy-to-eb@main
         with:
           aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
