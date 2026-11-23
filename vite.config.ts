@@ -1,4 +1,5 @@
 import { promises as fs } from 'node:fs'
+import { randomUUID } from 'node:crypto'
 import { resolve } from 'node:path'
 
 // Note: `vite` is a dependency of Slidev, not of this project, and pnpm keeps
@@ -74,6 +75,12 @@ function liveFileWriter() {
 }
 
 export default {
+  define: {
+    // One id per start of the dev server. The deck sends it to the hub as its
+    // presenter session, so a fresh `pnpm dev` is a fresh room (see
+    // HelloMessage.session in server/protocol.ts). Only the dev deck sends it.
+    __HUB_SESSION__: JSON.stringify(randomUUID()),
+  },
   plugins: [liveFileWriter()],
   server: {
     hmr: {

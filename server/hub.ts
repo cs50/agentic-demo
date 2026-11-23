@@ -20,7 +20,10 @@
  *     connection to the audience rather than dropping it.
  *   - A socket's identity is fixed at its first hello. A later hello may change
  *     the name or present a token; it cannot become another voter.
- *   - There is one session at a time. `reset` clears it for the next lecture.
+ *   - There is one session at a time. `reset` clears it for the next lecture,
+ *     and so does a presenter arriving with a new `session` id (each `pnpm dev`
+ *     run has its own), so a fresh start of the deck is a fresh room and phones
+ *     are not left following the last rehearsal.
  *
  * Accepted residual risk: the audience is anonymous by design (no login), so
  * one device that opens several sockets with several ids is several voters.
@@ -102,6 +105,8 @@ export class Hub {
   private messages: AudienceMessage[] = []
   private sync = new Map<string, SyncState>()
   private liveSource = new Map<string, string>()
+  /** The presenter run the room belongs to; see HelloMessage.session. */
+  private session: string | null = null
 
   constructor(opts: HubOptions) {
     this.token = opts.presenterToken
@@ -134,9 +139,20 @@ export class Hub {
       else out.push({ to: toConn(connId), msg: { type: 'error', reason: 'presenter token rejected; joined as audience' } })
     }
 
+    // A presenter from a new run of the deck starts a new lecture: whatever the
+    // room still holds from the last one goes, and everyone else is told.
+    const session = typeof hello.session === 'string' && hello.session ? hello.session.slice(0, 64) : null
+    let fresh = false
+    if (role === 'presenter' && session && session !== this.session) {
+      this.session = session
+      this.clear()
+      fresh = true
+    }
+
     const before = this.audienceCount()
     this.connections.set(connId, { connId, clientId, role, name, lastMessageAt: previous?.lastMessageAt ?? 0 })
     out.push({ to: toConn(connId), msg: this.snapshot(connId) })
+    if (fresh) for (const id of this.connections.keys()) if (id !== connId) out.push({ to: toConn(id), msg: this.snapshot(id) })
     if (role === 'presenter' && previous?.role !== 'presenter') {
       // A presenter arriving late still gets the room's messages so far.
       for (const m of this.messages) out.push({ to: toConn(connId), msg: { type: 'message', ...m } })
@@ -346,6 +362,13 @@ export class Hub {
   }
 
   private reset(): Outbound[] {
+    this.clear()
+    // Everyone re-renders from a fresh snapshot.
+    return [...this.connections.keys()].map((id) => ({ to: toConn(id), msg: this.snapshot(id) }))
+  }
+
+  /** Forget the lecture so far; connections and the session id stay. */
+  private clear() {
     this.poll = null
     this.votes.clear()
     this.reachedAt = []
@@ -353,8 +376,6 @@ export class Hub {
     this.messages = []
     this.sync.clear()
     this.liveSource.clear()
-    // Everyone re-renders from a fresh snapshot.
-    return [...this.connections.keys()].map((id) => ({ to: toConn(id), msg: this.snapshot(id) }))
   }
 
   // ---------------------------------------------------------------- helpers
