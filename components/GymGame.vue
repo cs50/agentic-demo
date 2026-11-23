@@ -27,8 +27,8 @@ import { useLive } from '../composables/useLive'
 import { Controller } from '../demo/mario/controller'
 import { Battle, MAX_HP, pollIdFor, type BattleState } from '../demo/gym/battle'
 import { Overworld, type OverworldState } from '../demo/gym/overworld'
-import { VIEW_H, VIEW_W, drawBattle, drawOverworld, type BattleScene } from '../demo/gym/render'
-import { SLOPWHALE_NAME } from '../demo/gym/slopwhale'
+import { TRANSITION_FRAMES, VIEW_H, VIEW_W, drawBattle, drawOverworld, drawTransition, freshScene, type BattleScene } from '../demo/gym/render'
+import { SLOPPYCLAUDE_NAME } from '../demo/gym/sloppyclaude'
 import DuckSprite from './viz/DuckSprite.vue'
 
 const props = withDefaults(defineProps<{ seconds?: number; full?: boolean }>(), { seconds: 20, full: false })
@@ -52,8 +52,14 @@ const controller = new Controller()
 const ow = ref<OverworldState>(world.state)
 const bs = ref<BattleState>(battle.state)
 const line = ref('')
-const fx: BattleScene = { clock: 0, monsterHurt: 0, duckHurt: 0, monsterGone: false, duckGone: false, showLeader: true }
+let fx: BattleScene = freshScene()
 const shake = ref(false)
+/** Frames into the flash-and-wipe that leads into a battle; -1 when not transitioning. */
+let transition = -1
+/** True while an intro animation (ball, burst, hop) is playing; ✕ waits for it. */
+const animating = ref(false)
+/** Reactive mirror of the bits of fx the template needs. */
+const monsterOut = ref(false)
 
 /** Answer picked with the controller when there is no hub (or no votes). */
 const localPick = ref(0)
@@ -62,11 +68,16 @@ const localMode = ref(false)
 let appliedPoll = ''
 
 world.onBattle = () => {
+  // The Yard stays on screen under the flash and the wipe; then the battle opens.
+  transition = 0
+}
+
+function beginBattle() {
+  transition = -1
   battle.start()
   scene.value = 'battle'
-  fx.clock = 0
-  fx.monsterGone = fx.duckGone = false
-  fx.showLeader = true
+  fx = freshScene()
+  monsterOut.value = false
   sync()
 }
 
@@ -177,6 +188,7 @@ let prevMoveY = 0
 function step() {
   const input = controller.poll()
   if (scene.value === 'yard') {
+    if (transition >= 0) return // hold still under the flash
     world.tick({ dx: Math.round(input.moveX), dy: Math.round(input.moveY), interact: input.actionPressed })
     ow.value = world.state
     return
@@ -186,7 +198,27 @@ function step() {
   fx.clock++
   if (fx.monsterHurt > 0) fx.monsterHurt--
   if (fx.duckHurt > 0) fx.duckHurt--
+  if (fx.slideIn < 1) fx.slideIn = Math.min(1, fx.slideIn + 1 / 24)
   const phase = battle.state.phase
+
+  // Intro choreography. Each runs once its phase begins; ✕ waits for it.
+  if (phase === 'sendout') {
+    if (fx.ball < 0) fx.ball = 0
+    if (fx.ball < 1) {
+      fx.ball = Math.min(1, fx.ball + 1 / 40)
+      fx.leader = Math.min(1, fx.leader + 1 / 40)
+      if (fx.ball === 1) fx.burst = 12
+    } else if (fx.burst > 0) {
+      fx.burst--
+      fx.monster = Math.min(1, fx.monster + 1 / 12)
+    } else fx.monster = 1
+    animating.value = fx.monster < 1 || fx.burst > 0
+    monsterOut.value = fx.monster >= 1
+  } else if (phase === 'duckin') {
+    if (fx.duckIn < 0) fx.duckIn = 0
+    if (fx.duckIn < 1) fx.duckIn = Math.min(1, fx.duckIn + 1 / 36)
+    animating.value = fx.duckIn < 1
+  } else animating.value = false
 
   if (phase === 'question') {
     // ↑ ↓ as edges, for the local pick
@@ -203,7 +235,7 @@ function step() {
     return
   }
 
-  if (input.actionPressed) {
+  if (input.actionPressed && !animating.value && fx.slideIn >= 1) {
     if (phase === 'won' || phase === 'lost') {
       // ✕ after the end: back into the Gym, in front of Henry.
       scene.value = 'yard'
@@ -212,7 +244,6 @@ function step() {
       return
     }
     const opened = battle.advance()
-    if (battle.state.phase !== 'intro') fx.showLeader = false
     if (battle.state.phase === 'won') fx.monsterGone = true
     if (battle.state.phase === 'lost') fx.duckGone = true
     sync()
@@ -232,8 +263,14 @@ function frame(t: number) {
   }
   const ctx = canvas.value?.getContext('2d')
   if (!ctx) return
-  if (scene.value === 'yard') drawOverworld(ctx, world.state)
-  else drawBattle(ctx, fx)
+  if (scene.value === 'yard') {
+    drawOverworld(ctx, world.state)
+    if (transition >= 0) {
+      drawTransition(ctx, transition)
+      transition++
+      if (transition >= TRANSITION_FRAMES) beginBattle()
+    }
+  } else drawBattle(ctx, fx)
 }
 
 function start() {
@@ -293,11 +330,11 @@ const concepts = computed(() => bs.value.round?.concepts.join(' · ') ?? '')
 
       <!-- Battle: HP, dialogue, question -->
       <template v-if="scene === 'battle'">
-        <div class="hp monster">
-          <div class="name">{{ SLOPWHALE_NAME }} <span class="lv">Lv. 50</span></div>
+        <div v-if="monsterOut && bs.phase !== 'intro'" class="hp monster">
+          <div class="name">{{ SLOPPYCLAUDE_NAME }} <span class="lv">Lv. 50</span></div>
           <div class="bar"><i :class="hpClass(bs.monsterHp)" :style="{ width: `${(100 * bs.monsterHp) / MAX_HP}%` }" /></div>
         </div>
-        <div class="hp duck">
+        <div v-if="bs.phase !== 'intro' && bs.phase !== 'sendout' && bs.phase !== 'duckin'" class="hp duck">
           <div class="name">CS50 Duck <span class="lv">Lv. 10</span></div>
           <div class="bar"><i :class="hpClass(bs.duckHp)" :style="{ width: `${(100 * bs.duckHp) / MAX_HP}%` }" /></div>
           <div class="num">{{ bs.duckHp }} / {{ MAX_HP }}</div>
@@ -322,13 +359,20 @@ const concepts = computed(() => bs.value.round?.concepts.join(' · ') ?? '')
           </ol>
         </div>
 
-        <div v-else class="box dialogue battle-line" :class="{ good: bs.last?.correct && bs.phase === 'resolve', bad: bs.last && !bs.last.correct && bs.phase === 'resolve' }">
+        <div v-if="bs.phase === 'won'" class="badge" aria-label="AI Slop Defender badge">
+          <div class="badge-shield">
+            <DuckSprite :size="54" />
+          </div>
+          <div class="badge-ribbon">AI SLOP DEFENDER</div>
+        </div>
+
+        <div v-if="bs.phase !== 'question'" class="box dialogue battle-line" :class="{ good: bs.last?.correct && bs.phase === 'resolve', bad: bs.last && !bs.last.correct && bs.phase === 'resolve' }">
           <div class="text">{{ line }}</div>
           <div v-if="revealed && bs.round" class="answer">
             Answer: <b>{{ String.fromCharCode(65 + bs.round.correct) }}</b> · {{ bs.round.options[bs.round.correct] }}
             <span v-if="bs.last && bs.last.total" class="muted"> · the room: {{ String.fromCharCode(65 + bs.last.winner) }}, {{ bs.last.total }} votes</span>
           </div>
-          <div class="more">✕</div>
+          <div v-if="!animating" class="more">✕</div>
         </div>
       </template>
     </div>
@@ -408,17 +452,17 @@ const concepts = computed(() => bs.value.round?.concepts.join(' · ') ?? '')
   left: 2%;
   right: 2%;
   bottom: 2.5%;
-  padding: 0.45rem 0.9rem 0.5rem;
-  border: 3px solid #212529;
-  border-radius: 8px;
-  box-shadow: inset 0 0 0 2px #fff, inset 0 0 0 4px #adb5bd;
+  padding: 0.7rem 1.2rem 0.8rem;
+  border: 4px solid #212529;
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 3px #fff, inset 0 0 0 6px #adb5bd;
   background: #fff;
   line-height: 1.35;
-  font-size: 0.92rem;
+  font-size: 1.25rem;
   color: #212529;
 }
 .dialogue .speaker {
-  font-size: 0.66rem;
+  font-size: 0.78rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: #a51c30;
@@ -427,13 +471,13 @@ const concepts = computed(() => bs.value.round?.concepts.join(' · ') ?? '')
 }
 .dialogue .text {
   font-weight: 700;
-  min-height: 2.6em;
+  min-height: 2.7em;
 }
 .dialogue .more {
   position: absolute;
-  right: 0.8rem;
-  bottom: 0.4rem;
-  font-size: 0.8rem;
+  right: 1rem;
+  bottom: 0.5rem;
+  font-size: 1rem;
   color: #a51c30;
   animation: blink 1s steps(1) infinite;
 }
@@ -449,8 +493,9 @@ const concepts = computed(() => bs.value.round?.concepts.join(' · ') ?? '')
   border-color: #a51c30;
 }
 .answer {
-  margin-top: 0.3rem;
-  font-size: 0.8rem;
+  margin-top: 0.35rem;
+  font-size: 0.95rem;
+  font-weight: 400;
   color: #495057;
 }
 .muted {
@@ -461,12 +506,12 @@ const concepts = computed(() => bs.value.round?.concepts.join(' · ') ?? '')
 .hp {
   position: absolute;
   width: 38%;
-  padding: 0.35rem 0.6rem;
-  border: 2px solid #212529;
-  border-radius: 6px;
+  padding: 0.45rem 0.8rem;
+  border: 3px solid #212529;
+  border-radius: 8px;
   background: rgba(255, 255, 255, 0.95);
   line-height: 1.3;
-  font-size: 0.8rem;
+  font-size: 1rem;
 }
 .hp.monster {
   left: 3%;
@@ -487,7 +532,7 @@ const concepts = computed(() => bs.value.round?.concepts.join(' · ') ?? '')
   font-size: 0.72rem;
 }
 .hp .bar {
-  height: 8px;
+  height: 10px;
   margin-top: 0.25rem;
   border-radius: 4px;
   background: #e9ecef;
@@ -525,7 +570,7 @@ const concepts = computed(() => bs.value.round?.concepts.join(' · ') ?? '')
   align-items: baseline;
   justify-content: space-between;
   gap: 0.6rem;
-  font-size: 0.66rem;
+  font-size: 0.8rem;
   color: #6c757d;
   margin-bottom: 0.15rem;
 }
@@ -548,8 +593,8 @@ const concepts = computed(() => bs.value.round?.concepts.join(' · ') ?? '')
 }
 .q-text {
   font-weight: 700;
-  font-size: 0.86rem;
-  margin-bottom: 0.25rem;
+  font-size: 1.1rem;
+  margin-bottom: 0.4rem;
 }
 .q-options {
   list-style: none;
@@ -557,8 +602,8 @@ const concepts = computed(() => bs.value.round?.concepts.join(' · ') ?? '')
   padding: 0;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.15rem 0.8rem;
-  font-size: 0.74rem;
+  gap: 0.25rem 1rem;
+  font-size: 0.95rem;
   line-height: 1.25;
 }
 .q-options li {
@@ -596,6 +641,51 @@ const concepts = computed(() => bs.value.round?.concepts.join(' · ') ?? '')
   height: 100%;
   background: #a51c30;
   transition: width 300ms ease;
+}
+
+/* the badge */
+.badge {
+  position: absolute;
+  left: 30%;
+  top: 32%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: badge-in 700ms cubic-bezier(0.2, 1.4, 0.4, 1) both;
+  filter: drop-shadow(0 6px 14px rgba(24, 32, 40, 0.3));
+}
+@keyframes badge-in {
+  from {
+    transform: translate(-50%, -50%) scale(0.2) rotate(-20deg);
+    opacity: 0;
+  }
+}
+.badge-shield {
+  width: 7.5rem;
+  height: 8.5rem;
+  display: grid;
+  place-items: center;
+  background: #a51c30;
+  clip-path: polygon(50% 0, 100% 12%, 100% 55%, 50% 100%, 0 55%, 0 12%);
+  box-shadow: inset 0 0 0 6px #e0b040;
+}
+.badge-shield :deep(svg) {
+  filter: drop-shadow(0 2px 0 rgba(0, 0, 0, 0.35));
+}
+.badge-ribbon {
+  position: relative;
+  z-index: 1;
+  margin-top: -1.4rem;
+  padding: 0.3rem 1rem;
+  background: #e0b040;
+  color: #182028;
+  border: 3px solid #182028;
+  border-radius: 4px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  font-size: 0.95rem;
+  white-space: nowrap;
 }
 
 /* a following viewer */

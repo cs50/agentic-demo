@@ -1,7 +1,7 @@
 /**
  * battle.ts — the Gym battle as pure logic.
  *
- * The Gym Leader, Henry Leitner, has one monster, Slopwhale, whose moves are
+ * The Gym Leader, Henry Leitner, has one monster, Sloppyclaude, whose moves are
  * all AI slop. Each round: the monster uses a move, a question is put to the room,
  * the room answers (a hub `choice` poll on stage; the controller when there is
  * no hub), and the answer decides who takes the hit. Five rounds cover the ten
@@ -93,8 +93,10 @@ export const HIT = 25
 export const DUCK_HIT = 34
 
 export type Phase =
-  | 'intro' // "Gym Leader AGENT would like to battle!"
-  | 'move' // "Slopwhale used CONFIDENT NONSENSE!"
+  | 'intro' // "Gym Leader HENRY would like to battle!"
+  | 'sendout' // the ball is thrown; Sloppyclaude appears
+  | 'duckin' // "Go! CS50 DUCK!"; the duck hops in
+  | 'move' // "Sloppyclaude used CONFIDENT NONSENSE!"
   | 'question' // the poll is open
   | 'resolve' // the room answered; damage shown
   | 'explain' // the one-liner
@@ -151,6 +153,12 @@ export class Battle {
   advance(): boolean {
     switch (this.s.phase) {
       case 'intro':
+        this.s = { ...this.s, phase: 'sendout' }
+        return false
+      case 'sendout':
+        this.s = { ...this.s, phase: 'duckin' }
+        return false
+      case 'duckin':
         this.s = { ...this.s, phase: 'move', round: ROUNDS[0], roundIndex: 0 }
         return false
       case 'move':
@@ -207,9 +215,13 @@ export class Battle {
     const { phase, round, last } = this.s
     switch (phase) {
       case 'intro':
-        return 'Gym Leader HENRY sent out SLOPWHALE!'
+        return 'Gym Leader HENRY would like to battle!'
+      case 'sendout':
+        return 'Gym Leader HENRY sent out SLOPPYCLAUDE!'
+      case 'duckin':
+        return 'Go! CS50 DUCK!'
       case 'move':
-        return `Slopwhale used ${round!.move.toUpperCase()}!`
+        return `Sloppyclaude used ${round!.move.toUpperCase()}!`
       case 'question':
         return 'The room decides…'
       case 'resolve':
@@ -219,7 +231,7 @@ export class Battle {
       case 'explain':
         return round!.explanation
       case 'won':
-        return 'Slopwhale fainted. You earned the VERIFICATION BADGE.'
+        return 'Sloppyclaude fainted. You earned the AI SLOP DEFENDER badge!'
       case 'lost':
         return 'The duck fainted. Gym Leader HENRY: "Let\'s go over that again. At the board."'
     }

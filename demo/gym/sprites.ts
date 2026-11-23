@@ -73,7 +73,31 @@ const DUCK_BASE: Sprite = { rows: DUCK_ROWS, palette: DUCK_PALETTE }
 /** Side view, facing right, outlined: 16×16. */
 export const DUCK_SIDE: Sprite = outlined(DUCK_BASE)
 
-/** From behind (battle screen, and walking up). */
+/**
+ * Side profile, hurt: eye squeezed shut, beak open. Same rows as the game's
+ * duck with the face redrawn, so it is unmistakably the same bird.
+ */
+export const DUCK_SIDE_HURT: Sprite = outlined({
+  palette: DUCK_PALETTE,
+  rows: [
+    '....DDDD......',
+    '...DYYYYD.....',
+    '..DYYYYYYD....',
+    '..DYYDDDYD....',
+    '..DYYYYYYDOO..',
+    '..DYYYYYYDDDO.',
+    '...DYYYYYYDOO.',
+    '.DD.DYYYYYD...',
+    'DYYDYYYYYYYD..',
+    'DYYYYYYYYYYYD.',
+    '.DYYYYYYYYYYD.',
+    '..DYYYYYYYYYD.',
+    '...DDYYYYYDD..',
+    '.....DDDDD....',
+  ],
+})
+
+/** From behind (walking up). */
 export const DUCK_BACK: Sprite = outlined({
   palette: DUCK_PALETTE,
   rows: [
@@ -309,6 +333,25 @@ function longHairRow(row: string, r: number): string {
     }
   }
   return cells.join('')
+}
+
+// ------------------------------------------------------------------ the ball
+
+/** A 10×10 ball: crimson over white with a dark band and a button. */
+export const BALL: Sprite = {
+  palette: { K: INK, R: '#a51c30', r: '#c9566a', W: '#f8f8f8', w: '#d8d8d0' },
+  rows: [
+    '...KKKK...',
+    '.KKrRRRKK.',
+    '.KrRRRRRK.',
+    'KRRRRRRRRK',
+    'KRRRKKRRRK',
+    'KKKKWWKKKK',
+    'KWWWKKWWWK',
+    '.KWWWWWWK.',
+    '.KKwWWWKK.',
+    '...KKKK...',
+  ],
 }
 
 // ------------------------------------------------------------ John Harvard

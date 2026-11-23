@@ -1130,7 +1130,7 @@ a minute, no more.
 Walk up the middle path to the Science Center. The glass doors are the Gym. Walking into
 them reads the sign; ✕ challenges.
 
-The battle. ✕ moves the text. Slopwhale uses a move; every move is a kind of AI slop:
+The battle. ✕ moves the text. Sloppyclaude uses a move; every move is a kind of AI slop:
 CONFIDENT NONSENSE, INFINITE LOOP, VIBE SPEC, WORKS ON MY MACHINE, YOU'RE ABSOLUTELY
 RIGHT. Each comes with a question, and the question opens on every phone as a
 twenty-second vote (the same mechanism as "the room decides"). Read it aloud; watch the
@@ -1142,7 +1142,7 @@ If the room isn't connected (no hub, or nobody voted), the panel says so and the
 controller picks: ↑ ↓ then ✕. ✕ while a vote is open closes it early. Keyboard works
 too: arrows, Space, Enter.
 
-Win: Slopwhale faints, the Verification Badge. Lose: "Come back after Week 11", and ✕
+Win: Sloppyclaude faints, the AI Slop Defender badge. Lose: "Come back after Week 11", and ✕
 puts the duck back in the Yard for a rematch (the hub treats it as new polls).
 -->
 

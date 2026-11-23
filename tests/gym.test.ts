@@ -6,7 +6,7 @@ import { AREAS, COLS, GYM, ROWS, YARD, YARD_DOORSTEP } from '../demo/gym/areas'
 import { Battle, DUCK_HIT, HIT, MAX_HP, ROUNDS } from '../demo/gym/battle'
 import { NPCS } from '../demo/gym/npcs'
 import { Overworld } from '../demo/gym/overworld'
-import { SLOPWHALE } from '../demo/gym/slopwhale'
+import { SLOPPYCLAUDE } from '../demo/gym/sloppyclaude'
 import { DUCK_BACK, DUCK_SIDE, STATUE, outlined, personSprite, spriteSize } from '../demo/gym/sprites'
 import { EXIT_MAT, GYM_DOOR, GYM_TILES, YARD_TILES } from '../demo/gym/tiles'
 
@@ -40,7 +40,9 @@ describe('the battle', () => {
   function play(answers: boolean[]) {
     const b = new Battle()
     b.start()
-    b.advance() // intro → move
+    b.advance() // intro → sendout
+    b.advance() // sendout → duckin
+    b.advance() // duckin → move
     for (const right of answers) {
       expect(b.advance()).toBe(true) // move → question (open the poll)
       const r = b.state.round!
@@ -82,6 +84,8 @@ describe('the battle', () => {
     expect(b.state.phase).toBe('intro')
     b.advance()
     b.advance()
+    b.advance()
+    b.advance()
     expect(b.state.phase).toBe('question')
     expect(b.advance()).toBe(false)
     expect(b.state.phase).toBe('question')
@@ -94,13 +98,19 @@ describe('the battle', () => {
     expect(b.state.monsterHp).toBe(MAX_HP)
     expect(b.state.attempt).toBe(1)
     b.advance()
+    b.advance()
+    b.advance()
     expect(b.pollId()).toBe('gym-1#2')
   })
 
   it('has a line for every phase, and the leader is Henry', () => {
     const b = new Battle()
     b.start()
-    expect(b.line()).toMatch(/HENRY/)
+    expect(b.line()).toMatch(/HENRY would like to battle/)
+    b.advance()
+    expect(b.line()).toMatch(/sent out SLOPPYCLAUDE/)
+    b.advance()
+    expect(b.line()).toMatch(/Go! CS50 DUCK/)
     b.advance()
     expect(b.line()).toMatch(/CONFIDENT NONSENSE/)
   })
@@ -229,7 +239,7 @@ describe('walking', () => {
 
 describe('sprites', () => {
   it('are rectangular, and the outline grows a sprite by one on each side', () => {
-    for (const s of [DUCK_BACK, DUCK_SIDE, STATUE, SLOPWHALE.idleA, SLOPWHALE.idleB, SLOPWHALE.hurt]) {
+    for (const s of [DUCK_BACK, DUCK_SIDE, STATUE, SLOPPYCLAUDE.idleA, SLOPPYCLAUDE.idleB, SLOPPYCLAUDE.hurt]) {
       const { w } = spriteSize(s)
       for (const row of s.rows) expect(row).toHaveLength(w)
     }
