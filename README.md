@@ -24,7 +24,7 @@ The deck follows the course website's look: a white page, crimson `#a51c30` as t
 
 Every C$50 Finance example is taken from the Problem Set 9 specification (the `buy` rules, the `history` columns, the hints about `?` placeholders, the "Testing" list, the personal touches). The demo's `mario.c` is the CS50 classic; this year's Problem Set 1 used Seats, which the slides and notes acknowledge.
 
-## Deck structure (58 slides)
+## Deck structure (59 slides)
 
 | Slides | Content | Layout |
 | --- | --- | --- |
@@ -33,7 +33,7 @@ Every C$50 Finance example is taken from the Problem Set 9 specification (the `b
 | 8–12, 14–19, 21–27, 29–43 | Ten concepts: title → visualization(s) → explanation / Finance example / takeaway. Concepts 4 and 8 have two visualization slides | `concept-title`, `concept-viz`, `concept-detail` |
 | 44–46 | Synthesis: effort table; the same as a chart; what doesn't go away | `default`, `concept-viz`, `default` |
 | 47–56 | Live demo: `mario.c` → the first prompt → what kind of controller? → language and shape → the riskiest assumption (one conversation, `AgentChat`) → the spec with its evidence → the experiment (`ControllerTest`) → play, then finish it (`LiveDemo`) → the room decides, twice (`GameChoice`) | mixed |
-| 57–58 | Closing quote; end | `quote`, `end` |
+| 57–59 | Closing quote; the finale: Harvard Yard and the Science Center Gym (`GymGame`); end | `quote`, `default`, `end` |
 
 Every slide carries presenter notes. On `concept-detail` slides the example appears on the first click and the takeaway on the second.
 
@@ -97,6 +97,8 @@ All live in `components/viz/`, share `CodeSnippet` (Shiki, via one highlighter i
 | `vite.config.ts` | Dev-server channel that writes the two live files (and only those) for the editor, accepting writes only from this machine; turns off Vite's full-screen error overlay in favor of the game's error strip. |
 | `components/ControllerTest.vue` | The "verify first" diagnostic: a DualShock 4 drawing (`viz/DualShock.vue`) whose buttons and sticks follow the real controller, the duck acting on the same inputs, and the event log. |
 | `demo/mario/duck.ts` | The CS50 duck as a 14×14 pixel sprite: one pixel map drawn on the game canvas (`drawDuck`) and as SVG on slides (`viz/DuckSprite.vue`). |
+| `demo/gym/` | The finale, framework-free like `demo/mario/`: `tiles.ts` and `map.ts` (the Yard, one character per 16 px tile), `overworld.ts` (tile-to-tile movement, talking, the Gym door), `npcs.ts` (who stands where and what they say; edit freely), `sprites.ts` and `slopwhale.ts` (pixel maps), `battle.ts` (the rounds as data and the battle as a pure state machine), `render.ts` (canvas drawing). |
+| `components/GymGame.vue` | The finale on a slide: canvas plus HTML overlays (dialogue, HP, the question and its live bars). Opens each round as a hub `choice` poll; falls back to the controller. |
 | `styles/index.css` | Design tokens (crimson, Bootstrap neutrals), bundled PT Sans, shared banner/section/table styles. |
 | `pnpm-workspace.yaml` | Allows `playwright-chromium`'s install script (pnpm ≥ 10 blocks build scripts by default) so `pnpm export` works after a fresh install. |
 | `server/` | The audience hub: `index.ts` (environment + listen), `app.ts` (HTTP + websocket relay, serves `dist/` and `/join`, rate limit), `hub.ts` (the session's rules, pure), `protocol.ts` (the messages, shared with the deck), `public/join.html` (the phone page), `loadtest.ts`. Its own `package.json`; `ws` is the only dependency. `tests/hub.test.ts` covers the rules, `tests/server.test.ts` the relay over real sockets. |
@@ -190,9 +192,11 @@ All of this is inert in the overview, the "next slide" preview, and `pnpm export
 
 **Capacity.** `pnpm hub:loadtest [ws://host/ws] [N]` simulates the room: N phones join, vote at once, and follow 20 slide changes and 10 live-file saves while the hub's memory is watched. On a laptop, 500 phones vote with a p95 round-trip of ~10 ms and the hub grows by about 10 MB; it exits non-zero if a vote is lost or fan-out is slow, so it can gate a deploy.
 
+**The finale** (`<GymGame :seconds>`, the last slide before the end). The duck walks a top-down Harvard Yard with the controller or the arrow keys and challenges the Science Center Gym. The Gym Leader's one monster, Slopwhale, uses five moves, each a kind of AI slop, and each comes with a question from the lecture. When a question opens, the presenter's deck opens it as a timed `choice` poll (the same mechanism as "the room decides"), so phones on `/join` and decks that follow show the answers as buttons; when the hub closes it, the winning answer decides who takes the hit. Four correct answers win. With no hub connected, or when a vote closes with nobody having voted, the panel says so and the controller answers: ↑ ↓ then ✕. ✕ while a vote is open closes it early. Poll ids are `gym-1` … `gym-5`, suffixed `#2`, `#3` on a rematch so the hub does not treat them as repeats. Questions, moves and explanations live in `demo/gym/battle.ts`; NPC dialogue in `demo/gym/npcs.ts`.
+
 ## Controller notes
 
 - The browser exposes a gamepad only after a button is physically pressed on it.
 - Chrome reports the DualShock 4 with `mapping: "standard"`: Cross = button 0, D-pad = 12–15, left stick = axes 0/1.
-- Keyboard fallback: click the game canvas, then arrows / `A` `D` to move and `Space` / `W` to jump.
+- Keyboard fallback: click the game canvas, then arrows / `A` `D` to move and `Space` / `W` to jump. In the finale, arrows / `W A S D` walk and `Space` or `Enter` talks and confirms.
   While the canvas is focused these keys do not advance the slides.

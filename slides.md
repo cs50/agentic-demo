@@ -1113,6 +1113,47 @@ git history is the receipt.
 -->
 
 ---
+layout: default
+---
+
+# One More Thing
+
+<div class="lede">
+Harvard Yard. The Science Center is a Gym now. The Gym Leader has one monster, and the room fights it.
+</div>
+
+<div style="height: 400px">
+  <GymGame :seconds="20" />
+</div>
+
+<!--
+The finale (8 min). Click the canvas, pick up the controller. The duck is on the path at
+the bottom of the Yard; walk. Talk to whoever is standing around (✕): the student whose
+agent "fixed something", the tourist at the statue, the professor who warns you about
+the Gym, the tour guide at Widener. Read John Harvard's plaque (face it, ✕): three
+claims, three wrong, and people still rub the shoe. The Yard is for poking around; take
+a minute, no more.
+
+Walk up the middle path to the Science Center. The glass doors are the Gym. Walking into
+them reads the sign; ✕ challenges.
+
+The battle. ✕ moves the text. Slopwhale uses a move; every move is a kind of AI slop:
+CONFIDENT NONSENSE, INFINITE LOOP, VIBE SPEC, WORKS ON MY MACHINE, YOU'RE ABSOLUTELY
+RIGHT. Each comes with a question, and the question opens on every phone as a
+twenty-second vote (the same mechanism as "the room decides"). Read it aloud; watch the
+bars. When the clock runs out the room's answer lands: right, and the duck's counter hits
+the monster; wrong, and the slop hits the duck. The explanation shows either way, in one
+line. Five rounds, ten concepts, two per round. Four right answers win.
+
+If the room isn't connected (no hub, or nobody voted), the panel says so and the
+controller picks: ↑ ↓ then ✕. ✕ while a vote is open closes it early. Keyboard works
+too: arrows, Space, Enter.
+
+Win: Slopwhale faints, the Verification Badge. Lose: "Come back after Week 11", and ✕
+puts the duck back in the Yard for a rematch (the hub treats it as new polls).
+-->
+
+---
 layout: end
 ---
 

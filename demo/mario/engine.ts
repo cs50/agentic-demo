@@ -95,8 +95,10 @@ export class Engine {
   private lastState: ControllerState = {
     connected: false,
     moveX: 0,
+    moveY: 0,
     jumpPressed: false,
     jumpHeld: false,
+    actionPressed: false,
     source: 'none',
   }
   private onStats?: (s: EngineStats) => void
