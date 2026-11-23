@@ -83,7 +83,6 @@ const pollId = computed(() => pollIdFor(bs.value))
 const poll = computed(() => (hub.state.poll?.id === pollId.value ? hub.state.poll : null))
 const pollOpen = computed(() => !!poll.value?.open)
 const tally = computed(() => (hub.state.tally?.pollId === pollId.value ? hub.state.tally : null))
-const result = computed(() => (hub.state.result?.pollId === pollId.value ? hub.state.result : null))
 const hubReady = computed(() => live && hub.state.connected && hub.isPresenter.value)
 
 function openQuestion() {
@@ -112,17 +111,27 @@ function resolve(winner: number, total: number) {
   sync()
 }
 
-watch(result, (r) => {
-  if (!r || !hubReady.value || battle.state.phase !== 'question') return
-  if (appliedPoll === r.pollId) return
-  appliedPoll = r.pollId
-  // Nobody voted: the hub names option 0 by rule; that is not an answer. Fall back to the controller.
-  if (r.total === 0) {
-    localMode.value = true
-    return
-  }
-  resolve(r.winner, r.total)
-})
+/**
+ * A round is decided only by a verdict that arrives live (`poll:result` on the
+ * socket), never by the snapshot a reconnect or reload brings, which may
+ * describe a vote that closed long ago. Same rule as GameChoice.
+ */
+let offResult: (() => void) | null = null
+function listenForResults() {
+  offResult?.()
+  offResult = hub.on((msg) => {
+    if (msg.type !== 'poll:result' || !hubReady.value || battle.state.phase !== 'question') return
+    if (msg.pollId !== pollIdFor(battle.state)) return
+    if (appliedPoll === msg.pollId) return
+    appliedPoll = msg.pollId
+    // Nobody voted: the hub names option 0 by rule; that is not an answer. Fall back to the controller.
+    if (msg.total === 0) {
+      localMode.value = true
+      return
+    }
+    resolve(msg.winner, msg.total)
+  })
+}
 
 // countdown
 const now = ref(Date.now())
@@ -234,6 +243,7 @@ function start() {
   canvas.value.width = VIEW_W
   canvas.value.height = VIEW_H
   controller.attachKeyboard(canvas.value)
+  listenForResults()
   last = performance.now()
   acc = 0
   raf = requestAnimationFrame(frame)
@@ -245,6 +255,8 @@ function stop() {
   if (raf) cancelAnimationFrame(raf)
   raf = 0
   controller.detachKeyboard()
+  offResult?.()
+  offResult = null
   clearInterval(ticker)
   if (import.meta.env.DEV) delete (window as any).__gym
 }
@@ -295,6 +307,7 @@ const concepts = computed(() => bs.value.round?.concepts.join(' · ') ?? '')
           <div class="q-head">
             <span class="q-concepts">{{ concepts }}</span>
             <span v-if="secondsLeft !== null" class="q-clock" :class="{ late: secondsLeft <= 5 }">{{ secondsLeft }}s</span>
+            <span v-else-if="localMode && hub.state.presenterRejected" class="q-local">presenter token rejected · ↑↓ then ✕</span>
             <span v-else-if="localMode" class="q-local">no room connected · ↑↓ then ✕</span>
             <span v-else class="q-room"><b>{{ hub.state.audienceCount }}</b> in the room</span>
           </div>
