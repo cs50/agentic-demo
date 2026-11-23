@@ -164,7 +164,11 @@ export async function installHubSync(r: RouterLike) {
   const isViewer = computed(() => hub.state.connected && hub.state.role === 'audience' && !hub.state.presenterRejected)
   watch(
     [isViewer, () => r.currentRoute.value.name],
-    ([viewer, route]) => (canFollow.value = viewer && route === 'play'),
+    ([viewer, route]) => {
+      canFollow.value = viewer && route === 'play'
+      // Styling hook: a following deck hides Slidev's toolbar (styles/index.css).
+      document.documentElement.classList.toggle('hub-viewer', canFollow.value)
+    },
     { immediate: true },
   )
 

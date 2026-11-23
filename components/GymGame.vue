@@ -33,7 +33,7 @@ import { TRANSITION_FRAMES, VIEW_H, VIEW_W, drawBattle, drawFade, drawOverworld,
 import { SLOPPYCLAUDE_NAME } from '../demo/gym/sloppyclaude'
 import DuckSprite from './viz/DuckSprite.vue'
 
-const props = withDefaults(defineProps<{ seconds?: number; full?: boolean }>(), { seconds: 20, full: false })
+const props = withDefaults(defineProps<{ seconds?: number; full?: boolean }>(), { seconds: 15, full: false })
 
 const live = useLive()
 const isActive = useIsSlideActive()

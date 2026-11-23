@@ -97,18 +97,6 @@
   .confirm { margin-top: 0.7rem; font-size: 0.9rem; color: var(--ok); font-weight: 700; min-height: 1.3em; }
 
   .row { display: flex; gap: 0.6rem; align-items: stretch; }
-  input, textarea {
-    font: inherit; width: 100%; padding: 0.65rem 0.75rem;
-    border: 1px solid var(--border); border-radius: 8px; color: var(--body); background: #fff;
-  }
-  input:focus, textarea:focus { outline: 2px solid rgba(165, 28, 48, 0.35); border-color: var(--crimson); }
-  textarea { resize: vertical; min-height: 4.5rem; }
-  button.send {
-    font: inherit; font-weight: 700; padding: 0.65rem 1.1rem; border-radius: 8px;
-    border: 0; background: var(--crimson); color: #fff; flex: none;
-  }
-  button.send:disabled { opacity: 0.5; }
-  .hint { font-size: 0.8rem; color: var(--muted); margin-top: 0.5rem; min-height: 1.2em; }
 
   a.follow {
     display: block; text-align: center; padding: 0.85rem 1rem; border-radius: 10px;
@@ -148,20 +136,6 @@
     <p class="muted" id="waiting-text">Nothing to vote on yet. When a poll opens, it shows up here.</p>
   </section>
 
-  <section class="card">
-    <div class="label">Say something to the presenter</div>
-    <div class="row" style="margin-bottom:0.6rem">
-      <input id="name" type="text" maxlength="40" placeholder="Your name (optional)" autocomplete="nickname" autocapitalize="words">
-    </div>
-    <div class="row">
-      <textarea id="text" maxlength="500" placeholder="A question, a reaction, a prompt you'd try…"></textarea>
-    </div>
-    <div class="row" style="margin-top:0.6rem; justify-content:flex-end">
-      <button class="send" id="send" type="button">Send</button>
-    </div>
-    <div class="hint" id="hint">Only the presenter sees messages.</div>
-  </section>
-
   <a class="follow" href="/">Follow the slides on this device →</a>
 </main>
 
@@ -179,14 +153,14 @@
     clientId = (crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2) + Date.now())
     store.setItem('hub:clientId', clientId)
   }
-  const nameInput = document.getElementById('name')
-  nameInput.value = store.getItem('hub:name') || ''
+  // A name is kept only if an earlier version of this page stored one.
+  const storedName = store.getItem('hub:name') || ''
 
   // --------------------------------------------------------------- elements
   const $ = (id) => document.getElementById(id)
   const statusEl = $('status'), pollEl = $('poll'), pollLabel = $('poll-label'), questionEl = $('question')
   const optionsEl = $('options'), confirmEl = $('confirm'), waitingEl = $('waiting'), waitingText = $('waiting-text')
-  const textEl = $('text'), sendBtn = $('send'), hintEl = $('hint'), toastEl = $('toast'), footerEl = $('footer')
+  const toastEl = $('toast'), footerEl = $('footer')
 
   let toastTimer = 0
   function toast(msg) {
@@ -285,7 +259,7 @@
   }
 
   function hello() {
-    send({ type: 'hello', role: 'audience', clientId, name: nameInput.value.trim() || undefined })
+    send({ type: 'hello', role: 'audience', clientId, name: storedName || undefined })
   }
 
   function connect() {
@@ -379,28 +353,6 @@
     myVote = i
     render()
   }
-
-  // --------------------------------------------------------------- messages
-  function sendText() {
-    const text = textEl.value.trim()
-    if (!text) return
-    if (!send({ type: 'message', text })) {
-      toast('Not connected. Try again in a moment.')
-      return
-    }
-    textEl.value = ''
-    hintEl.textContent = 'Sent.'
-    setTimeout(() => (hintEl.textContent = 'Only the presenter sees messages.'), 1500)
-  }
-  sendBtn.addEventListener('click', sendText)
-  textEl.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) sendText()
-  })
-
-  nameInput.addEventListener('change', () => {
-    store.setItem('hub:name', nameInput.value.trim())
-    hello() // the server keeps the name per connection
-  })
 
   connect()
 })()

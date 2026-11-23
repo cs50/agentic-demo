@@ -52,9 +52,9 @@ describe('presets', () => {
   })
 
   it('every preset a slide offers the room exists', () => {
+    // The deck may offer none (the only votes in it are the Gym battle's); any it does offer must exist.
     const slides = readFileSync(resolve(import.meta.dirname, '..', 'slides.md'), 'utf8')
     const offered = [...slides.matchAll(/preset:\s*'([^']+)'/g)].map((m) => m[1])
-    expect(offered.length).toBeGreaterThan(0)
     for (const name of offered) expect(presetNames(), `slides.md offers ${name}`).toContain(name)
   })
 })

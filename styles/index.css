@@ -186,24 +186,11 @@ body,
 }
 
 /* Section dividers */
-.slidev-layout.section .section-kicker {
-  font-size: 0.8rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--cs50-crimson);
-  font-weight: 700;
-  margin-bottom: 0.6rem;
-}
 .slidev-layout.section h1 {
   font-size: 2.6rem;
   max-width: 22ch;
   margin: 0 auto;
   padding-bottom: 0;
-}
-.slidev-layout.section .section-sub {
-  margin-top: 0.9rem;
-  font-size: 1.1rem;
-  color: var(--cs50-muted);
 }
 
 /* Two-column header layout (opening hook) */
@@ -449,4 +436,10 @@ body,
 .slidev-layout.gym-slide {
   padding: 0;
   overflow: hidden;
+}
+
+/* A deck following the presenter (an audience phone or laptop) has no toolbar:
+   the presenter drives. The class is set by composables/hubSync.ts. */
+html.hub-viewer .slidev-slide-container > .absolute.bottom-0.left-0 {
+  display: none;
 }
