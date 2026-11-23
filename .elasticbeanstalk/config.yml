@@ -1,7 +1,10 @@
 branch-defaults:
   main:
-    environment: agentic-cs50-io-staging
+    environment: agentic-cs50-io
 environment-defaults:
+  agentic-cs50-io:
+    branch: null
+    repository: null
   agentic-cs50-io-staging:
     branch: null
     repository: null
