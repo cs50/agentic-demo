@@ -9,12 +9,15 @@
  * e.g. `Button 0 (CROSS): DOWN`.
  *
  * Polls the Gamepad API only while this slide is active. The duck preview uses
- * the game's own physics constants so what it previews is what the game does.
+ * the values the solution physics.ts will use, so what it previews is what the
+ * finished game does. (Deliberately not the live physics.ts: this experiment
+ * comes before the game in the story and must work whatever that file says.)
  */
 import { useIsSlideActive, useSlideContext } from '@slidev/client'
 import { onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { Controller, type ControllerEvent } from '../demo/mario/controller'
-import { GRAVITY, JUMP_VELOCITY, MOVE_SPEED } from '../demo/mario/engine'
+import { MOVE_SPEED } from '../demo/mario/engine'
+import { GRAVITY, JUMP_VELOCITY } from '../demo/mario/solutions/physics'
 import DualShock from './viz/DualShock.vue'
 import DuckSprite from './viz/DuckSprite.vue'
 
@@ -81,7 +84,7 @@ function onEvent(ev: ControllerEvent) {
   }
 }
 
-/** One 60 Hz physics step for the preview duck, using the game's constants (scaled to the small stage). */
+/** One 60 Hz physics step for the preview duck, using the finished game's constants (scaled to the small stage). */
 function stepDuck(state: ReturnType<Controller['poll']>) {
   const k = 0.8 // the stage is smaller than the game canvas
   duck.x = Math.max(0, Math.min(STAGE_W - DUCK, duck.x + state.moveX * MOVE_SPEED * k))
@@ -281,6 +284,9 @@ onBeforeUnmount(stop)
   bottom: 14px;
   line-height: 0;
   will-change: transform;
+  /* Shared with the landing target in MarioGame: on the way to the next slide,
+     the browser morphs this duck into the one standing in the game. */
+  view-transition-name: duck;
 }
 .action {
   margin-top: 0.4rem;

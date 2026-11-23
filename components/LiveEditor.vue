@@ -1,16 +1,17 @@
 <script setup lang="ts">
 /**
- * LiveEditor — a Monaco editor bound two ways to demo/mario/level.ts.
+ * LiveEditor — a Monaco editor bound two ways to one of the live files
+ * (demo/mario/level.ts or physics.ts).
  *
- *   disk  → editor   `levelSource` (an HMR-fed ref, see liveSource.ts) changes
+ *   disk  → editor   `source` (an HMR-fed ref, see liveSource.ts) changes
  *                    whenever the file changes on disk, e.g. when the agent
  *                    saves it. If the editor has no unsaved edits, the new text
  *                    is applied in place. If it does, a conflict bar lets the
  *                    presenter choose.
  *   editor → disk    Edits are autosaved (debounced) or saved with Cmd/Ctrl+S,
- *                    through a dev-server channel that writes only this file
- *                    (see vite.config.ts). The write triggers HMR, so the game
- *                    rebuilds the level, and `levelSource` echoes the save back.
+ *                    through a dev-server channel that writes only the live
+ *                    files (see vite.config.ts). The write triggers HMR, so the
+ *                    game picks the change up, and `source` echoes the save back.
  *
  * Slidev's Monaco setup already disables slide shortcuts while the editor has
  * focus, so typing Space or arrows doesn't change slides.
@@ -28,11 +29,18 @@ import {
   rollbackFailedWrite,
   type SyncState,
 } from '../demo/mario/editorSync'
-import { levelSource } from '../demo/mario/liveSource'
+import { sourceOf, type LiveFile } from '../demo/mario/liveSource'
 
 const props = withDefaults(
-  defineProps<{ autosave?: boolean; autosaveDelay?: number; autofocus?: boolean; writeTimeout?: number }>(),
+  defineProps<{
+    file?: LiveFile
+    autosave?: boolean
+    autosaveDelay?: number
+    autofocus?: boolean
+    writeTimeout?: number
+  }>(),
   {
+    file: 'demo/mario/level.ts',
     autosave: true,
     autosaveDelay: 600,
     autofocus: false,
@@ -47,6 +55,9 @@ export type EditorStatus = 'ready' | 'dirty' | 'saving' | 'saved' | 'error' | 'c
 const { $renderContext } = useSlideContext()
 const isLive = ['slide', 'presenter'].includes($renderContext.value)
 
+const source = sourceOf(props.file)
+const basename = props.file.split('/').pop()
+
 const container = ref<HTMLDivElement | null>(null)
 const status = ref<EditorStatus>('ready')
 const errorMessage = ref<string | null>(null)
@@ -57,7 +68,7 @@ let monaco: typeof Monaco | null = null
 let editor: Monaco.editor.IStandaloneCodeEditor | null = null
 let model: Monaco.editor.ITextModel | null = null
 /** What the editor believes about the file on disk; see editorSync.ts. */
-let sync: SyncState = initialSyncState(levelSource.value)
+let sync: SyncState = initialSyncState(source.value)
 let saveTimer = 0
 let writeTimer = 0
 let offResult: (() => void) | null = null
@@ -110,8 +121,8 @@ function save(force = false) {
     return
   }
   setStatus('saving')
-  import.meta.hot.send('lecture:write-level', { content })
-  // Optimistic: the HMR echo via levelSource confirms the write; the result
+  import.meta.hot.send('lecture:write-file', { file: props.file, content })
+  // Optimistic: the HMR echo via `source` confirms the write; the result
   // event (or the timeout below, if the socket swallowed the send) reports failure.
   sync = markSent(sync, content)
   clearTimeout(writeTimer)
@@ -164,7 +175,7 @@ function flush() {
 }
 
 // disk → editor
-watch(levelSource, (disk) => {
+watch(source, (disk) => {
   if (!model) {
     sync = initialSyncState(disk)
     return
@@ -207,12 +218,8 @@ onMounted(async () => {
   monaco = result.monaco
   if (!container.value) return // unmounted while loading
 
-  model = monaco.editor.createModel(
-    levelSource.value,
-    'typescript',
-    monaco.Uri.parse('file:///demo/mario/level.ts'),
-  )
-  sync = initialSyncState(levelSource.value)
+  model = monaco.editor.createModel(source.value, 'typescript', monaco.Uri.parse(`file:///${props.file}`))
+  sync = initialSyncState(source.value)
 
   editor = monaco.editor.create(container.value, {
     model,
@@ -246,14 +253,15 @@ onMounted(async () => {
   })
 
   editor.addAction({
-    id: 'lecture-save-level',
-    label: 'Save level.ts',
+    id: 'lecture-save-file',
+    label: `Save ${basename}`,
     keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS],
     run: saveNow, // during a conflict this is "Keep mine"
   })
 
   if (import.meta.hot) {
-    const onResult = (r: { ok: boolean; error?: string }) => {
+    const onResult = (r: { file?: string; ok: boolean; error?: string }) => {
+      if (r.file !== props.file) return // another editor's write
       if (r.ok) {
         errorMessage.value = null
         // 'saved' is set when the HMR echo arrives; nothing to do here.
@@ -261,16 +269,16 @@ onMounted(async () => {
         failWrite(r.error ?? 'write failed')
       }
     }
-    import.meta.hot.on('lecture:write-level:result', onResult)
-    offResult = () => import.meta.hot?.off('lecture:write-level:result', onResult)
+    import.meta.hot.on('lecture:write-file:result', onResult)
+    offResult = () => import.meta.hot?.off('lecture:write-file:result', onResult)
   }
 
   setStatus('ready')
   // Focus only once the editor exists; a parent calling focus() right after
   // mounting would run before the async Monaco setup above has finished.
   if (props.autofocus) editor.focus()
-  // Expose for on-stage diagnostics (e.g. from DevTools): window.__levelEditor.getValue()
-  if (import.meta.env.DEV) (window as any).__levelEditor = editor
+  // Expose for on-stage diagnostics (e.g. from DevTools): window.__editors['demo/mario/level.ts'].getValue()
+  if (import.meta.env.DEV) ((window as any).__editors ??= {})[props.file] = editor
 })
 
 /**
@@ -295,7 +303,7 @@ onBeforeUnmount(() => {
   model?.dispose()
   editor = null
   model = null
-  if (import.meta.env.DEV) delete (window as any).__levelEditor
+  if (import.meta.env.DEV) delete (window as any).__editors?.[props.file]
 })
 
 defineExpose({ focus: () => editor?.focus(), save, saveNow, flush, isDirty })
@@ -304,7 +312,7 @@ defineExpose({ focus: () => editor?.focus(), save, saveNow, flush, isDirty })
 <template>
   <div class="le-root">
     <div v-if="pendingExternal !== null" class="le-conflict">
-      <span><b>level.ts</b> changed on disk while you had unsaved edits.</span>
+      <span><b>{{ basename }}</b> changed on disk while you had unsaved edits.</span>
       <button type="button" @click="loadExternal">Load the file</button>
       <button type="button" class="secondary" @click="keepMine">Keep mine</button>
     </div>

@@ -8,6 +8,7 @@
     "build": "slidev build",
     "export": "slidev export --output slides-export.pdf",
     "test": "vitest run",
+    "demo": "node --experimental-strip-types scripts/demo.ts",
     "audit:layout": "node --experimental-strip-types scripts/audit-layout.ts"
   },
   "devDependencies": {

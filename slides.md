@@ -848,7 +848,7 @@ caption: "Four presses. Hover a language for its cost; hover a module for what i
 Step 4 (3 min). Press: the language options. All three can run in a browser; they differ
 in cost. Python needs Pyodide and a JavaScript bridge for the controller; C needs
 Emscripten and a rebuild per change. Press: we pick TypeScript, for the APIs we know and
-for live reload. Press: the shape, four modules with one job each; hover one to see what
+for live reload. Press: the shape, five modules with one job each; hover one to see what
 it knows and does not know. The fifth card is the one-file alternative, the shape you get
 when you only say "build it". Press: we pick modules and keep the level as the Week 1
 loop. These are Concepts 5 and 8 applied: say what each piece must do, and keep each
@@ -895,6 +895,7 @@ spec did the same ("You don't need to worry about race conditions").
 
 ---
 layout: default
+transition: view-transition
 ---
 
 # Step 6 · The Experiment
@@ -912,41 +913,51 @@ duck walks. Press ✕: the button lights, the log prints "Button 0 (CROSS): DOWN
 duck jumps. Three views of one event. Nobody has read the controller code; everybody has
 seen it work. That's Concept 7, and it is rows 1 and 2 of the specification, checked.
 Only now do we build the rest.
+
+Press →: the duck shrinks and drops into the game on the next slide. (The View
+Transitions API; Chrome and Safari. Elsewhere the slides just change.)
 -->
 
 ---
 layout: default
 ---
 
-# Step 7 · Build, Play, Change the Level
+# Step 7 · Play, Then Finish It
 
 <div class="lede">
-Ask the agent to edit <code>level.ts</code>, or click <b>Edit</b> and type. Either way, the level rebuilds under the duck without a reload.
+The agent built the engine, the controller and the world. Two things are missing: nothing pulls the duck down, and there is no pyramid.
 </div>
 
-<div class="grid grid-cols-[1.05fr_1fr] gap-4 items-start" style="height: 400px">
-  <LiveCode />
-  <MarioGame compact />
+<div style="height: 370px">
+  <LiveDemo />
 </div>
 
 <!--
-Step 7 (3 min). The experiment passed, so the agent built the rest against the spec.
-Pick up the controller and run the duck up and over the pyramid.
+Step 7 (5 min). The game, full width, nothing else. Pick up the controller: the duck
+runs. Press ✕: it flies straight up and out of the level, and a message says why. Let
+the room laugh, then ask them what is missing. They know: gravity. They wrote this
+arithmetic in Week 1.
 
-Then change level.ts, two ways:
+Press → (or "Show code"). The code panel opens with two files: level.ts, which returns
+no rows, and physics.ts, whose applyGravity() hands the speed straight back. Nothing is
+hidden; what is missing is visibly missing.
 
-  With the agent (leave the panel in Preview so the audience sees the diff animate):
-  1. "Make it 12 tall."
-  2. "Flip it: widest row on top."
-  3. "Make it the Mario 'more' version: two half-pyramids with a gap of two."
-  4. "Add a second, smaller pyramid to the right."
-  5. Break it on purpose so the error strip appears: the old level stays, the message
-     says why, and the agent reads the error and fixes it. That's Concept 3, live.
+Then, with the agent, in Preview so the room sees the diff animate:
+  1. "The duck flies off when I jump. Add gravity to physics.ts: 0.8 pixels per frame
+     squared, with a terminal velocity of 16."  → the duck comes back down and lands.
+  2. "Add the Week 1 pyramid to level.ts, eight rows, as a loop inside a loop."
+     → the pyramid appears under the duck.
+  3. Then the old favourites: "Make it 12 tall", "Flip it", "the Mario 'more' version",
+     and break it on purpose so the error strip appears and the agent fixes it.
 
-  Yourself (click Edit): change HEIGHT, pause, and watch the level rebuild. Edits
-  autosave after you stop typing; Cmd+S saves at once. If the agent edits the file
-  while you have unsaved changes, a bar asks whether to load theirs or keep yours.
-  Slide shortcuts are off while the editor has focus.
+Or type it yourself: click Edit, pick the file tab, and change it. Edits autosave after
+you stop typing; Cmd+S saves at once. If the agent writes the file while you have unsaved
+edits, a bar asks whether to load theirs or keep yours.
+
+If the agent is down or its code does not work, in a terminal:
+    pnpm demo solve physics      (or: level, or no argument for both)
+The solution file is copied over the live one; the game and the panel update at once,
+no reload. `pnpm demo reset` puts both files back to their starting state.
 
 If the controller isn't detected, click the canvas and use the arrow keys and space.
 -->

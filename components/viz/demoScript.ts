@@ -4,8 +4,9 @@
  *
  * Every factual claim here is checked against the code in demo/mario:
  * button 0 is Cross, axis 0 is the left stick, the D-pad is buttons 14/15,
- * the engine steps at 60 Hz with gravity 0.8 and jump -14, level.ts is a
- * nested loop, and the engine owns its Controller (it is handed a World).
+ * the engine steps at 60 Hz, physics.ts holds gravity 0.8 and jump -14,
+ * level.ts is a nested loop, and the engine owns its Controller (it is
+ * handed a World and a Physics).
  */
 
 export type Feasible = 'yes' | 'maybe' | 'no'
@@ -95,7 +96,7 @@ export const scenes: Scene[] = [
   },
   {
     id: 'design',
-    summary: 'TypeScript on plain browser APIs; four modules, one job each',
+    summary: 'TypeScript on plain browser APIs; five modules, one job each',
     turns: [
       {
         who: 'agent',
@@ -112,7 +113,8 @@ export const scenes: Scene[] = [
         text: 'Then the shape. I\u2019d split it by job, so each piece can be checked on its own and changed without touching the others:',
         choices: [
           { name: 'controller.ts', blurb: 'reads the gamepad', feasible: 'yes', detail: 'Polls the Gamepad API each step and turns it into two facts: how far left or right, and whether jump was just pressed. Knows the DualShock\u2019s numbers. Knows nothing about ducks or pyramids. Also listens to the keyboard as a fallback.' },
-          { name: 'engine.ts', blurb: '60 steps a second, physics, drawing', feasible: 'yes', detail: 'A fixed 60 Hz step regardless of the screen\u2019s refresh rate. Gravity 0.8 px per step squared, jump \u221214 px per step, collision against tiles. Owns one controller; is handed a world. Knows nothing about Bluetooth.' },
+          { name: 'engine.ts', blurb: '60 steps a second, collisions, drawing', feasible: 'yes', detail: 'A fixed 60 Hz step regardless of the screen\u2019s refresh rate; collision against tiles; drawing. Owns one controller; is handed a world and a physics, and can be handed new ones while it runs. Knows nothing about Bluetooth or gravity.' },
+          { name: 'physics.ts', blurb: 'gravity and the jump', feasible: 'yes', detail: 'Two numbers and one function: the speed a jump starts with, and what happens to the vertical speed every frame. Gravity 0.8 px per frame squared, jump \u221214, a terminal velocity of 16. Small enough to read aloud, which is the point: this is the arithmetic from Week 1.' },
           { name: 'level.ts', blurb: 'the pyramid, as a loop inside a loop', feasible: 'yes', detail: 'mario.c in TypeScript: for each row, so many spaces then so many hashes, returning strings. The one file we will edit live. Readable in one glance.' },
           { name: 'world.ts', blurb: 'rows of # into tiles', feasible: 'yes', detail: 'Turns the strings into a grid of solid tiles on a ground row, centred. Knows nothing about where the strings came from.' },
           { name: 'one file instead', blurb: 'everything in one script', feasible: 'maybe', detail: 'It would run. But a controller bug and a physics bug would share two hundred lines, nothing could be tested alone, and any change means re-reading all of it. This is the shape you get when you only say "build it".' },

@@ -370,7 +370,60 @@ body,
   color: #58151c;
 }
 
+/* ----------------------------------------------------------------------------
+   Step 6 → Step 7: the duck drops into the game.
+   The experiment slide declares `transition: view-transition`; its duck and the
+   landing target in MarioGame share `view-transition-name: duck`, so the
+   browser morphs one into the other. The rest of the page cross-fades quickly;
+   the duck takes longer and accelerates, like a fall, then squashes on landing.
+   ---------------------------------------------------------------------------- */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 260ms;
+}
+::view-transition-group(duck) {
+  animation-duration: 900ms;
+  animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45); /* ease-in: slow start, fast finish */
+}
+::view-transition-old(duck),
+::view-transition-new(duck) {
+  /* Same sprite at two sizes: no cross-fade. The large snapshot shrinks along
+     the morph (crisper than scaling the small one up); the small one takes over at the end. */
+  animation: none;
+  mix-blend-mode: normal;
+}
+::view-transition-new(duck) {
+  display: none;
+}
+::view-transition-old(duck) {
+  height: 100%;
+  width: 100%;
+  object-fit: fill;
+}
+/* The target becomes visible as the morph ends and squashes on touchdown. */
+.mg-landing {
+  transform-origin: 50% 100%;
+  animation: mg-squash 260ms ease-out 930ms both;
+}
+@keyframes mg-squash {
+  0% {
+    transform: scale(1, 1);
+  }
+  40% {
+    transform: scale(1.25, 0.7);
+  }
+  100% {
+    transform: scale(1, 1);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  .mg-landing {
+    animation-duration: 0ms !important;
+  }
   .viz-enter,
   .viz-dim,
   .viz-now,

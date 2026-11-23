@@ -13,6 +13,14 @@ describe('describeTransformError', () => {
     )
   })
 
+  it('reads the oxc (Vite 8) box header for the location and drops the error code', () => {
+    const err = {
+      message:
+        'Transform failed with 1 error:\n\n[PARSE_ERROR] Unexpected token\n   ╭─[ demo/mario/physics.ts:3:15 ]\n   │\n 3 │   return vy + )\n   │               ┬  \n   │               ╰── \n───╯\n',
+    }
+    expect(describeTransformError(err)).toBe('SyntaxError (line 3, column 15): Unexpected token')
+  })
+
   it('omits the location when loc is missing', () => {
     const err = { message: 'Transform failed with 1 error:\nlevel.ts:2:3: ERROR: Unexpected "}"' }
     expect(describeTransformError(err)).toBe('SyntaxError: Unexpected "}"')

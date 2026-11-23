@@ -199,6 +199,10 @@ const feasLabel: Record<string, string> = { yes: 'feasible', maybe: 'feasible, w
 .turn.old .choice {
   padding: 0.25rem 0.6rem;
 }
+.turn.old .bubble {
+  padding-top: 0.4rem;
+  padding-bottom: 0.4rem;
+}
 
 /* specification card */
 .spec {

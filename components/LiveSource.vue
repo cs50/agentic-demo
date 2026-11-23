@@ -1,19 +1,21 @@
 <script setup lang="ts">
 /**
- * LiveSource — renders demo/mario/level.ts on the slide and animates the diff
- * (Shiki Magic Move) every time the agent saves the file.
+ * LiveSource — renders one of the live files on the slide and animates the
+ * diff (Shiki Magic Move) every time the file is saved.
  */
 import { ShikiMagicMove } from '@shikijs/magic-move/vue'
 import '@shikijs/magic-move/style.css'
 import { createHighlighterCore, type HighlighterCore } from 'shiki/core'
 import { createJavaScriptRegexEngine } from 'shiki/engine/javascript'
-import { onMounted, shallowRef } from 'vue'
-import { levelSource } from '../demo/mario/liveSource'
+import { computed, onMounted, shallowRef } from 'vue'
+import { sourceOf, type LiveFile } from '../demo/mario/liveSource'
 
 const props = withDefaults(
-  defineProps<{ file?: string; duration?: number; stagger?: number; bare?: boolean }>(),
+  defineProps<{ file?: LiveFile; duration?: number; stagger?: number; bare?: boolean }>(),
   { file: 'demo/mario/level.ts', duration: 700, stagger: 4, bare: false },
 )
+
+const code = computed(() => sourceOf(props.file).value)
 
 const highlighter = shallowRef<HighlighterCore | null>(null)
 
@@ -39,10 +41,10 @@ onMounted(async () => {
         :highlighter="highlighter"
         lang="typescript"
         theme="github-light"
-        :code="levelSource"
+        :code="code"
         :options="{ duration: props.duration, stagger: props.stagger, lineNumbers: true }"
       />
-      <pre v-else class="ls-fallback">{{ levelSource }}</pre>
+      <pre v-else class="ls-fallback">{{ code }}</pre>
     </div>
   </div>
 </template>

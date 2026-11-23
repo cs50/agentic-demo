@@ -23,7 +23,7 @@ The deck follows the course website's look: a white page, crimson `#a51c30` as t
 
 Every C$50 Finance example is taken from the Problem Set 9 specification (the `buy` rules, the `history` columns, the hints about `?` placeholders, the "Testing" list, the personal touches). The demo's `mario.c` is the CS50 classic; this year's Problem Set 1 used Seats, which the slides and notes acknowledge.
 
-## Deck structure (52 slides)
+## Deck structure (53 slides)
 
 | Slides | Content | Layout |
 | --- | --- | --- |
@@ -31,8 +31,8 @@ Every C$50 Finance example is taken from the Problem Set 9 specification (the `b
 | 4, 10, 17, 25 | Part dividers | `section` |
 | 5–9, 11–16, 18–24, 26–40 | Ten concepts: title → visualization(s) → explanation / Finance example / takeaway. Concepts 4 and 8 have two visualization slides | `concept-title`, `concept-viz`, `concept-detail` |
 | 41–43 | Synthesis: effort table; the same as a chart; what doesn't go away | `default`, `concept-viz`, `default` |
-| 44–51 | Live demo: `mario.c` → just ask → four design decisions → say what you mean → the spec with its evidence → `test_controller` → play and change the level → closing quote | mixed |
-| 52 | End | `end` |
+| 44–52 | Live demo: `mario.c` → the first prompt → what kind of controller? → language and shape → the riskiest assumption (one conversation, `AgentChat`) → the spec with its evidence → the experiment (`ControllerTest`) → play, then finish it (`LiveDemo`) → closing quote | mixed |
+| 53 | End | `end` |
 
 Every slide carries presenter notes. On `concept-detail` slides the example appears on the first click and the takeaway on the second.
 
@@ -75,50 +75,73 @@ All live in `components/viz/`, share `CodeSnippet` (Shiki, via one highlighter i
 | `components/viz/` | The twelve visualizations and their shared pieces (see above). |
 | `demo/mario.c` | The classic CS50 Mario solution shown in Step 1 of the demo. |
 | `demo/live.md` | **Agent-editable** slide, available for pulling in via `src:` (not in the current deck). When included, Vite HMR patches the deck in place as the agent writes to it, no reload. |
-| `demo/mario/level.ts` | **Agent-editable** level generator: the classic `mario.c` nested loop in TypeScript. Save it and the level rebuilds under Mario, live. |
+| `demo/mario/level.ts` | **Live file**: the level as rows of text. Starts empty; the solution is the `mario.c` nested loop. Save it and the level rebuilds under the duck. |
+| `demo/mario/physics.ts` | **Live file**: `applyGravity(vy)` and `JUMP_VELOCITY`. Starts with no gravity (the duck flies out of the level when it jumps); the solution adds 0.8 px/frame² with a terminal velocity of 16. |
+| `demo/mario/start/`, `demo/mario/solutions/` | The two known states of the live files. `pnpm demo reset` / `pnpm demo solve` copy them in; `pnpm test` checks both. |
+| `scripts/demo.ts` | The `pnpm demo` command: `status`, `reset`, `solve [level\|physics]`. |
 | `demo/mario/world.ts` | Pure placer: ASCII rows from `level.ts` → tile grid, bottom-aligned on the ground and centered. |
-| `demo/mario/engine.ts` | Fixed-timestep 60 FPS loop, AABB tile collision, rendering, `setWorld()` for hot level swaps. Gravity `0.8`, jump `-14`. |
+| `demo/mario/engine.ts` | Fixed-timestep 60 FPS loop, AABB tile collision, rendering; `setWorld()` and `setPhysics()` for hot swaps; reports when the duck leaves the level. |
 | `demo/mario/controller.ts` | Gamepad API polling, DualShock 4 "standard" mapping, keyboard fallback. |
-| `demo/mario/liveLevel.ts` | Vite HMR boundary for `level.ts`: rebuilds the world and notifies the running engine. Keeps the previous level, and shows why, if the new code throws or doesn't compile. |
-| `demo/mario/liveSource.ts` | HMR boundary for `level.ts?raw`: keeps the source text in a ref so the slide can animate the diff. |
-| `components/MarioGame.vue` | Canvas game embedded in a slide; runs only while its slide is active. `compact` prop for side-by-side layouts. |
-| `components/LiveCode.vue` | The code panel on the demo slide: a **Preview / Edit** toggle over the two components below. |
-| `components/LiveSource.vue` | Preview: shows `level.ts` with Shiki Magic Move, animating each save. |
-| `components/LiveEditor.vue` | Edit: a Monaco editor bound two ways to `level.ts`. Disk changes appear in the editor; edits autosave back to disk. |
+| `demo/mario/liveModule.ts` | Shared bookkeeping for the HMR boundaries: current value, subscribers, keep-the-previous-value-and-say-why. |
+| `demo/mario/liveLevel.ts`, `livePhysics.ts` | Vite HMR boundaries for `level.ts` and `physics.ts`: validate the new module and hand it to the running engine. A file that throws or doesn't compile keeps the previous version and shows why. |
+| `demo/mario/liveSource.ts` | HMR boundary for the live files' `?raw` text: one ref per file so the slide can animate the diff; also the list of files the editor may write. |
+| `components/LiveDemo.vue` | The Step 7 slide: the game alone first; → or **Show code** opens the code panel beside it. |
+| `components/MarioGame.vue` | Canvas game embedded in a slide; runs only while its slide is active. Shows the "ouch" when the duck leaves the level. `compact` prop for side-by-side layouts. |
+| `components/LiveCode.vue` | The code panel on the demo slide: file tabs and a **Preview / Edit** toggle over the two components below. |
+| `components/LiveSource.vue` | Preview: shows a live file with Shiki Magic Move, animating each save. |
+| `components/LiveEditor.vue` | Edit: a Monaco editor bound two ways to one live file. Disk changes appear in the editor; edits autosave back to disk. |
 | `demo/mario/editorSync.ts` | The editor's sync bookkeeping (what was sent, what is believed to be on disk), kept pure so `tests/` can cover echo, conflict, and failed-write cases. |
-| `vite.config.ts` | Dev-server channel that writes `level.ts` (and only that file) for the editor, accepting writes only from this machine; turns off Vite's full-screen error overlay in favor of the game's error strip. |
+| `vite.config.ts` | Dev-server channel that writes the two live files (and only those) for the editor, accepting writes only from this machine; turns off Vite's full-screen error overlay in favor of the game's error strip. |
 | `components/ControllerTest.vue` | The "verify first" diagnostic: a DualShock 4 drawing (`viz/DualShock.vue`) whose buttons and sticks follow the real controller, the duck acting on the same inputs, and the event log. |
 | `demo/mario/duck.ts` | The CS50 duck as a 14×14 pixel sprite: one pixel map drawn on the game canvas (`drawDuck`) and as SVG on slides (`viz/DuckSprite.vue`). |
 | `styles/index.css` | Design tokens (crimson, Bootstrap neutrals), bundled PT Sans, shared banner/section/table styles. |
 | `pnpm-workspace.yaml` | Allows `playwright-chromium`'s install script (pnpm ≥ 10 blocks build scripts by default) so `pnpm export` works after a fresh install. |
 
-## Live level editing (the demo)
+## The live demo (Step 7)
 
-On the **Step 4** slide, `demo/mario/level.ts` can be changed two ways, and the level rebuilds under Mario either way, without a reload.
+The game comes up at full width with two things deliberately missing: `demo/mario/physics.ts` has an `applyGravity()` that hands the speed straight back (so a jump sends the duck out through the top of the level, with a message), and `demo/mario/level.ts` returns no rows. Both are added on stage, by the agent or by hand. Press → (or **Show code**) to open the code panel beside the game; it has a tab per file.
 
-**With the agent.** Leave the code panel in **Preview** so the audience sees each save morph the old code into the new. Prompts that work well:
+**Before the lecture**
 
-1. "Make the pyramid 12 tall."
-2. "Invert it, widest row on top." (a ceiling Mario can walk under)
-3. "Make it the Mario *more* version: two half-pyramids with a 2-space gap."
-4. "Add a second, smaller pyramid to the right."
-5. Introduce a bug on purpose (e.g. `.repeat(-1)`, or delete a parenthesis): the game keeps the previous level and shows the error; have the agent fix it.
+```sh
+pnpm demo status    # both files should read "start"
+pnpm demo reset     # if they don't
+pnpm test           # also checks that the start and solution files behave
+```
 
-**Yourself.** Click **Edit**. The panel becomes a Monaco editor bound two ways to the file:
+**With the agent.** Leave the panel in **Preview** so the audience sees each save morph the old code into the new. Prompts that work:
 
-- Edits autosave about half a second after you stop typing; <kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>S</kbd> saves at once. The status in the panel's title bar reads *unsaved → saving… → saved*.
-- If the agent (or anyone) changes the file on disk while the editor has no unsaved edits, the editor updates in place.
-- If the file changes on disk while you *do* have unsaved edits, a bar asks whether to **Load the file** or **Keep mine**. Autosave stands down until you choose, so neither side silently wins; the **Preview** tab is disabled until you do.
-- Switching to **Preview** saves any pending edit first. If a save is refused (or the dev server doesn't answer), the status reads *write failed* and the edit stays unsaved so the next keystroke or <kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>S</kbd> retries it.
-- Edit mode works only from the machine running `pnpm dev`. With `slidev --remote`, other devices on the network still get the deck, the game, and **Preview**, but their writes to `level.ts` are refused (*write failed*), so nobody in the room can change the level under you.
+1. "The duck flies off when I jump. Add gravity to `physics.ts`: 0.8 pixels per frame squared, with a terminal velocity of 16."
+2. "Add the Week 1 pyramid to `level.ts`: eight rows, as a loop inside a loop."
+3. "Make the pyramid 12 tall." / "Invert it, widest row on top." / "Make it the Mario *more* version: two half-pyramids with a 2-space gap."
+4. Introduce a bug on purpose (delete a parenthesis): the game keeps the previous version and shows the error with its line and column; have the agent fix it.
 
-`pnpm test` runs the unit tests for the sync logic and the syntax-error formatter.
+**If the agent fails on stage** (outage, or code that does not work), in any terminal:
+
+```sh
+pnpm demo solve physics    # copies demo/mario/solutions/physics.ts over the live file
+pnpm demo solve level      # same for level.ts
+pnpm demo solve            # both
+```
+
+The dev server sees the write like any other save: the game, the Preview panel and an open editor all update at once, no reload. The solution files are covered by `pnpm test`, so they are known to work before you need them. `pnpm demo reset` puts both files back to their start state.
+
+**Yourself.** Click **Edit**, pick a file tab. The panel becomes a Monaco editor bound two ways to the file:
+
+- Edits autosave about half a second after you stop typing; <kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>S</kbd> saves at once. The status in the title bar reads *unsaved → saving… → saved*.
+- If the agent (or `pnpm demo solve`) changes the file on disk while the editor has no unsaved edits, the editor updates in place.
+- If the file changes on disk while you *do* have unsaved edits, a bar asks whether to **Load the file** or **Keep mine**. Autosave stands down until you choose, so neither side silently wins; **Preview** and the other file tab are disabled until you do.
+- Each file keeps its own editor once opened, so switching tabs never loses a draft. Switching to **Preview** or another tab saves any pending edit first. If a save is refused (or the dev server doesn't answer), the status reads *write failed* and the edit stays unsaved so the next keystroke or <kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>S</kbd> retries it.
+- Edit mode works only from the machine running `pnpm dev`, and only for these two files. With `slidev --remote`, other devices on the network still get the deck, the game, and **Preview**, but their writes are refused (*write failed*), so nobody in the room can change the game under you.
 - Slide shortcuts (Space, arrows) are off while the editor has focus.
 
-Rules: `buildLevel()` must return `string[]`; `#` is solid, anything else is air. Levels wider than 30 columns or taller than 15 rows are clipped with a HUD warning. A runtime error or a syntax error keeps the previous level and names the problem in the strip under the game; this also holds if the deck is refreshed while the file is broken.
+Rules: `buildLevel()` must return `string[]`; `#` is solid, anything else is air. Levels wider than 30 columns or taller than 15 rows are clipped with a HUD warning. `applyGravity(vy)` must return a number; `JUMP_VELOCITY` is optional (default −14). A runtime error or a syntax error in either file keeps the previous version and names the problem in the strip under the game; this also holds if the deck is refreshed while a file is broken.
+
+`pnpm test` runs the unit tests: the editor's sync logic, the syntax-error formatter (esbuild and oxc shapes), and the demo's start and solution files driven through the engine.
 
 ### Known caveats
 
+- Changes to `vite.config.ts` (the write channel) need a dev-server restart; the slide's editor will report *write failed* until then.
 - If you insert or remove a slide *before* a slide that uses `<<<` snippet imports, Slidev 53.1 can render that snippet as raw text until the dev server restarts. Finalize slide order before the lecture, or restart `pnpm dev` once after reordering.
 - Slidev reserves `title` in slide frontmatter (it drives the table of contents), so layouts read it from the `frontmatter` prop rather than as a direct prop.
 
