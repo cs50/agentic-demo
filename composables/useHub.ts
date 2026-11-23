@@ -39,6 +39,10 @@ const CLIENT_ID_KEY = 'hub:clientId'
 const TOKEN_KEY = 'hub:presenterToken'
 const NAME_KEY = 'hub:name'
 
+/** Minted once per `pnpm dev` start (vite.config.ts `define`); absent in a build. */
+declare const __HUB_SESSION__: string | undefined
+const SESSION = typeof __HUB_SESSION__ === 'string' && import.meta.env.DEV ? __HUB_SESSION__ : undefined
+
 type Listener = (msg: ServerMessage) => void
 
 const state = reactive({
@@ -152,6 +156,8 @@ function connect() {
       clientId: clientId(),
       name: storage()?.getItem(NAME_KEY) || undefined,
       token: token ?? undefined,
+      // A new run of the dev deck is a new lecture; the hub clears the last one.
+      session: token ? SESSION : undefined,
     })
   })
 
