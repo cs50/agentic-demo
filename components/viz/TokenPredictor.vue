@@ -39,8 +39,8 @@ const steps: Step[] = [
     text: '        quote = lookup(symbol)\n',
     candidates: [
       { text: 'quote = lookup(symbol)', p: 0.64 },
-      { text: 'quote = lookup(symbol.upper())', p: 0.19 },
-      { text: 'if not symbol:', p: 0.11, note: 'the spec wants this check; it lost' },
+      { text: 'if not symbol:', p: 0.19, note: 'the spec wants this check; it lost' },
+      { text: 'quote = lookup(symbol.upper())', p: 0.11 },
       { text: 'price = get_price(symbol)', p: 0.04 },
     ],
   },

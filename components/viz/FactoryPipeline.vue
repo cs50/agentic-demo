@@ -21,7 +21,7 @@ const stages: Stage[] = [
   { id: 'sandbox', label: 'Sandbox', tip: 'A clean machine in the cloud with the repository checked out. Thrown away afterwards.', artifact: 'git clone · pip install -r requirements.txt · flask run' },
   { id: 'plan', label: 'Plan', tip: 'An agent reads the issue and the code and writes down the change before making it.', artifact: 'Add /deposit (GET form, POST amount). Positive number only. UPDATE users SET cash = cash + ?.' },
   { id: 'implement', label: 'Implement', tip: 'The change, in a branch.', artifact: 'app.py +22 · templates/deposit.html +18 · layout.html +1' },
-  { id: 'test', label: 'Test', tip: 'The spec\u2019s test plan plus the new case, run on the sandbox.', artifact: 'deposit $500 → cash +500.00 ✓ · deposit -5 → apology ✓ · check50 12/12 ✓' },
+  { id: 'test', label: 'Test', tip: 'The spec\u2019s test plan plus the new case, run on the sandbox.', artifact: 'deposit $500 → cash +500.00 ✓ · deposit -5 → apology ✓ · check50 ✓' },
   { id: 'pr', label: 'Pull request', tip: 'A summary of what changed and why, with the test results attached. This is where you come in.', artifact: 'PR #6 "Add cash deposits" · 3 files · ready for review' },
 ]
 

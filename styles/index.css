@@ -443,3 +443,12 @@ body,
 html.hub-viewer .slidev-slide-container > .absolute.bottom-0.left-0 {
   display: none;
 }
+
+/* The breath before the game: a sentence, not a heading. */
+.slidev-layout.section.meanwhile h1 {
+  max-width: 30ch;
+  font-size: 2rem;
+  font-weight: 400;
+  color: var(--cs50-muted);
+  line-height: 1.35;
+}

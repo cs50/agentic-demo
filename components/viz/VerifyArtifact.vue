@@ -70,7 +70,7 @@ const ticked = computed(() => (at(4) ? 5 : at(3) ? 2 : 0))
       <div class="viz-label">What the spec requires of /history</div>
       <ul class="checks">
         <li v-for="(c, i) in checks" :key="c.id" :class="{ on: ticked > i }">
-          <span class="box">{{ ticked > i ? '✓' : '' }}</span>
+          <span class="box"><svg v-if="ticked > i" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.5 5 9l4.5-6" /></svg></span>
           <span>{{ c.text }}</span>
         </li>
       </ul>
@@ -190,10 +190,16 @@ td.hot {
   border-radius: 3px;
   display: grid;
   place-items: center;
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #fff;
   transition: all 250ms;
+}
+.box svg {
+  width: 0.75rem;
+  height: 0.75rem;
+  fill: none;
+  stroke: #fff;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 .checks li.on .box {
   background: #198754;
