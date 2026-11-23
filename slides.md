@@ -42,6 +42,34 @@ longer the hard part.
 -->
 
 ---
+layout: concept-viz
+kicker: Before we begin
+title: "What Should You Learn Next?"
+caption: "Four presses. Hover a line or a label."
+---
+
+<LanguageIndex />
+
+<!--
+The hook (3 min). Start dead serious, even a little dull: the TIOBE index, the chart
+people put in slides about which language to learn. Seven lines, five Novembers, real
+numbers (tiobe.com, pulled this month). Python on top, C second; the four CS50 languages
+are marked. Let it breathe. "So: which of these should you learn next?"
+
+Press: another index slides in, same format, different column. "Fix it" has held first
+place for two years. "Still broken" is second and, analysts note, closely linked to it.
+Press: the rest, with the CS50 entries: "Why didn't it work?", the only one in the top
+five that asks a question; "Just give me the code", which the duck declines; "What's a
+pointer?", which spikes every Week 4. The ratings are made up. The prompts are not.
+
+Press: the second index goes away, and one more line is drawn on the first chart. It
+starts near zero in 2021, bends the week ChatGPT appeared, and by this month is above
+Python. It isn't a language TIOBE tracks. Every prompt on the other index was written
+in it. Press: the line. English is now a programming language, and you are already
+fluent. That is the inversion on the next slide.
+-->
+
+---
 layout: two-cols-header
 class: px-2
 ---
