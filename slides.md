@@ -1113,9 +1113,60 @@ git history is the receipt.
 -->
 
 ---
+layout: section
+---
+
+<div class="section-kicker">One more thing</div>
+
+# Harvard Yard
+
+<div class="section-sub">The Science Center is a Gym now. The Gym Leader has one monster, and the room fights it.</div>
+
+<!--
+A breath before the game. Phones are still out from the votes; they will need them
+again in a minute. "You've watched the duck all evening. Now you get to walk it."
+-->
+
+---
+layout: default
+class: gym-slide
+---
+
+<GymGame :seconds="20" full />
+
+<!--
+The finale (8 min). Click the canvas, pick up the controller. The duck is on the path at
+the bottom of the Yard; walk. Talk to whoever is standing around (✕): the student whose
+agent "fixed something", the tourist at the statue, the professor who warns you about
+the Gym, the tour guide at Widener. Read John Harvard's plaque (face it, ✕): three
+claims, three wrong, and people still rub the shoe. The Yard is for poking around; take
+a minute, no more.
+
+Walk up the middle path to the Science Center. The glass doors are the Gym. Walking into
+them reads the sign; ✕ challenges.
+
+The battle. ✕ moves the text. Sloppyclaude uses a move; every move is a kind of AI slop:
+CONFIDENT NONSENSE, INFINITE LOOP, VIBE SPEC, WORKS ON MY MACHINE, YOU'RE ABSOLUTELY
+RIGHT. Each comes with a question, and the question opens on every phone as a
+twenty-second vote (the same mechanism as "the room decides"). Read it aloud; watch the
+bars. When the clock runs out the room's answer lands: right, and the duck's counter hits
+the monster; wrong, and the slop hits the duck. The explanation shows either way, in one
+line. Five rounds, ten concepts, two per round. Four right answers win.
+
+If the room isn't connected (no hub, or nobody voted), the panel says so and the
+controller picks: ↑ ↓ then ✕. ✕ while a vote is open closes it early. Keyboard works
+too: arrows, Space, Enter.
+
+Win: Sloppyclaude faints, the AI Slop Defender badge. ✕ returns to the Gym, where Henry has
+a few parting words; then David walks over, says the only thing he says, and the screen
+fades to the last slide on its own. Lose: Henry sends you back to the board; walk up and
+talk to him again for a rematch (the hub treats it as new polls).
+-->
+
+---
 layout: end
 ---
 
-# That's It
+# This Was CS50
 
 <div class="end-meta">The deck, the game, and how both were built: <code>github.com/cs50/agentic-demo</code></div>

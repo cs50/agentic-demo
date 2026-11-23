@@ -44,9 +44,12 @@ export const DS4_AXES: Record<number, string> = {
 }
 
 const BTN_JUMP = 0 // Cross
+const BTN_DPAD_UP = 12
+const BTN_DPAD_DOWN = 13
 const BTN_DPAD_LEFT = 14
 const BTN_DPAD_RIGHT = 15
 const AXIS_LEFT_X = 0
+const AXIS_LEFT_Y = 1
 const DEADZONE = 0.25
 
 /** Normalized intent the game engine consumes each frame. */
@@ -54,10 +57,18 @@ export interface ControllerState {
   connected: boolean
   /** -1 (left) … +1 (right) after deadzone. */
   moveX: number
-  /** True only on the frame jump was pressed (edge-triggered). */
+  /** -1 (up) … +1 (down) after deadzone; for top-down games. Arrow keys / W S on the keyboard. */
+  moveY: number
+  /** True only on the frame jump was pressed (edge-triggered). Cross, or Space / W / ↑. */
   jumpPressed: boolean
   /** True while jump is held. */
   jumpHeld: boolean
+  /**
+   * True only on the frame the action button was pressed. Cross, or Space /
+   * Enter: unlike `jumpPressed` this never comes from ↑ or W, so a top-down
+   * game can walk up without also "talking".
+   */
+  actionPressed: boolean
   source: 'gamepad' | 'keyboard' | 'none'
 }
 
@@ -74,9 +85,10 @@ export class Controller {
   private prevButtons: boolean[] = []
   private prevAxes: number[] = []
   private prevJump = false
+  private prevAction = false
   private wasConnected = false
 
-  private keys = { left: false, right: false, jump: false }
+  private keys = { left: false, right: false, up: false, down: false, jump: false, action: false }
   private keyboardTarget: HTMLElement | null = null
 
   /** Human-readable id of the active gamepad, or null. */
@@ -118,7 +130,7 @@ export class Controller {
   }
 
   private onBlur = () => {
-    this.keys = { left: false, right: false, jump: false }
+    this.keys = { left: false, right: false, up: false, down: false, jump: false, action: false }
   }
 
   private onKey = (e: KeyboardEvent) => {
@@ -134,9 +146,20 @@ export class Controller {
         this.keys.right = down
         break
       case ' ':
+        this.keys.jump = down
+        this.keys.action = down
+        break
+      case 'Enter':
+        this.keys.action = down
+        break
       case 'ArrowUp':
       case 'w':
         this.keys.jump = down
+        this.keys.up = down
+        break
+      case 'ArrowDown':
+      case 's':
+        this.keys.down = down
         break
       default:
         handled = false
@@ -166,7 +189,9 @@ export class Controller {
     }
 
     let moveX = 0
+    let moveY = 0
     let jumpHeld = false
+    let actionHeld = false
     let source: ControllerState['source'] = 'none'
 
     if (gp) {
@@ -190,22 +215,33 @@ export class Controller {
 
       const stick = gp.axes[AXIS_LEFT_X] ?? 0
       if (Math.abs(stick) > DEADZONE) moveX = Math.sign(stick) * Math.min(1, (Math.abs(stick) - DEADZONE) / (1 - DEADZONE))
+      const stickY = gp.axes[AXIS_LEFT_Y] ?? 0
+      if (Math.abs(stickY) > DEADZONE) moveY = Math.sign(stickY) * Math.min(1, (Math.abs(stickY) - DEADZONE) / (1 - DEADZONE))
       if (gp.buttons[BTN_DPAD_LEFT]?.pressed) moveX = -1
       if (gp.buttons[BTN_DPAD_RIGHT]?.pressed) moveX = 1
+      if (gp.buttons[BTN_DPAD_UP]?.pressed) moveY = -1
+      if (gp.buttons[BTN_DPAD_DOWN]?.pressed) moveY = 1
       jumpHeld = gp.buttons[BTN_JUMP]?.pressed ?? false
+      actionHeld = jumpHeld
     }
 
     // Keyboard fallback (only when the canvas is focused and no gamepad input).
-    if (this.keys.left || this.keys.right || this.keys.jump) {
+    const k = this.keys
+    if (k.left || k.right || k.up || k.down || k.jump || k.action) {
       if (source === 'none') source = 'keyboard'
-      if (this.keys.left) moveX = -1
-      if (this.keys.right) moveX = 1
-      if (this.keys.jump) jumpHeld = true
+      if (k.left) moveX = -1
+      if (k.right) moveX = 1
+      if (k.up) moveY = -1
+      if (k.down) moveY = 1
+      if (k.jump) jumpHeld = true
+      if (k.action) actionHeld = true
     }
 
     const jumpPressed = jumpHeld && !this.prevJump
     this.prevJump = jumpHeld
+    const actionPressed = actionHeld && !this.prevAction
+    this.prevAction = actionHeld
 
-    return { connected: !!gp, moveX, jumpPressed, jumpHeld, source }
+    return { connected: !!gp, moveX, moveY, jumpPressed, jumpHeld, actionPressed, source }
   }
 }

@@ -20,7 +20,7 @@ import type { ControllerState } from '../demo/mario/controller'
 const root = resolve(import.meta.dirname, '..')
 const read = (p: string) => readFileSync(resolve(root, p), 'utf8')
 
-const idle: ControllerState = { connected: false, moveX: 0, jumpPressed: false, jumpHeld: false, source: 'none' }
+const idle: ControllerState = { connected: false, moveX: 0, moveY: 0, jumpPressed: false, jumpHeld: false, actionPressed: false, source: 'none' }
 const jump: ControllerState = { ...idle, jumpPressed: true, jumpHeld: true }
 
 describe('start state', () => {
