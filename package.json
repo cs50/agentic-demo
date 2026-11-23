@@ -9,6 +9,8 @@
     "export": "slidev export --output slides-export.pdf",
     "test": "vitest run",
     "demo": "node --experimental-strip-types scripts/demo.ts",
+    "hub": "node --experimental-strip-types server/index.ts",
+    "postinstall": "pnpm --dir server install --ignore-workspace --frozen-lockfile",
     "audit:layout": "node --experimental-strip-types scripts/audit-layout.ts"
   },
   "devDependencies": {
