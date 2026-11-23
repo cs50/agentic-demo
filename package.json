@@ -10,7 +10,7 @@
     "test": "vitest run",
     "demo": "node --experimental-strip-types scripts/demo.ts",
     "hub": "node --experimental-strip-types server/index.ts",
-    "postinstall": "pnpm --dir server install --ignore-workspace --frozen-lockfile",
+    "postinstall": "pnpm --dir server install --ignore-workspace --frozen-lockfile --reporter=silent",
     "audit:layout": "node --experimental-strip-types scripts/audit-layout.ts"
   },
   "devDependencies": {
