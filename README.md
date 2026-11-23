@@ -23,16 +23,16 @@ The deck follows the course website's look: a white page, crimson `#a51c30` as t
 
 Every C$50 Finance example is taken from the Problem Set 9 specification (the `buy` rules, the `history` columns, the hints about `?` placeholders, the "Testing" list, the personal touches). The demo's `mario.c` is the CS50 classic; this year's Problem Set 1 used Seats, which the slides and notes acknowledge.
 
-## Deck structure (53 slides)
+## Deck structure (54 slides)
 
 | Slides | Content | Layout |
 | --- | --- | --- |
-| 1–3 | Title; "An Inversion"; the same inversion as a picture | `cover`, `two-cols-header`, `concept-viz` |
-| 4, 10, 17, 25 | Part dividers | `section` |
-| 5–9, 11–16, 18–24, 26–40 | Ten concepts: title → visualization(s) → explanation / Finance example / takeaway. Concepts 4 and 8 have two visualization slides | `concept-title`, `concept-viz`, `concept-detail` |
-| 41–43 | Synthesis: effort table; the same as a chart; what doesn't go away | `default`, `concept-viz`, `default` |
-| 44–52 | Live demo: `mario.c` → the first prompt → what kind of controller? → language and shape → the riskiest assumption (one conversation, `AgentChat`) → the spec with its evidence → the experiment (`ControllerTest`) → play, then finish it (`LiveDemo`) → closing quote | mixed |
-| 53 | End | `end` |
+| 1–4 | Title; the hook ("What Should You Learn Next?"); "An Inversion"; the same inversion as a picture | `cover`, `concept-viz`, `two-cols-header`, `concept-viz` |
+| 5, 11, 18, 26 | Part dividers | `section` |
+| 6–10, 12–17, 19–25, 27–41 | Ten concepts: title → visualization(s) → explanation / Finance example / takeaway. Concepts 4 and 8 have two visualization slides | `concept-title`, `concept-viz`, `concept-detail` |
+| 42–44 | Synthesis: effort table; the same as a chart; what doesn't go away | `default`, `concept-viz`, `default` |
+| 45–53 | Live demo: `mario.c` → the first prompt → what kind of controller? → language and shape → the riskiest assumption (one conversation, `AgentChat`) → the spec with its evidence → the experiment (`ControllerTest`) → play, then finish it (`LiveDemo`) → closing quote | mixed |
+| 54 | End | `end` |
 
 Every slide carries presenter notes. On `concept-detail` slides the example appears on the first click and the takeaway on the second.
 
@@ -44,6 +44,7 @@ On-slide cues about what to press ("Press → to ask") are off; the presenter no
 
 | Concept | Component | Steps | What the → does |
 | --- | --- | --- | --- |
+| Hook | `LanguageIndex` | 4 | the TIOBE chart (ratings each November 2021–2026, read from tiobe.com's per-language pages; the four CS50 languages marked); the Prompt Index slides in (`prompt_index.md`, satirical, parsed from the file so the two cannot drift); its CS50 entries; then one more line on the chart, English, not tracked by TIOBE, above Python by this year; the line |
 | Hook | `InversionFlip` | 3 | this semester's chain; the new chain; where "you" moved to |
 | 1 LLM | `TokenPredictor` | 6 | predicts `def quote():` a line at a time, showing the candidates each line beat |
 | 2 Chatbot | `ChatSim` | 5 | one turn of the `/buy` conversation; a ledger tallies who did the work |
@@ -68,6 +69,7 @@ All live in `components/viz/`, share `CodeSnippet` (Shiki, via one highlighter i
 | Path | Purpose |
 | --- | --- |
 | `slides.md` | The deck. Prepared slides live here. |
+| `prompt_index.md` | The satirical Prompt Index shown on the hook slide; `viz/LanguageIndex.vue` reads its table. Edit the file to change the slide. |
 | `layouts/concept-title.vue` | "Bold Concept Callout" slide. Frontmatter: `concept`, `sequence`. |
 | `layouts/concept-detail.vue` | Explanation (default slot), `::example::`, `::takeaway::`. Frontmatter: `concept`, `title`, optional `reveal: false`. |
 | `layouts/concept-viz.vue` | Full-width visualization slide. Frontmatter: `concept` (or `kicker`), `title`, `caption`. |
