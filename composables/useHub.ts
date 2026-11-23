@@ -263,20 +263,25 @@ function on(fn: Listener): () => void {
 }
 
 export function useHub() {
-  return {
-    state: readonly(state),
-    isPresenter,
-    connect,
-    disconnect,
-    send,
-    on,
-    openPoll,
-    closePoll,
-    vote,
-    publishSync,
-    publishLiveSource,
-    reset,
-    hubUrl,
-    joinUrl,
-  }
+  return hubApi
 }
+
+const hubApi = {
+  state: readonly(state),
+  isPresenter,
+  connect,
+  disconnect,
+  send,
+  on,
+  openPoll,
+  closePoll,
+  vote,
+  publishSync,
+  publishLiveSource,
+  reset,
+  hubUrl,
+  joinUrl,
+}
+
+// For on-stage diagnostics from DevTools: window.__hub.state.audienceCount, window.__hub.reset()
+if (import.meta.env.DEV && typeof window !== 'undefined') (window as any).__hub = hubApi

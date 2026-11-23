@@ -8,9 +8,14 @@
  *   is saved, the running engine is handed the new world or physics, no remount.
  * - When the duck leaves the level (nothing pulls it down until physics.ts says
  *   so), shows what happened and lets the engine put it back.
+ * - On a phone following the presenter (composables/hubSync.ts), shows a note
+ *   instead: the game needs HMR to pick up level.ts edits, which a static
+ *   build lacks, and a phone has no controller. Unlocking brings the canvas
+ *   back, so a student exploring later can play with the keyboard.
  */
 import { useIsSlideActive, useSlideContext } from '@slidev/client'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { canFollow, following } from '../composables/hubSync'
 import { DUCK_COLS, DUCK_ROWS_N } from '../demo/mario/duck'
 import { Engine, FPS, type EngineStats } from '../demo/mario/engine'
 import { COLS, ROWS, TILE, buildWorld } from '../demo/mario/world'
@@ -23,6 +28,8 @@ const props = withDefaults(defineProps<{ compact?: boolean }>(), { compact: fals
 const { $renderContext } = useSlideContext()
 const isLive = ['slide', 'presenter'].includes($renderContext.value)
 const isActive = useIsSlideActive()
+/** A viewer following the presenter watches the presenter's game, not a copy. */
+const mirroring = computed(() => canFollow.value && following.value)
 
 const canvas = ref<HTMLCanvasElement | null>(null)
 const stats = ref<EngineStats | null>(null)
@@ -79,7 +86,7 @@ function flashFrame() {
 let startToken = 0
 
 async function start() {
-  if (!isLive || !canvas.value) return
+  if (!isLive || !canvas.value || mirroring.value) return
   stop()
   // Wait for level.ts to load (it's imported dynamically so a broken file can't
   // take the slide down). Bail if the slide was left while we waited.
@@ -145,12 +152,21 @@ function focusCanvas() {
 // remounts (where onSlideEnter would not re-fire); the watch covers navigation.
 onMounted(() => isActive.value && start())
 watch(isActive, (active) => (active ? start() : stop()))
+// Unlocking while on this slide hands the viewer a playable game; following again takes it back.
+watch(mirroring, (m) => (m ? stop() : isActive.value && start()))
 onBeforeUnmount(stop)
 </script>
 
 <template>
   <div class="mg-root" :class="{ compact }">
-    <div class="mg-frame" :class="{ focused, flash, broken: !!levelError || !!physicsError }">
+    <div v-if="mirroring" class="mg-mirror">
+      <DuckSprite :size="48" />
+      <div>
+        <b>The game is running on the presenter's screen.</b>
+        <div>The code beside it updates here as it is edited. Unlock (bottom right) to play a copy with the keyboard.</div>
+      </div>
+    </div>
+    <div v-else class="mg-frame" :class="{ focused, flash, broken: !!levelError || !!physicsError }">
       <canvas
         ref="canvas"
         tabindex="0"
@@ -181,7 +197,7 @@ onBeforeUnmount(stop)
       </div>
     </div>
 
-    <div class="mg-hud">
+    <div class="mg-hud" v-if="!mirroring">
       <span>
         <b :class="stats && stats.fps >= 55 ? 'ok' : 'warn'">{{ stats?.fps ?? '—' }}</b> fps
         <span class="muted">(target {{ FPS }})</span>
@@ -212,6 +228,25 @@ onBeforeUnmount(stop)
 }
 .mg-root.compact {
   --mg-max-h: min(300px, 50vh);
+}
+.mg-mirror {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  max-width: 34rem;
+  padding: 0.9rem 1.1rem;
+  border: 1px dashed var(--cs50-border);
+  border-radius: 8px;
+  background: var(--cs50-code-bg);
+  color: var(--cs50-muted);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+.mg-mirror b {
+  color: var(--cs50-body);
+}
+.mg-mirror svg {
+  flex: none;
 }
 .mg-landing {
   position: absolute;

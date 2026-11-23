@@ -25,6 +25,12 @@ const props = withDefaults(defineProps<{ file?: LiveFile; mode?: 'preview' | 'ed
 
 const file = ref<LiveFile>(props.file)
 const mode = ref<'preview' | 'edit'>(props.mode)
+/**
+ * Editing writes to disk through the dev server's websocket. A static build
+ * (the hosted deck, where the room follows along) has no such thing, so the
+ * Edit tab is not offered: it would load Monaco only to save nowhere.
+ */
+const canEdit = !!import.meta.hot
 const statuses = reactive<Partial<Record<LiveFile, EditorStatus>>>({})
 const editors = ref<Record<string, InstanceType<typeof LiveEditor> | null>>({})
 /** Files whose editor has been opened; they stay mounted. */
@@ -111,7 +117,7 @@ defineExpose({ setFile, setMode })
       <span v-if="mode === 'edit' || undecided(status)" class="lc-status" :class="status">{{ statusLabel[status] }}</span>
       <span v-else class="lc-status ready">● live</span>
 
-      <div class="lc-toggle" role="tablist" aria-label="Code panel mode">
+      <div v-if="canEdit" class="lc-toggle" role="tablist" aria-label="Code panel mode">
         <button
           type="button"
           role="tab"
