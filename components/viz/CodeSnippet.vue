@@ -52,8 +52,7 @@ const classes = computed(() => ({ 'with-lines': props.lines }))
   font-variant-ligatures: none;
 }
 .snippet :deep(.line) {
-  display: inline-block;
-  width: 100%;
+  display: block;
   transition: background-color 250ms;
 }
 .snippet :deep(.line.marked) {

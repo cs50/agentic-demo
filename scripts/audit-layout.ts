@@ -113,10 +113,32 @@ async function audit(n: number, c: number): Promise<Finding[]> {
             out.push({ slide: n, click: c, kind: 'clip', what: `${name(el)} "${text(el)}"`, by: `${Math.max(dy, 0)}px down, ${Math.max(dx, 0)}px across` })
         }
 
-        // 3. text outside the frame
+        // 2b. a box wider or taller than the slot its parent gave it (it will paint
+        //     over a sibling, e.g. a flex item that cannot shrink below its content)
+        if (el.children.length > 0 && !(el instanceof SVGElement)) {
+          const parent = el.parentElement!
+          const ps = getComputedStyle(parent)
+          if (ps.display !== 'contents' && !/absolute|fixed/.test(cs.position)) {
+            const pr = parent.getBoundingClientRect()
+            const over = Math.max(rect.right - pr.right, pr.left - rect.left, rect.bottom - pr.bottom, pr.top - rect.top)
+            if (over > 1.5)
+              out.push({ slide: n, click: c, kind: 'clip', what: `${name(el)} "${text(el)}"`, by: `${Math.round(over)}px larger than its slot (will overlap a neighbour)` })
+          }
+        }
+
+        // 3. text outside the frame, or spilling out of its own parent (an inline
+        //    span has no clientWidth, so compare geometry rather than scroll metrics)
         if (el.children.length === 0 && text(el)) {
           if (rect.right > frame.right + 1 || rect.bottom > frame.bottom + 1 || rect.left < frame.left - 1 || rect.top < frame.top - 1)
             out.push({ slide: n, click: c, kind: 'outside', what: `${name(el)} "${text(el)}"`, by: 'extends past the slide frame' })
+          else if (!/absolute|fixed/.test(cs.position)) {
+            const parent = el.parentElement!
+            const pr = parent.getBoundingClientRect()
+            const over = Math.max(rect.right - pr.right, pr.left - rect.left)
+            // 4px: bold glyphs' ink can exceed the line box by a pixel or two
+            if (over > 4 && getComputedStyle(parent).display !== 'contents')
+              out.push({ slide: n, click: c, kind: 'clip', what: `${name(el)} "${text(el)}"`, by: `text ${Math.round(over)}px wider than its box` })
+          }
         }
       }
       return out

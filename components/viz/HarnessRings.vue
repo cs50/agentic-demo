@@ -95,7 +95,8 @@ const schema = `CREATE TABLE users (
         <!-- step 4: SELECT passes -->
         <g class="flow ok" :class="{ shown: is(4) }">
           <path d="M276,120 C330,105 360,90 376,78" marker-end="url(#h-arrow-ok)" />
-          <text x="286" y="104" class="cmd">SELECT cash FROM users WHERE id = ?</text>
+          <rect x="290" y="112" width="184" height="17" rx="4" class="cmd-bg" />
+          <text x="382" y="124" text-anchor="middle" class="cmd small">SELECT cash FROM users WHERE id = ?</text>
         </g>
 
         <defs>
@@ -209,6 +210,15 @@ const schema = `CREATE TABLE users (
 .flow.in text {
   fill: #198754;
   font-weight: 700;
+}
+.cmd-bg {
+  fill: #fff;
+  stroke: #198754;
+  stroke-width: 1;
+}
+.cmd.small {
+  font-size: 8.5px;
+  fill: #0a3622;
 }
 .block circle {
   fill: #f8d7da;

@@ -128,12 +128,12 @@ const after: Node[] = [
   display: flex;
   align-items: stretch;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 0.35rem;
+  min-width: 0;
 }
 .chain :deep(.tip) {
-  flex: 1 1 0;
+  flex: 1 1 auto; /* size to the longest word, then share the rest */
   display: flex;
-  min-width: 0;
 }
 .node {
   flex: 1;
@@ -141,8 +141,8 @@ const after: Node[] = [
   flex-direction: column;
   justify-content: center;
   gap: 0.3rem;
-  padding: 1.1rem 0.8rem;
-  min-height: 6.8rem;
+  padding: 1rem 0.7rem;
+  min-height: 6.4rem;
   border: 1px solid var(--cs50-border);
   border-radius: 10px;
   background: #fff;
@@ -150,13 +150,14 @@ const after: Node[] = [
   transition: all 300ms;
 }
 .node .label {
-  font-size: 1.3rem;
+  font-size: 1.2rem;
+  white-space: nowrap;
   font-weight: 700;
   color: var(--cs50-body);
   line-height: 1.15;
 }
 .node .sub {
-  font-size: 0.86rem;
+  font-size: 0.82rem;
   color: var(--cs50-muted);
   line-height: 1.3;
 }
@@ -182,11 +183,12 @@ const after: Node[] = [
 }
 .arrow {
   align-self: center;
-  color: var(--cs50-muted);
-  font-size: 1.6rem;
-  line-height: 1;
-  padding: 0 0.2rem;
   flex: none;
+  width: 1.6rem;
+  text-align: center;
+  color: var(--cs50-muted);
+  font-size: 1.4rem;
+  line-height: 1;
 }
 .divider {
   display: flex;

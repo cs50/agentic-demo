@@ -135,7 +135,7 @@ function total(e: { shares: Shares }, group: Category['group']) {
   display: flex;
   gap: 0.6rem;
   justify-content: flex-end;
-  width: 6.5rem;
+  width: 9.5rem;
   font-size: 0.62rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -154,7 +154,7 @@ function total(e: { shares: Shares }, group: Category['group']) {
 }
 .era {
   display: grid;
-  grid-template-columns: 8.5rem 1fr 6.5rem;
+  grid-template-columns: 8.5rem 1fr 9.5rem;
   gap: 0.8rem;
   align-items: center;
 }
