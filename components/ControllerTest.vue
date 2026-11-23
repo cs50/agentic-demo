@@ -5,7 +5,7 @@
  * Left: a DualShock 4 whose buttons and sticks light up and move with the real
  * controller. Right: the duck, acting on the same inputs (left stick or D-pad
  * to walk, Cross to jump), so the audience sees input become action before any
- * game code is trusted. Below: the stdout-style log the spec asks for,
+ * game code is trusted. Below: the event log the spec asks for,
  * e.g. `Button 0 (CROSS): DOWN`.
  *
  * Polls the Gamepad API only while this slide is active. The duck preview uses
@@ -170,7 +170,7 @@ onBeforeUnmount(stop)
     </div>
 
     <section class="ct-panel log">
-      <div class="ct-title">stdout — test_controller</div>
+      <div class="ct-title">event log</div>
       <pre><template v-if="log.length"><div v-for="(l, i) in log" :key="l + i" :class="{ newest: i === 0 }">{{ l }}</div></template><div v-else class="muted">// no events yet</div></pre>
     </section>
   </div>

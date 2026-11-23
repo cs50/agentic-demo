@@ -58,7 +58,7 @@ On-slide cues about what to press ("Press → to ask") are off; the presenter no
 | 9 Factory | `FactoryPipeline` | 6 | one Finance issue ("add cash") from issue to pull request, one stage per press |
 | 10 Approval gates | `ApprovalDial` | 3 | moves the gate: everything waits, the sensible middle, the dark factory |
 | Synthesis | `EffortChart` | 4 | adds an era to the stacked bars; every segment is labeled; hovering a segment or legend entry lights that category in every bar |
-| Demo | `DecisionCards` | 8 | four design decisions behind the game, two presses each: the options (ask the room), then our pick. Hover an option for its feasibility and trade-offs; after the reveal, our verdict too |
+| Demo | `AgentChat` | 3–4 per scene | one scene of the student–agent conversation per slide (`scene="ask"`, `controller`, `design`, `risk`); each press is the next turn. Hover a choice (what controller? which language? which shape?) for its feasibility, or a dot on the risk scale for why it sits there. The script, with every claim checked against `demo/mario/`, is `viz/demoScript.ts` |
 | Demo | `DemoSpec` | 7 | the game's requirements, each paired with the artifact that proves it; the last press is what was left out on purpose |
 
 All live in `components/viz/`, share `CodeSnippet` (Shiki, via one highlighter in `highlighter.ts`) and `Tip` (hover/focus tooltip), use only the deck's design tokens, and respect `prefers-reduced-motion`.
@@ -74,7 +74,7 @@ All live in `components/viz/`, share `CodeSnippet` (Shiki, via one highlighter i
 | `composables/useVizSteps.ts` | Claims `n` click steps for a component and exposes the current step, so → drives visualizations. |
 | `components/viz/` | The twelve visualizations and their shared pieces (see above). |
 | `demo/mario.c` | The classic CS50 Mario solution shown in Step 1 of the demo. |
-| `demo/live.md` | **Agent-editable** slides pulled in via `src:`. The agent appends here during the demo; Vite HMR patches the deck in place, no reload. |
+| `demo/live.md` | **Agent-editable** slide, available for pulling in via `src:` (not in the current deck). When included, Vite HMR patches the deck in place as the agent writes to it, no reload. |
 | `demo/mario/level.ts` | **Agent-editable** level generator: the classic `mario.c` nested loop in TypeScript. Save it and the level rebuilds under Mario, live. |
 | `demo/mario/world.ts` | Pure placer: ASCII rows from `level.ts` → tile grid, bottom-aligned on the ground and centered. |
 | `demo/mario/engine.ts` | Fixed-timestep 60 FPS loop, AABB tile collision, rendering, `setWorld()` for hot level swaps. Gravity `0.8`, jump `-14`. |
@@ -87,7 +87,7 @@ All live in `components/viz/`, share `CodeSnippet` (Shiki, via one highlighter i
 | `components/LiveEditor.vue` | Edit: a Monaco editor bound two ways to `level.ts`. Disk changes appear in the editor; edits autosave back to disk. |
 | `demo/mario/editorSync.ts` | The editor's sync bookkeeping (what was sent, what is believed to be on disk), kept pure so `tests/` can cover echo, conflict, and failed-write cases. |
 | `vite.config.ts` | Dev-server channel that writes `level.ts` (and only that file) for the editor, accepting writes only from this machine; turns off Vite's full-screen error overlay in favor of the game's error strip. |
-| `components/ControllerTest.vue` | The "verify first" diagnostic: a DualShock 4 drawing (`viz/DualShock.vue`) whose buttons and sticks follow the real controller, the duck acting on the same inputs, and the stdout-style log. |
+| `components/ControllerTest.vue` | The "verify first" diagnostic: a DualShock 4 drawing (`viz/DualShock.vue`) whose buttons and sticks follow the real controller, the duck acting on the same inputs, and the event log. |
 | `demo/mario/duck.ts` | The CS50 duck as a 14×14 pixel sprite: one pixel map drawn on the game canvas (`drawDuck`) and as SVG on slides (`viz/DuckSprite.vue`). |
 | `styles/index.css` | Design tokens (crimson, Bootstrap neutrals), bundled PT Sans, shared banner/section/table styles. |
 | `pnpm-workspace.yaml` | Allows `playwright-chromium`'s install script (pnpm ≥ 10 blocks build scripts by default) so `pnpm export` works after a fresh install. |

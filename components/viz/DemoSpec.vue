@@ -11,45 +11,38 @@ interface Row {
   must: string
   detail: string
   evidence: string
-  where: string
 }
 
 const rows: Row[] = [
   {
     must: 'The browser sees the controller',
     detail: 'A DualShock 4 over Bluetooth, with the standard button mapping',
-    evidence: 'test_controller prints "Connected … (mapping: standard)"',
-    where: 'the next slide',
+    evidence: 'The experiment page logs "Connected … (mapping: standard)"',
   },
   {
     must: 'Cross jumps, the left stick moves',
     detail: 'Button 0 is jump; axis 0 or the D-pad is horizontal movement',
     evidence: 'Press ✕, read "Button 0 (CROSS): DOWN"; the duck on the slide jumps',
-    where: 'the next slide',
   },
   {
     must: 'Physics is fixed, not frame-rate dependent',
     detail: '60 steps per second; gravity 0.8 px/step², jump −14 px/step',
     evidence: 'The HUD reads 60 fps (the simulation rate) on a 120 Hz display',
-    where: 'the game slide',
   },
   {
     must: 'The level is the Week 1 pyramid',
     detail: 'Eight rows, right-aligned, from a loop in level.ts',
     evidence: 'Count the rows on the canvas; read level.ts beside it',
-    where: 'the game slide',
   },
   {
     must: 'Saving level.ts rebuilds the level without a reload',
     detail: 'The duck keeps its position; a broken file keeps the old level and says why',
     evidence: 'Edit it on stage: the pyramid changes, the HUD says "level v1 live"; break it and read the strip',
-    where: 'the game slide',
   },
   {
     must: 'Losing the controller does not crash the game',
     detail: 'The game keeps running; the HUD says what input it has',
     evidence: 'Turn the controller off: the HUD switches to "press a button"; the keyboard still works',
-    where: 'the game slide',
   },
 ]
 
@@ -64,7 +57,6 @@ const { step, at } = useVizSteps(rows.length + 1)
           <th class="n"></th>
           <th>Must hold</th>
           <th>How we will know</th>
-          <th class="w">Where</th>
         </tr>
       </thead>
       <tbody>
@@ -79,7 +71,6 @@ const { step, at } = useVizSteps(rows.length + 1)
               <span>{{ r.evidence }}</span>
             </Tip>
           </td>
-          <td class="w"><span class="viz-pill">{{ r.where }}</span></td>
         </tr>
       </tbody>
     </table>
@@ -148,10 +139,6 @@ tr.latest .num {
 }
 .ev {
   font-size: 0.82rem;
-}
-.w {
-  width: 7rem;
-  white-space: nowrap;
 }
 .out {
   padding: 0.45rem 0.9rem;
