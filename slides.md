@@ -813,11 +813,13 @@ caption: "Two presses per decision: the options, then our pick."
 <DecisionCards />
 
 <!--
-Step 2½ (3 min). The vague prompt failed because nobody made these decisions; the model
-made them by accident. Take each in two presses. First press: the question and three
-options. Ask the room: "which would you pick?" Take an answer or two. Second press: our
-pick, why, and what the others would have cost. The concept labels (Design, Verification,
-Specification) tie each back to the first half of the lecture.
+Step 2½ (3 min). The prompt said "in the browser" and nothing else, so the model made
+these four decisions for us. Take each in two presses. First press: the question and
+three options. Ask the room: "which would you pick?" Hover an option to show what it
+would actually take (Python in a browser needs Pyodide and a JavaScript bridge for the
+controller; C needs Emscripten and a rebuild per change). Second press: our pick and why;
+hovering now also shows our verdict on each option. The concept labels (Design,
+Verification, Specification) tie each back to the first half of the lecture.
 -->
 
 ---

@@ -58,7 +58,7 @@ On-slide cues about what to press ("Press → to ask") are off; the presenter no
 | 9 Factory | `FactoryPipeline` | 6 | one Finance issue ("add cash") from issue to pull request, one stage per press |
 | 10 Approval gates | `ApprovalDial` | 3 | moves the gate: everything waits, the sensible middle, the dark factory |
 | Synthesis | `EffortChart` | 4 | adds an era to the stacked bars; every segment is labeled; hovering a segment or legend entry lights that category in every bar |
-| Demo | `DecisionCards` | 8 | four design decisions behind the game, two presses each: the options (ask the room), then our pick and what the others would have cost |
+| Demo | `DecisionCards` | 8 | four design decisions behind the game, two presses each: the options (ask the room), then our pick. Hover an option for its feasibility and trade-offs; after the reveal, our verdict too |
 | Demo | `DemoSpec` | 7 | the game's requirements, each paired with the artifact that proves it; the last press is what was left out on purpose |
 
 All live in `components/viz/`, share `CodeSnippet` (Shiki, via one highlighter in `highlighter.ts`) and `Tip` (hover/focus tooltip), use only the deck's design tokens, and respect `prefers-reduced-motion`.
