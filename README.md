@@ -7,9 +7,13 @@ Spec: [`agentic-coding-lecture-spec.md`](./agentic-coding-lecture-spec.md).
 
 ```sh
 pnpm install
-pnpm dev          # http://localhost:3030  (presenter view: /presenter)
-pnpm export       # writes slides-export.pdf as an offline backup
+pnpm dev            # http://localhost:3030  (presenter view: /presenter)
+pnpm export         # writes slides-export.pdf as an offline backup
+pnpm test           # unit tests (editor sync, error messages)
+pnpm audit:layout   # loads every slide at every click and reports anything cut off
 ```
+
+`audit:layout` needs a dev server on port 3031 (`pnpm exec slidev --port 3031`); pass another port, and optionally a slide range, as `pnpm audit:layout -- 3030 36-50`. It takes a few minutes for the whole deck and exits non-zero if any element is clipped, so it can gate a release. Run it after any layout change; a glance at a slide's final state misses clipping at earlier clicks and inside cards.
 
 The deck makes no network requests at runtime: PT Sans is bundled from npm.
 
@@ -19,18 +23,43 @@ The deck follows the course website's look: a white page, crimson `#a51c30` as t
 
 Every C$50 Finance example is taken from the Problem Set 9 specification (the `buy` rules, the `history` columns, the hints about `?` placeholders, the "Testing" list, the personal touches). The demo's `mario.c` is the CS50 classic; this year's Problem Set 1 used Seats, which the slides and notes acknowledge.
 
-## Deck structure (36 slides)
+## Deck structure (50 slides)
 
 | Slides | Content | Layout |
 | --- | --- | --- |
-| 1–2 | Title; opening hook "The CS50 Contract: An Inversion" | `cover`, `two-cols-header` |
-| 3, 8, 13, 20 | Sequence dividers | `section` |
-| 4–7, 9–12, 14–19, 21–26 | Ten concept pairs: title slide + explanation/Finance example/takeaway | `concept-title`, `concept-detail` |
-| 27–28 | Synthesis: evolution of human effort; what remains indispensable | `default` |
-| 29–35 | Live demo: `mario.c` → naive prompt → spec-driven → `test_controller` → live game → closing quote | mixed |
-| 36 | End | `end` |
+| 1–3 | Title; "An Inversion"; the same inversion as a picture | `cover`, `two-cols-header`, `concept-viz` |
+| 4, 10, 17, 25 | Part dividers | `section` |
+| 5–9, 11–16, 18–24, 26–40 | Ten concepts: title → visualization(s) → explanation / Finance example / takeaway. Concepts 4 and 8 have two visualization slides | `concept-title`, `concept-viz`, `concept-detail` |
+| 41–43 | Synthesis: effort table; the same as a chart; what doesn't go away | `default`, `concept-viz`, `default` |
+| 44–49 | Live demo: `mario.c` → just ask → say what you mean → `test_controller` → play and change the level → closing quote | mixed |
+| 50 | End | `end` |
 
-Every slide carries presenter notes taken from the spec's "Presenter Note" and stage directions. On `concept-detail` slides the example appears on the first click and the takeaway on the second.
+Every slide carries presenter notes. On `concept-detail` slides the example appears on the first click and the takeaway on the second.
+
+## Visualizations
+
+Each concept has a full-width visualization slide between its title and its explanation. The presenter's → key drives every one of them, exactly as it drives `v-click` (a component claims its steps from Slidev's clicks context via `composables/useVizSteps.ts`), so the lecture never needs a mouse. Hover and keyboard focus reveal extra detail for students exploring the deck afterwards. Each visualization has a finished state, which is what the PDF export shows.
+
+On-slide cues about what to press ("Press → to ask") are off; the presenter notes carry them. Set `SHOW_HINTS = true` in `components/viz/config.ts` to show them again, e.g. when publishing the deck for students to click through on their own.
+
+| Concept | Component | Steps | What the → does |
+| --- | --- | --- | --- |
+| Hook | `InversionFlip` | 3 | this semester's chain; the new chain; where "you" moved to |
+| 1 LLM | `TokenPredictor` | 6 | predicts `def quote():` a line at a time, showing the candidates each line beat |
+| 2 Chatbot | `ChatSim` | 5 | one turn of the `/buy` conversation; a ledger tallies who did the work |
+| 3 Tool calling | `ExecutionLoop` | 8 | one event in the `/sell` think → act → observe loop |
+| 4 Harness | `HarnessRings` | 4 | labels the ring; injects `.schema`; blocks `DROP TABLE`; passes a `SELECT` |
+| 4 Harness | `HarnessFiles` | 4 | a real harness as files: `AGENTS.md` and `SKILL.md` (the model reads them), `settings.json` permissions, `hooks.json`, `sandbox.json` (the harness enforces them). Formats checked against the Cursor, Claude Code and Agent Skills docs, November 2026 |
+| 5 Specifications | `SpecChecks` | 6 | submits one input to `buy`; the rule that catches it lights up |
+| 6 Guardrails | `Guardrails` | 4 | version 1 through the prompt and the scanner; then version 2 |
+| 7 Verification | `VerifyArtifact` | 4 | tries reading 1,000 lines; then checks `/history` against the spec |
+| 8 Multi-agent | `Swimlanes` | 4 | hands the "trade from `index`" feature to the next agent |
+| 8 Multi-agent | `ContextStacks` | 6 | one agent's context grows through the four jobs (13 things, testing its own work); then four agents with 3 each |
+| 9 Factory | `FactoryPipeline` | 6 | one Finance issue ("add cash") from issue to pull request, one stage per press |
+| 10 Approval gates | `ApprovalDial` | 3 | moves the gate: everything waits, the sensible middle, the dark factory |
+| Synthesis | `EffortChart` | 4 | adds an era to the stacked bars; every segment is labeled; hovering a segment or legend entry lights that category in every bar |
+
+All live in `components/viz/`, share `CodeSnippet` (Shiki, via one highlighter in `highlighter.ts`) and `Tip` (hover/focus tooltip), use only the deck's design tokens, and respect `prefers-reduced-motion`.
 
 ## Layout
 
@@ -39,6 +68,9 @@ Every slide carries presenter notes taken from the spec's "Presenter Note" and s
 | `slides.md` | The deck. Prepared slides live here. |
 | `layouts/concept-title.vue` | "Bold Concept Callout" slide. Frontmatter: `concept`, `sequence`. |
 | `layouts/concept-detail.vue` | Explanation (default slot), `::example::`, `::takeaway::`. Frontmatter: `concept`, `title`, optional `reveal: false`. |
+| `layouts/concept-viz.vue` | Full-width visualization slide. Frontmatter: `concept` (or `kicker`), `title`, `caption`. |
+| `composables/useVizSteps.ts` | Claims `n` click steps for a component and exposes the current step, so → drives visualizations. |
+| `components/viz/` | The twelve visualizations and their shared pieces (see above). |
 | `demo/mario.c` | The classic CS50 Mario solution shown in Step 1 of the demo. |
 | `demo/live.md` | **Agent-editable** slides pulled in via `src:`. The agent appends here during the demo; Vite HMR patches the deck in place, no reload. |
 | `demo/mario/level.ts` | **Agent-editable** level generator: the classic `mario.c` nested loop in TypeScript. Save it and the level rebuilds under Mario, live. |

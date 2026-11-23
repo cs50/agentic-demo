@@ -92,6 +92,21 @@ banner. This is the thesis; everything else is detail.
 -->
 
 ---
+layout: concept-viz
+kicker: The same, as a picture
+title: An Inversion
+caption: "Press → three times. Hover a box for what it does."
+---
+
+<InversionFlip />
+
+<!--
+Three presses. First the old chain: you were the arrow in the middle. Then the new
+chain. Then the highlight: you appear three times (decide, specify, verify), and none
+of them is "type the code". Leave this up while you say that sentence.
+-->
+
+---
 layout: section
 ---
 
@@ -108,6 +123,21 @@ sequence: The Chatbot Era
 ---
 
 # Large Language Model
+
+---
+layout: concept-viz
+concept: 1
+title: Large Language Model
+caption: "Each → predicts the next line. Hover a line to see the candidates it beat."
+---
+
+<TokenPredictor />
+
+<!--
+Five presses, one line each. Point at the probabilities: every pick is the most likely
+continuation. On the third and fourth, point at the runner-up: the check the spec wants
+(blank symbol, lookup returning None) was right there and lost. Sixth press: the verdict.
+-->
 
 ---
 layout: concept-detail
@@ -141,6 +171,21 @@ sequence: The Chatbot Era
 ---
 
 # Chatbots and Turn-by-Turn Prompting
+
+---
+layout: concept-viz
+concept: 2
+title: Chatbots and Turn-by-Turn Prompting
+caption: "Each → is one turn. Watch the ledger on the right."
+---
+
+<ChatSim />
+
+<!--
+Five presses. The chat is the conversation most of them had during Finance. Don't narrate
+the code; narrate the ledger: by the end the model has two entries and you have seven.
+That asymmetry is the concept.
+-->
 
 ---
 layout: concept-detail
@@ -186,6 +231,21 @@ sequence: Tool Use and the Single Agent
 
 # Tool Calling and Execution Loops
 
+
+---
+layout: concept-viz
+concept: 3
+title: Tool Calling and Execution Loops
+caption: "Each → is one event. Watch which node lights up."
+---
+
+<ExecutionLoop />
+
+<!--
+Eight presses, two trips around the loop. Narrate the phases, not the commands: it decided, it
+acted, it looked. On the 500, stop: this is the moment that used to be yours. On the 302, point
+at the crossed-out person. Nobody pasted anything.
+-->
 ---
 layout: concept-detail
 concept: 3
@@ -220,6 +280,44 @@ sequence: Tool Use and the Single Agent
 
 # The Agent Harness
 
+
+---
+layout: concept-viz
+concept: 4
+title: The Agent Harness
+caption: "Four presses. Hover a ring segment for what it controls."
+---
+
+<HarnessRings />
+
+<!--
+Press once to label the ring. Then the two jobs: the schema flowing in (now the model
+knows the columns rather than guessing), and DROP TABLE being stopped on the way out. Last
+press: a harmless SELECT goes through. Same model all three times; the harness made the
+difference.
+-->
+
+---
+layout: concept-viz
+concept: 4
+title: "The Agent Harness, as files on disk"
+caption: "Four presses: context, permissions, sandbox, then the line between them."
+---
+
+<HarnessFiles />
+
+<!--
+What a harness is, concretely. These are real file formats, current as of this
+lecture: AGENTS.md and SKILL.md (the model reads them; skill libraries like pstack and
+Compound Engineering's ce-* skills are collections of SKILL.md files), settings.json
+permissions (deny, then ask, then allow), hooks.json, sandbox.json.
+
+Press three times to reveal the columns; narrate each as the question at the top.
+Fourth press tags every file: "model reads it" or "harness enforces it". The quote at
+the bottom is from the Claude Code docs, verbatim. That line is the concept: an
+instruction is something the model may follow; a permission is something it cannot
+change.
+-->
 ---
 layout: concept-detail
 concept: 4
@@ -263,6 +361,21 @@ sequence: Engineering with Agents
 
 # Specifications and Acceptance Criteria
 
+
+---
+layout: concept-viz
+concept: 5
+title: Specifications and Acceptance Criteria
+caption: "Each → submits one input. Watch which rule catches it."
+---
+
+<SpecChecks />
+
+<!--
+Five inputs from the spec's own testing list. The first passes all four rules; the rest
+each trip a different one. Point out the quote under the rules: every one is a sentence
+from the Finance spec. They have been reading acceptance criteria all term.
+-->
 ---
 layout: concept-detail
 concept: 5
@@ -301,6 +414,22 @@ sequence: Engineering with Agents
 
 # Deterministic Guardrails
 
+
+---
+layout: concept-viz
+concept: 6
+title: Deterministic Guardrails
+caption: "Four presses: version 1 through both gates, then version 2."
+---
+
+<Guardrails />
+
+<!--
+Version 1 is the f-string. The prompt lets it through (press 1); the scanner stops the build
+(press 2), and the injection payload appears to show why it mattered. Version 2 uses the
+placeholder from the spec's hint; both gates pass. The line to say: the prompt passed both
+versions.
+-->
 ---
 layout: concept-detail
 concept: 6
@@ -334,6 +463,21 @@ sequence: Engineering with Agents
 
 # Verification Artifacts
 
+
+---
+layout: concept-viz
+concept: 7
+title: Verification Artifacts
+caption: "Four presses: try the code, then try the evidence."
+---
+
+<VerifyArtifact />
+
+<!--
+Press 1: the code scrolls. Let it run for a few seconds in silence. Press 2: stop; don't
+review the code. The evidence panel is the spec's own test plan. Presses 3 and 4 tick the
+five things the spec requires of /history. You never opened the template.
+-->
 ---
 layout: concept-detail
 concept: 7
@@ -378,6 +522,39 @@ sequence: Many Agents and Software Factories
 
 # Multi-Agent Orchestration
 
+
+---
+layout: concept-viz
+concept: 8
+title: Multi-Agent Orchestration
+caption: "Each → hands the work to the next agent."
+---
+
+<Swimlanes />
+
+<!--
+Four presses, one handoff each. Point at what each agent sees: three things, never the
+whole project. The last agent tests code it did not write. Where to cut was a human
+decision, the same decision as splitting a program into functions. The next slide shows
+why it matters.
+-->
+
+---
+layout: concept-viz
+concept: 8
+title: "One agent or four?"
+caption: "Four presses grow one agent's context; the fifth brings in the team; the sixth is the verdict."
+---
+
+<ContextStacks />
+
+<!--
+Same four jobs. Presses 1 to 4: one agent does them in order and everything it reads and
+writes piles up; by the end it is carrying thirteen things and testing its own code.
+Press 5: the four agents from the previous slide, three things each. Press 6: the
+verdict. The point is not that one agent cannot do it; it is that a shorter context and
+fresh eyes are the same reasons we write small functions.
+-->
 ---
 layout: concept-detail
 concept: 8
@@ -413,6 +590,22 @@ sequence: Many Agents and Software Factories
 
 # The Software Factory
 
+
+---
+layout: concept-viz
+concept: 9
+title: The Software Factory
+caption: "Each → is one stage. Hover a stage for what it is."
+---
+
+<FactoryPipeline />
+
+<!--
+Six presses from issue to pull request. The issue is one of the spec's personal touches
+(let users add cash). Hover a stage for what it is. Nobody's laptop is involved until
+the last box: a person files the issue, a person reviews the pull request, and the
+machine does the rest.
+-->
 ---
 layout: concept-detail
 concept: 9
@@ -446,6 +639,22 @@ sequence: Many Agents and Software Factories
 
 # Human Approval Gates
 
+
+---
+layout: concept-viz
+concept: 10
+title: Human Approval Gates
+caption: "Three presses: the gate at the top, in the middle, and gone. Hover a change for its risk."
+---
+
+<ApprovalDial />
+
+<!--
+Press 1: everything waits, you are the bottleneck. Press 2: the gate where it belongs;
+low-stakes changes ship alone, anything touching passwords, sessions or money waits. Press 3:
+the dark factory. Read the note aloud, slowly. Then: autonomy is a dial, and someone owns
+the setting.
+-->
 ---
 layout: concept-detail
 concept: 10
@@ -490,6 +699,21 @@ class: synthesis
 <!--
 Read the rightmost column top to bottom: your job moves up a level each row. The
 last row is the lecture in one line.
+-->
+
+---
+layout: concept-viz
+kicker: The same, as a picture
+title: Where the Effort Goes
+caption: "Each → adds an era. Hover a segment for the share."
+---
+
+<EffortChart />
+
+<!--
+Four presses, one era each. Gray is the human-compiler work; red is engineering. Left to
+right, gray drains and red fills. Then the line: the red is what this course taught you to do.
+The numbers are illustrative; the shape is the point.
 -->
 
 ---
@@ -544,7 +768,7 @@ class: demo-nostalgia
 
 <div class="lede">Mario, a CS50 classic (and Seats, which you wrote, uses the same loops)</div>
 
-<<< ./demo/mario.c c {16-28}{maxHeight:'330px'}
+<<< ./demo/mario.c#loop c
 
 ::right::
 

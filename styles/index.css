@@ -153,11 +153,15 @@ body,
   color: var(--cs50-crimson);
 }
 
-/* Cover + end: a crimson band, like the site's aside */
+/* Cover + end: a crimson band, like the site's aside.
+   The built-in end layout applies bg-black via a scoped rule; match its specificity. */
 .slidev-layout.cover,
-.slidev-layout.end {
-  background: var(--cs50-crimson);
+.slidev-layout.end,
+.slidev-layout.end.end {
+  background: var(--cs50-crimson) !important;
   color: #fff;
+  letter-spacing: normal !important;
+  user-select: text;
 }
 .slidev-layout.cover h1,
 .slidev-layout.end h1 {
@@ -264,4 +268,114 @@ body,
   font-size: 0.95rem;
   margin-top: -0.4rem;
   margin-bottom: 0.9rem;
+}
+
+/* ---- Visualizations (components/viz) ------------------------------------- */
+
+.viz {
+  display: grid;
+  gap: 1rem;
+  height: 100%;
+  min-height: 0;
+  font-size: 0.85rem;
+}
+.viz-card {
+  border: 1px solid var(--cs50-border);
+  border-radius: 8px;
+  background: #fff;
+  padding: 0.7rem 0.9rem;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.viz-label {
+  font-size: 0.66rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--cs50-muted);
+  font-weight: 700;
+  margin-bottom: 0.45rem;
+}
+.viz-label.accent {
+  color: var(--cs50-crimson);
+}
+.viz-mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-variant-ligatures: none;
+}
+
+/* Things that appear on a step */
+.viz-enter {
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 320ms ease, transform 320ms ease;
+}
+.viz-enter.shown {
+  opacity: 1;
+  transform: none;
+}
+/* Things that are present but de-emphasised until their step */
+.viz-dim {
+  opacity: 0.35;
+  transition: opacity 320ms ease;
+}
+.viz-dim.shown {
+  opacity: 1;
+}
+/* The thing that matters right now */
+.viz-now {
+  transition: box-shadow 250ms, border-color 250ms, background-color 250ms, color 250ms;
+}
+.viz-now.on {
+  border-color: var(--cs50-crimson) !important;
+  box-shadow: 0 0 0 3px rgba(165, 28, 48, 0.15);
+}
+
+/* Status colours (Bootstrap's) */
+.viz-ok {
+  color: #198754;
+}
+.viz-bad {
+  color: #dc3545;
+}
+.viz-warn {
+  color: #b58100;
+}
+
+/* Small pill */
+.viz-pill {
+  display: inline-block;
+  padding: 0.08rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  border: 1px solid var(--cs50-border);
+  color: var(--cs50-muted);
+  background: #fff;
+}
+.viz-pill.crimson {
+  background: var(--cs50-crimson);
+  border-color: var(--cs50-crimson);
+  color: #fff;
+}
+.viz-pill.ok {
+  background: #d1e7dd;
+  border-color: #a3cfbb;
+  color: #0a3622;
+}
+.viz-pill.bad {
+  background: #f8d7da;
+  border-color: #f1aeb5;
+  color: #58151c;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .viz-enter,
+  .viz-dim,
+  .viz-now,
+  .viz * {
+    transition-duration: 0ms !important;
+    animation-duration: 0ms !important;
+  }
 }
