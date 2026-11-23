@@ -24,16 +24,16 @@ The deck follows the course website's look: a white page, crimson `#a51c30` as t
 
 Every C$50 Finance example is taken from the Problem Set 9 specification (the `buy` rules, the `history` columns, the hints about `?` placeholders, the "Testing" list, the personal touches). The demo's `mario.c` is the CS50 classic; this year's Problem Set 1 used Seats, which the slides and notes acknowledge.
 
-## Deck structure (60 slides)
+## Deck structure (57 slides)
 
 | Slides | Content | Layout |
 | --- | --- | --- |
-| 1–6 | Title; "Take Out Your Phone" (`AudienceQR`); a live poll (`LivePoll`); the hook ("What Should You Learn Next?"); "An Inversion"; the same inversion as a picture | `cover`, `concept-viz` ×3, `two-cols-header`, `concept-viz` |
-| 7, 13, 20, 28 | Part dividers | `section` |
-| 8–12, 14–19, 21–27, 29–43 | Ten concepts: title → visualization(s) → explanation / Finance example / takeaway. Concepts 4 and 8 have two visualization slides | `concept-title`, `concept-viz`, `concept-detail` |
-| 44–46 | Synthesis: effort table; the same as a chart; what doesn't go away | `default`, `concept-viz`, `default` |
-| 47–56 | Live demo: `mario.c` → the first prompt → what kind of controller? → language and shape → the riskiest assumption (one conversation, `AgentChat`) → the spec with its evidence → the experiment (`ControllerTest`) → play, then finish it (`LiveDemo`) → the room decides, twice (`GameChoice`) | mixed |
-| 57–60 | Closing quote; a breath ("One more thing · Harvard Yard"); the finale: Harvard Yard and the Science Center Gym (`GymGame`, the whole slide); end: "This Was CS50" | `quote`, `section`, `default`, `end` |
+| 1–5 | Title; "Take Out Your Phone" (`AudienceQR`); the hook ("What Should You Learn Next?"); "An Inversion"; the same inversion as a picture | `cover`, `concept-viz` ×2, `two-cols-header`, `concept-viz` |
+| 6, 12, 19, 27 | Part dividers | `section` |
+| 7–11, 13–18, 20–26, 28–42 | Ten concepts: title → visualization(s) → explanation / Finance example / takeaway. Concepts 4 and 8 have two visualization slides | `concept-title`, `concept-viz`, `concept-detail` |
+| 43–45 | Synthesis: effort table; the same as a chart; what doesn't go away | `default`, `concept-viz`, `default` |
+| 46–53 | Live demo: `mario.c` → the first prompt → what kind of controller? → language and shape → the riskiest assumption (one conversation, `AgentChat`) → the spec with its evidence → the experiment (`ControllerTest`) → play, then finish it (`LiveDemo`) | mixed |
+| 54–57 | Closing quote; a breath ("Harvard Yard"); the finale: Harvard Yard and the Science Center Gym (`GymGame`, the whole slide); end: "This Was CS50" | `quote`, `section`, `default`, `end` |
 
 Every slide carries presenter notes. On `concept-detail` slides the example appears on the first click and the takeaway on the second.
 
@@ -106,7 +106,7 @@ All live in `components/viz/`, share `CodeSnippet` (Shiki, via one highlighter i
 | `composables/hubSync.ts` | Registers the hub as a Slidev sync transport, so the room follows the presenter; follow/unlock; mirrors the live files' text to viewers. |
 | `composables/useLive.ts` | Whether a component is on a slide being presented (not overview, preview, or print), so hub components stay inert elsewhere. |
 | `setup/main.ts`, `global-bottom.vue` | Slidev hooks: install the sync bridge; render the Follow pill and the vote overlay over every slide. |
-| `components/AudienceQR.vue`, `LivePoll.vue`, `GameChoice.vue` | The join slide; a poll driven by →; a timed vote whose winner is written into the game. |
+| `components/AudienceQR.vue`, `LivePoll.vue`, `GameChoice.vue` | The join slide; a poll driven by →; a timed vote whose winner is written into the game. The deck uses only the join slide and the Gym's votes; the other two are available for `slides.md`. |
 | `components/FollowControl.vue`, `AudienceChoice.vue` | What a viewer sees: the Following / Unlocked pill, and a vote as an overlay wherever they are in the deck. |
 | `demo/mario/presets/`, `presets.ts` | Complete `level.ts` / `physics.ts` variants the room can vote for, and the write-through that applies the winner. `pnpm test` checks each is a working live file. |
 | `Dockerfile`, `.github/workflows/main.yml`, `.ebextensions/`, `.platform/`, `.elasticbeanstalk/` | Hosting (see "The room"). |
@@ -161,7 +161,7 @@ Rules: `buildLevel()` must return `string[]`; `#` is solid, anything else is air
 
 ## The room (audience hub)
 
-The audience joins from their phones. A QR code on slide 2 points at `/join`, a page small enough to load on lecture-hall wifi, where they can vote, send the presenter a message, or follow the slides on their own screen. Everything goes through one websocket on one small Node process, `server/`, which also serves the built deck. There is no login: a name is optional, and a device is identified by a random id kept in `localStorage`, so one phone is one vote however often it reconnects.
+The audience joins from their phones. A QR code on slide 2 points at `/join`, a page small enough to load on lecture-hall wifi, where they can vote or follow the slides on their own screen. Everything goes through one websocket on one small Node process, `server/`, which also serves the built deck. There is no login: a device is identified by a random id kept in `localStorage`, so one phone is one vote however often it reconnects.
 
 **Running it locally**
 
@@ -180,10 +180,12 @@ Which window to drive from: polls and the room's votes work from either the slid
 
 **What the presenter can do**
 
+The only votes in the deck are the Gym battle's (below). Two more components are ready to drop into `slides.md`:
+
 - **Poll** (`<LivePoll id question :options>`): → opens it on every phone, → again closes it. The presenter sees the bars move; the room sees them when it closes. A poll's `id` must be unique in the deck.
 - **The room decides** (`<GameChoice id question :choices :seconds>`): → opens a timed vote. When it closes the hub names a winner (ties go to the option that got there first) and the presenter's deck writes that choice's preset over `level.ts` or `physics.ts` through the dev server, so the running game changes. Choices name files in `demo/mario/presets/` by stem: `level-*` replaces `level.ts`, `physics-*` replaces `physics.ts`. To offer something new, add a file there; `pnpm test` checks it loads.
 - **Follow along.** The presenter's slide, click, laser pointer and drawings are published to the room; a phone following the deck moves with them. Following is on by default. Navigating by hand unlocks (the pill in the corner reads *Unlocked*); tapping it jumps back to the presenter and follows again. During the live demo the text of `level.ts` and `physics.ts` is mirrored too, so the code pane animates on phones; the game itself stays on the big screen, and a following phone shows a note where the canvas would be.
-- **Messages** arrive in the presenter's deck (`useHub().state.messages`); there is no slide for them yet.
+- **Messages.** The hub still relays audience messages to the presenter's deck (`useHub().state.messages`), but the join page no longer offers a way to send one; the card was removed to keep the page to voting and following.
 - **Reset** between lectures from the presenter's DevTools: `__hub.reset()` clears the poll, votes, messages and positions; connections stay. `window.__hub` exists on any deck the hub has accepted as presenter (and always under `pnpm dev`).
 
 All of this is inert in the overview, the "next slide" preview, and `pnpm export`, and a copy of the deck with no hub reachable simply says so.
@@ -192,7 +194,7 @@ All of this is inert in the overview, the "next slide" preview, and `pnpm export
 
 **Capacity.** `pnpm hub:loadtest [ws://host/ws] [N]` simulates the room: N phones join, vote at once, and follow 20 slide changes and 10 live-file saves while the hub's memory is watched. On a laptop, 500 phones vote with a p95 round-trip of ~10 ms and the hub grows by about 10 MB; it exits non-zero if a vote is lost or fan-out is slow, so it can gate a deploy.
 
-**The finale** (`<GymGame :seconds>`, the last slide before the end). The duck walks a top-down Harvard Yard with the controller or the arrow keys and challenges the Science Center Gym. The Gym Leader's one monster, Sloppyclaude, uses five moves, each a kind of AI slop, and each comes with a question from the lecture. When a question opens, the presenter's deck opens it as a timed `choice` poll (the same mechanism as "the room decides"), so phones on `/join` and decks that follow show the answers as buttons; when the hub closes it, the winning answer decides who takes the hit. Four correct answers win. After the battle Henry has a few parting words; after a win, David walks over for the last word and the deck fades to the final slide by itself. With no hub connected, or when a vote closes with nobody having voted, the panel says so and the controller answers: ↑ ↓ then ✕. ✕ while a vote is open closes it early. Poll ids are `gym-1` … `gym-5`, suffixed `#2`, `#3` on a rematch so the hub does not treat them as repeats. Questions, moves and explanations live in `demo/gym/battle.ts`; NPC dialogue in `demo/gym/npcs.ts`.
+**The finale** (`<GymGame :seconds>`, the last slide before the end). The duck walks a top-down Harvard Yard with the controller or the arrow keys and challenges the Science Center Gym. The Gym Leader's one monster, Sloppyclaude, uses five moves, each a kind of AI slop, and each comes with a question from the lecture. When a question opens, the presenter's deck opens it as a timed `choice` poll so phones on `/join` and decks that follow show the answers as buttons; when the hub closes it, the winning answer decides who takes the hit. Four correct answers win. After the battle Henry has a few parting words; after a win, David walks over for the last word and the deck fades to the final slide by itself. With no hub connected, or when a vote closes with nobody having voted, the panel says so and the controller answers: ↑ ↓ then ✕. ✕ while a vote is open closes it early. Poll ids are `gym-1` … `gym-5`, suffixed `#2`, `#3` on a rematch so the hub does not treat them as repeats. Questions, moves and explanations live in `demo/gym/battle.ts`; NPC dialogue in `demo/gym/npcs.ts`.
 
 ## Controller notes
 

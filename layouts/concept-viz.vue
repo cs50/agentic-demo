@@ -26,11 +26,8 @@ const props = defineProps<{
    * SHOW_HINTS is on (components/viz/config.ts).
    */
   caption?: string
-  /** Overline label when there is no concept number (hook, synthesis). */
-  kicker?: string
 }>()
 
-const padded = computed(() => (props.concept != null ? String(props.concept).padStart(2, '0') : null))
 const title = computed(() => props.frontmatter?.title ?? '')
 const showCaption = computed(() => SHOW_HINTS && !!props.caption)
 </script>
@@ -38,8 +35,6 @@ const showCaption = computed(() => SHOW_HINTS && !!props.caption)
 <template>
   <div class="slidev-layout concept-viz">
     <header class="cv-header">
-      <span v-if="padded" class="cv-number">Concept {{ padded }}</span>
-      <span v-else-if="kicker" class="cv-number">{{ kicker }}</span>
       <h1 class="cv-title">{{ title }}</h1>
     </header>
     <div class="cv-body">

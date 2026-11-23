@@ -8,7 +8,6 @@ info: |
   submitted final project proposals.
 author: CS50
 colorSchema: light
-transition: fade
 aspectRatio: 16/9
 canvasWidth: 980
 fonts:
@@ -43,7 +42,6 @@ longer the hard part.
 
 ---
 layout: concept-viz
-kicker: Before we begin
 title: "Take Out Your Phone"
 caption: "Leave this up while people arrive. The count is live."
 ---
@@ -52,32 +50,11 @@ caption: "Leave this up while people arrive. The count is live."
 
 <!--
 Up while people settle. Phones out, scan, or type the address. The page is tiny and
-loads on anything. A name is optional. From here they can vote, send me a message, or
-follow the slides on their own screen. Watch the count climb; when it levels off, go.
+loads on anything. From here they can vote, or follow the slides on their own screen. Watch the count climb; when it levels off, go.
 -->
 
 ---
 layout: concept-viz
-kicker: Before we begin
-title: "What Should You Learn Next?"
-caption: "Press → to open the poll, → again to close it."
----
-
-<LivePoll
-  id="learn-next"
-  question="You've learned C, Python, SQL and JavaScript. Which language should you learn next?"
-  :options="['Rust', 'Go', 'TypeScript', 'Something else entirely']"
-/>
-
-<!--
-Press: the poll opens on every phone. Give it twenty seconds; read the room. Press: it
-closes and everyone sees the bars. Don't comment on the answer yet. "Let's see what the
-index says." Next slide.
--->
-
----
-layout: concept-viz
-kicker: Before we begin
 title: "What Should You Learn Next?"
 caption: "Four presses. Hover a line or a label."
 ---
@@ -155,7 +132,6 @@ banner. This is the thesis; everything else is detail.
 
 ---
 layout: concept-viz
-kicker: The same, as a picture
 title: An Inversion
 caption: "Press → three times. Hover a box for what it does."
 ---
@@ -172,11 +148,7 @@ of them is "type the code". Leave this up while you say that sentence.
 layout: section
 ---
 
-<div class="section-kicker">Part 1</div>
-
 # The Chatbot Era
-
-<div class="section-sub">Text in, text out</div>
 
 ---
 layout: concept-title
@@ -279,11 +251,7 @@ steps gets handed to the machine.
 layout: section
 ---
 
-<div class="section-kicker">Part 2</div>
-
 # Tool Use and the Single Agent
-
-<div class="section-sub">The model gets a terminal</div>
 
 ---
 layout: concept-title
@@ -409,11 +377,7 @@ context gets injected. The duck in their codespace is a harness too.
 layout: section
 ---
 
-<div class="section-kicker">Part 3</div>
-
 # Engineering with Agents
-
-<div class="section-sub">Where your effort goes now</div>
 
 ---
 layout: concept-title
@@ -570,11 +534,7 @@ produce one before the game is ever launched.
 layout: section
 ---
 
-<div class="section-kicker">Part 4</div>
-
 # Many Agents and Software Factories
-
-<div class="section-sub">From one agent to a pipeline</div>
 
 ---
 layout: concept-title
@@ -765,7 +725,6 @@ last row is the lecture in one line.
 
 ---
 layout: concept-viz
-kicker: The same, as a picture
 title: Where the Effort Goes
 caption: "Each → adds an era. Hover a segment for the share."
 ---
@@ -808,11 +767,7 @@ you must understand what you submit.
 layout: section
 ---
 
-<div class="section-kicker">Demonstration</div>
-
 # From Nested Loops to a Game Controller
-
-<div class="section-sub">Week 1's loops, played with a PlayStation controller</div>
 
 <!--
 Before this slide: controller on and paired, agent open on the other display, this
@@ -863,7 +818,6 @@ run and jump across, with a real controller."
 
 ---
 layout: concept-viz
-kicker: Step 2
 title: "The First Prompt"
 caption: "Three presses. The agent asks before it builds."
 ---
@@ -880,7 +834,6 @@ possible at all.
 
 ---
 layout: concept-viz
-kicker: Step 3
 title: "What Kind of Controller?"
 caption: "Three presses. Hover an option to see whether the browser can read it."
 ---
@@ -899,7 +852,6 @@ specification so far, written down.
 
 ---
 layout: concept-viz
-kicker: Step 4
 title: "Language and Shape"
 caption: "Four presses. Hover a language for its cost; hover a module for what it knows."
 ---
@@ -919,7 +871,6 @@ piece small.
 
 ---
 layout: concept-viz
-kicker: Step 5
 title: "The Riskiest Assumption"
 caption: "Three presses. Hover a dot for why it sits where it does."
 ---
@@ -940,7 +891,6 @@ Concept 7 before a line of game code exists.
 
 ---
 layout: concept-viz
-kicker: The specification, written down
 title: "What Must Hold, and How We Will Know"
 caption: "One press per requirement. The last press is what we left out."
 ---
@@ -1025,78 +975,6 @@ If the controller isn't detected, click the canvas and use the arrow keys and sp
 -->
 
 ---
-layout: default
----
-
-# Step 8 · The Room Decides
-
-<div class="lede">
-The game works. Now the specification changes, and the people changing it are the ones holding the phones.
-</div>
-
-<div class="room-decides">
-  <GameChoice
-    id="gravity"
-    question="Where should the duck play next?"
-    :seconds="20"
-    :choices="[
-      { label: 'Earth · gravity 0.8', preset: 'physics-earth' },
-      { label: 'The Moon · a sixth of that', preset: 'physics-moon' },
-      { label: 'Jupiter · two and a half times', preset: 'physics-jupiter' },
-    ]"
-  />
-  <MarioGame compact />
-</div>
-
-<!--
-Step 8 (3 min). The room has watched the agent change the game from a sentence. Now
-they get to be the sentence. Press →: a twenty-second vote opens on every phone and on
-every deck that is following. Read the options aloud; the bars move as they tap.
-
-When the clock runs out the hub names the winner and the deck writes that preset over
-physics.ts, the same path the agent used. The duck's next jump is on the Moon, or on
-Jupiter. Pick up the controller and show it.
-
-The point to make: nothing about the engine changed. A specification changed, the file
-that held it changed, and the system kept running. That is what a boundary buys you.
-
-The presets are files in demo/mario/presets/: level-*.ts replaces level.ts, physics-*.ts
-replaces physics.ts. To offer a different menu, add a file and name it in the slide.
-If the dev server isn't running, the vote still works but nothing is written; the panel
-says so.
--->
-
----
-layout: default
----
-
-# Step 8 · The Room Decides, Again
-
-<div class="lede">
-Same question, other file.
-</div>
-
-<div class="room-decides">
-  <GameChoice
-    id="level"
-    question="What should the duck climb?"
-    :seconds="20"
-    :choices="[
-      { label: 'The Week 1 pyramid', preset: 'level-pyramid' },
-      { label: 'Mario, more comfortable', preset: 'level-more' },
-      { label: 'Towers', preset: 'level-towers' },
-    ]"
-  />
-  <MarioGame compact />
-</div>
-
-<!--
-Optional, if there is time. Press →: a second vote, this time over level.ts. The
-"more comfortable" option is the two half-pyramids from the Week 1 spec, with the gap;
-ask whether the duck can clear it under whatever gravity they just chose.
--->
-
----
 layout: quote
 class: text-center
 ---
@@ -1114,13 +992,10 @@ git history is the receipt.
 
 ---
 layout: section
+transition: fade
 ---
 
-<div class="section-kicker">One more thing</div>
-
 # Harvard Yard
-
-<div class="section-sub">The Science Center is a Gym now. The Gym Leader has one monster, and the room fights it.</div>
 
 <!--
 A breath before the game. Phones are still out from the votes; they will need them
@@ -1130,9 +1005,10 @@ again in a minute. "You've watched the duck all evening. Now you get to walk it.
 ---
 layout: default
 class: gym-slide
+transition: fade
 ---
 
-<GymGame :seconds="20" full />
+<GymGame :seconds="15" full />
 
 <!--
 The finale (8 min). Click the canvas, pick up the controller. The duck is on the path at
@@ -1148,7 +1024,7 @@ them reads the sign; ✕ challenges.
 The battle. ✕ moves the text. Sloppyclaude uses a move; every move is a kind of AI slop:
 CONFIDENT NONSENSE, INFINITE LOOP, VIBE SPEC, WORKS ON MY MACHINE, YOU'RE ABSOLUTELY
 RIGHT. Each comes with a question, and the question opens on every phone as a
-twenty-second vote (the same mechanism as "the room decides"). Read it aloud; watch the
+fifteen-second vote on the hub. Read it aloud; watch the
 bars. When the clock runs out the room's answer lands: right, and the duck's counter hits
 the monster; wrong, and the slop hits the duck. The explanation shows either way, in one
 line. Five rounds, ten concepts, two per round. Four right answers win.

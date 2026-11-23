@@ -124,7 +124,7 @@ const legend = computed(() => (at(3) ? [...langs, english] : langs))
         <template v-if="!at(3)">TIOBE Index · ratings each November, 2021–2026 · <a href="https://www.tiobe.com" target="_blank" rel="noopener">www.tiobe.com</a></template>
         <template v-else>The fastest-growing programming language of the last five years isn't on the list.</template>
       </div>
-      <div v-if="at(4)" class="line viz-enter shown">It's the one you already speak.</div>
+      <div v-if="at(4)" class="line viz-enter shown">It's the one you're already familiar with.</div>
     </div>
 
     <div class="legend" role="list" aria-label="Languages" @mouseleave="hovered = null">

@@ -38,14 +38,12 @@ const props = withDefaults(
   { exampleLabel: 'In C$50 Finance', reveal: true },
 )
 
-const padded = String(props.concept).padStart(2, '0')
 const title = computed(() => props.frontmatter?.title ?? '')
 </script>
 
 <template>
   <div class="slidev-layout concept-detail">
     <header class="cd-header">
-      <span class="cd-number">Concept {{ padded }}</span>
       <h1 class="cd-title">{{ title }}</h1>
     </header>
 

@@ -18,13 +18,10 @@ const props = defineProps<{
   sequence?: string
 }>()
 
-const padded = String(props.concept).padStart(2, '0')
 </script>
 
 <template>
   <div class="slidev-layout concept-title">
-    <div class="ct-sequence" v-if="sequence">{{ sequence }}</div>
-    <div class="ct-number">Concept {{ padded }}</div>
     <div class="ct-title">
       <slot />
     </div>
@@ -39,23 +36,6 @@ const padded = String(props.concept).padStart(2, '0')
   padding: 3rem 4rem;
   position: relative;
   border-left: 12px solid var(--cs50-crimson);
-}
-.ct-sequence {
-  position: absolute;
-  top: 2.2rem;
-  left: 4rem;
-  font-size: 0.8rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--cs50-muted);
-}
-.ct-number {
-  font-size: 1rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--cs50-crimson);
-  font-weight: 700;
-  margin-bottom: 0.6rem;
 }
 .ct-title :deep(h1) {
   font-size: 3.2rem;
