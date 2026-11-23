@@ -1,13 +1,15 @@
 /**
- * overworld.ts — the Yard as a game: tile-to-tile movement, facing, what is
- * in front of the duck, and what happens when ✕ is pressed there.
+ * overworld.ts — the Yard and the Gym as a game: tile-to-tile movement,
+ * facing, what is in front of the duck, what ✕ does there, doors between the
+ * two areas, and people who walk about on their own.
  *
- * Pure and framework-free, like demo/mario/engine.ts: it is stepped 60 times
- * a second with an input and exposes state for a renderer. No canvas here.
+ * Pure and framework-free, like demo/mario/engine.ts: stepped 60 times a
+ * second with an input, exposing state for a renderer. No canvas here. The
+ * random source is injectable so tests are deterministic.
  */
 
-import { GYM_DOOR, STATUE_TILE, TILE, TILES } from './tiles'
-import { MAP_COLS, MAP_ROWS, MAP_ROWS_N, SPAWN, VIEW_COLS, VIEW_ROWS } from './map'
+import { AREAS, YARD_DOORSTEP, type Area, type Placement } from './areas'
+import { EXIT_MAT, GYM_DOOR, STATUE_TILE, TILE } from './tiles'
 import { GYM_DOOR_LINES, NPCS, PLAQUE, type Npc } from './npcs'
 import type { Facing } from './sprites'
 
@@ -19,22 +21,46 @@ export interface OverworldInput {
   interact: boolean
 }
 
-/** What the duck is doing, for the renderer and the component. */
 export type Mode =
   | { kind: 'walk' }
-  | { kind: 'talk'; speaker: string; lines: string[]; index: number }
-  | { kind: 'gym' } // standing at the door, challenge accepted
+  | { kind: 'talk'; speaker: string; lines: string[]; index: number; then?: 'battle' }
+  | { kind: 'battle' }
+
+/** A person as placed and moving. */
+export interface Actor {
+  npc: Npc
+  col: number
+  row: number
+  from: { col: number; row: number }
+  progress: number
+  facing: Facing
+  /** Frames until a wandering NPC considers moving again. */
+  rest: number
+  /** Tiles left in the current stroll. */
+  strollLeft: number
+}
+
+export interface ActorView {
+  id: string
+  x: number
+  y: number
+  facing: Facing
+  frame: 0 | 1
+  moving: boolean
+}
 
 export interface OverworldState {
+  area: Area['id']
   /** Duck position in pixels (top-left of its tile). */
   x: number
   y: number
   facing: Facing
-  /** 0/1 while walking, for the two-frame animation. */
   frame: 0 | 1
   moving: boolean
-  camera: { x: number; y: number }
+  actors: ActorView[]
   mode: Mode
+  /** Frames since an area change; the renderer fades in from it. */
+  sinceEnter: number
 }
 
 const STEP_FRAMES = 8 // frames to cross one tile
@@ -44,90 +70,134 @@ const DIRS: Record<Facing, { dc: number; dr: number }> = {
   left: { dc: -1, dr: 0 },
   right: { dc: 1, dr: 0 },
 }
-
-export function tileAt(col: number, row: number): string {
-  if (row < 0 || row >= MAP_ROWS_N || col < 0 || col >= MAP_COLS) return 'T'
-  return MAP_ROWS[row][col]
-}
-
-export function isSolid(col: number, row: number): boolean {
-  const def = TILES[tileAt(col, row)]
-  return def ? def.solid : true
-}
-
-export function npcAt(col: number, row: number): Npc | undefined {
-  return NPCS.find((n) => n.col === col && n.row === row)
-}
+const FACINGS: Facing[] = ['up', 'down', 'left', 'right']
 
 export class Overworld {
-  private col = SPAWN.col
-  private row = SPAWN.row
-  private facing: Facing = SPAWN.facing
-  /** Progress across the current tile move, 0..STEP_FRAMES; 0 = standing. */
+  area: Area = AREAS.yard
+  private col = 0
+  private row = 0
+  private facing: Facing = 'up'
+  private from = { col: 0, row: 0 }
   private progress = 0
-  private from = { col: SPAWN.col, row: SPAWN.row }
   private walkClock = 0
   private mode: Mode = { kind: 'walk' }
-  /** Set when the duck reaches the Gym door; the component starts the battle. */
-  onGym: (() => void) | null = null
+  private actors: Actor[] = []
+  private sinceEnter = 0
+  private pendingBattle = false
 
-  reset() {
-    this.col = SPAWN.col
-    this.row = SPAWN.row
-    this.facing = SPAWN.facing
-    this.progress = 0
-    this.from = { col: SPAWN.col, row: SPAWN.row }
-    this.mode = { kind: 'walk' }
+  /** Called when the leader's lines end: the component starts the battle. */
+  onBattle: (() => void) | null = null
+
+  constructor(private rng: () => number = Math.random) {
+    this.enter('yard')
   }
 
-  /** The tile the duck is facing. */
+  /** Go to an area, standing at its spawn (or somewhere given). */
+  enter(id: Area['id'], at?: { col: number; row: number; facing: Facing }) {
+    this.area = AREAS[id]
+    const s = at ?? this.area.spawn
+    this.col = s.col
+    this.row = s.row
+    this.facing = s.facing
+    this.from = { col: s.col, row: s.row }
+    this.progress = 0
+    this.mode = { kind: 'walk' }
+    this.sinceEnter = 0
+    this.actors = this.area.npcs.map((p) => placeActor(p))
+  }
+
+  reset() {
+    this.enter('yard')
+  }
+
+  // ---------------------------------------------------------------- queries
+
+  tileAt(col: number, row: number): string {
+    const row_ = this.area.rows[row]
+    if (!row_ || col < 0 || col >= row_.length) return '\0'
+    return row_[col]
+  }
+
+  isSolid(col: number, row: number): boolean {
+    const def = this.area.tiles[this.tileAt(col, row)]
+    return def ? def.solid : true
+  }
+
+  actorAt(col: number, row: number): Actor | undefined {
+    return this.actors.find((a) => (a.col === col && a.row === row) || (a.progress > 0 && a.from.col === col && a.from.row === row))
+  }
+
+  /** Free for someone to step onto: not solid, nobody there, not the duck. */
+  private isFree(col: number, row: number): boolean {
+    if (this.isSolid(col, row)) return false
+    if (this.actorAt(col, row)) return false
+    if ((this.col === col && this.row === row) || (this.progress > 0 && this.from.col === col && this.from.row === row)) return false
+    return true
+  }
+
   private ahead() {
     const d = DIRS[this.facing]
     return { col: this.col + d.dc, row: this.row + d.dr }
   }
 
-  step(input: OverworldInput) {
+  // ------------------------------------------------------------------ step
+
+  /** One frame. */
+  tick(input: OverworldInput) {
+    this.sinceEnter++
+    this.stepDuck(input)
+    if (this.mode.kind === 'walk') this.stepActors()
+    if (this.pendingBattle && this.mode.kind === 'walk') {
+      this.pendingBattle = false
+      this.mode = { kind: 'battle' }
+      this.onBattle?.()
+    }
+  }
+
+  private stepDuck(input: OverworldInput) {
     if (this.mode.kind === 'talk') {
       if (input.interact) {
         const m = this.mode
         if (m.index + 1 < m.lines.length) this.mode = { ...m, index: m.index + 1 }
-        else this.mode = { kind: 'walk' }
+        else {
+          this.mode = { kind: 'walk' }
+          if (m.then === 'battle') this.pendingBattle = true
+        }
       }
       return
     }
-    if (this.mode.kind === 'gym') return
+    if (this.mode.kind === 'battle') return
 
-    // Mid-move: keep going.
     if (this.progress > 0) {
       this.progress++
       this.walkClock++
       if (this.progress >= STEP_FRAMES) {
         this.progress = 0
         this.from = { col: this.col, row: this.row }
+        this.arrived()
       }
       return
     }
 
     if (input.interact) {
       const a = this.ahead()
-      const npc = npcAt(a.col, a.row)
-      if (npc) {
-        this.mode = { kind: 'talk', speaker: npc.name, lines: npc.lines, index: 0 }
+      const actor = this.actorAt(a.col, a.row)
+      if (actor) {
+        actor.facing = opposite(this.facing)
+        this.mode = { kind: 'talk', speaker: actor.npc.name, lines: actor.npc.lines, index: 0, then: actor.npc.leader ? 'battle' : undefined }
         return
       }
-      const t = tileAt(a.col, a.row)
-      if (t === STATUE_TILE) {
+      const t = this.tileAt(a.col, a.row)
+      if (this.area.id === 'yard' && t === STATUE_TILE) {
         this.mode = { kind: 'talk', speaker: 'Plaque', lines: PLAQUE, index: 0 }
         return
       }
-      if (t === GYM_DOOR) {
-        this.mode = { kind: 'gym' }
-        this.onGym?.()
+      if (this.area.id === 'yard' && t === GYM_DOOR) {
+        this.mode = { kind: 'talk', speaker: 'Sign', lines: GYM_DOOR_LINES, index: 0 }
         return
       }
     }
 
-    // Start a move if a direction is held.
     let facing: Facing | null = null
     if (input.dy < 0) facing = 'up'
     else if (input.dy > 0) facing = 'down'
@@ -141,14 +211,11 @@ export class Overworld {
     const d = DIRS[facing]
     const nc = this.col + d.dc
     const nr = this.row + d.dr
-    const t = tileAt(nc, nr)
-    if (t === GYM_DOOR) {
-      // Walking into the door is the same as knocking.
-      this.mode = { kind: 'talk', speaker: 'Door', lines: GYM_DOOR_LINES, index: 0 }
-      this.pendingGym = true
+    if (this.area.id === 'yard' && this.tileAt(nc, nr) === GYM_DOOR) {
+      this.enter('gym')
       return
     }
-    if (isSolid(nc, nr) || npcAt(nc, nr)) return
+    if (this.isSolid(nc, nr) || this.actorAt(nc, nr)) return
     this.from = { col: this.col, row: this.row }
     this.col = nc
     this.row = nr
@@ -156,47 +223,90 @@ export class Overworld {
     this.walkClock++
   }
 
-  /** After the door's lines, the next ✕ is the challenge. */
-  private pendingGym = false
-
-  /** Called by the component each step after `step()`, to turn "door lines finished" into the gym. */
-  private resolvePendingGym() {
-    if (this.pendingGym && this.mode.kind === 'walk') {
-      this.pendingGym = false
-      this.mode = { kind: 'gym' }
-      this.onGym?.()
+  /** The duck has finished a step onto its tile. */
+  private arrived() {
+    if (this.area.id === 'gym' && this.tileAt(this.col, this.row) === EXIT_MAT) {
+      this.enter('yard', YARD_DOORSTEP)
     }
   }
 
-  /** One frame: input, then bookkeeping. */
-  tick(input: OverworldInput) {
-    this.step(input)
-    this.resolvePendingGym()
+  private stepActors() {
+    for (const a of this.actors) {
+      if (a.progress > 0) {
+        a.progress++
+        if (a.progress >= STEP_FRAMES) {
+          a.progress = 0
+          a.from = { col: a.col, row: a.row }
+        }
+        continue
+      }
+      if (!a.npc.wander) continue
+      if (a.rest > 0) {
+        a.rest--
+        continue
+      }
+      if (a.strollLeft <= 0) {
+        // Stroll is over: stand still for two to five seconds, then plan another.
+        a.rest = 120 + Math.floor(this.rng() * 180)
+        a.strollLeft = 1 + Math.floor(this.rng() * 3)
+        a.facing = FACINGS[Math.floor(this.rng() * 4)]
+        continue
+      }
+      const d = DIRS[a.facing]
+      const nc = a.col + d.dc
+      const nr = a.row + d.dr
+      if (this.isFree(nc, nr)) {
+        a.from = { col: a.col, row: a.row }
+        a.col = nc
+        a.row = nr
+        a.progress = 1
+        a.strollLeft--
+      } else {
+        // Blocked: turn, and count it as the end of this stroll.
+        a.facing = FACINGS[Math.floor(this.rng() * 4)]
+        a.strollLeft = 0
+      }
+    }
   }
 
-  /** Where the duck stands or is heading, in tiles. */
+  // ----------------------------------------------------------------- view
+
   get tile() {
     return { col: this.col, row: this.row }
   }
 
   get state(): OverworldState {
     const t = this.progress / STEP_FRAMES
-    const x = (this.from.col + (this.col - this.from.col) * t) * TILE
-    const y = (this.from.row + (this.row - this.from.row) * t) * TILE
-    const camX = clamp(x + TILE / 2 - (VIEW_COLS * TILE) / 2, 0, (MAP_COLS - VIEW_COLS) * TILE)
-    const camY = clamp(y + TILE / 2 - (VIEW_ROWS * TILE) / 2, 0, (MAP_ROWS_N - VIEW_ROWS) * TILE)
     return {
-      x,
-      y,
+      area: this.area.id,
+      x: (this.from.col + (this.col - this.from.col) * t) * TILE,
+      y: (this.from.row + (this.row - this.from.row) * t) * TILE,
       facing: this.facing,
       frame: Math.floor(this.walkClock / 6) % 2 === 0 ? 0 : 1,
       moving: this.progress > 0,
-      camera: { x: Math.round(camX), y: Math.round(camY) },
+      actors: this.actors.map((a) => {
+        const u = a.progress / STEP_FRAMES
+        return {
+          id: a.npc.id,
+          x: (a.from.col + (a.col - a.from.col) * u) * TILE,
+          y: (a.from.row + (a.row - a.from.row) * u) * TILE,
+          facing: a.facing,
+          frame: a.progress > 0 && a.progress % 8 >= 4 ? 1 : 0,
+          moving: a.progress > 0,
+        }
+      }),
       mode: this.mode,
+      sinceEnter: this.sinceEnter,
     }
   }
 }
 
-function clamp(v: number, lo: number, hi: number) {
-  return Math.max(lo, Math.min(hi, v))
+function placeActor(p: Placement): Actor {
+  const npc = NPCS[p.npc]
+  if (!npc) throw new Error(`unknown npc "${p.npc}"`)
+  return { npc, col: p.col, row: p.row, from: { col: p.col, row: p.row }, progress: 0, facing: p.facing ?? 'down', rest: 60, strollLeft: 0 }
+}
+
+function opposite(f: Facing): Facing {
+  return f === 'up' ? 'down' : f === 'down' ? 'up' : f === 'left' ? 'right' : 'left'
 }

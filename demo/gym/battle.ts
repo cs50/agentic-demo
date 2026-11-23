@@ -1,8 +1,8 @@
 /**
  * battle.ts — the Gym battle as pure logic.
  *
- * The Gym Leader (the Agent) has one monster, Slopwhale, whose moves are all
- * AI slop. Each round: the monster uses a move, a question is put to the room,
+ * The Gym Leader, Henry Leitner, has one monster, Slopwhale, whose moves are
+ * all AI slop. Each round: the monster uses a move, a question is put to the room,
  * the room answers (a hub `choice` poll on stage; the controller when there is
  * no hub), and the answer decides who takes the hit. Five rounds cover the ten
  * concepts in pairs.
@@ -207,7 +207,7 @@ export class Battle {
     const { phase, round, last } = this.s
     switch (phase) {
       case 'intro':
-        return 'Gym Leader AGENT would like to battle!'
+        return 'Gym Leader HENRY sent out SLOPWHALE!'
       case 'move':
         return `Slopwhale used ${round!.move.toUpperCase()}!`
       case 'question':
@@ -221,7 +221,7 @@ export class Battle {
       case 'won':
         return 'Slopwhale fainted. You earned the VERIFICATION BADGE.'
       case 'lost':
-        return 'The duck fainted. Gym Leader AGENT: "Come back after Week 11."'
+        return 'The duck fainted. Gym Leader HENRY: "Let\'s go over that again. At the board."'
     }
   }
 }

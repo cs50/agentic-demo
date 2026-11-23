@@ -1114,17 +1114,10 @@ git history is the receipt.
 
 ---
 layout: default
+class: gym-slide
 ---
 
-# One More Thing
-
-<div class="lede">
-Harvard Yard. The Science Center is a Gym now. The Gym Leader has one monster, and the room fights it.
-</div>
-
-<div style="height: 400px">
-  <GymGame :seconds="20" />
-</div>
+<GymGame :seconds="20" full />
 
 <!--
 The finale (8 min). Click the canvas, pick up the controller. The duck is on the path at

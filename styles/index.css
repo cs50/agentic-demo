@@ -444,3 +444,9 @@ body,
     animation-duration: 0ms !important;
   }
 }
+
+/* The finale: no padding, the game takes the whole slide (see GymGame's `full`). */
+.slidev-layout.gym-slide {
+  padding: 0;
+  overflow: hidden;
+}

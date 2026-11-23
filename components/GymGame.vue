@@ -4,7 +4,9 @@
  * Science Center Gym, where the room answers for it.
  *
  *   Overworld   left stick / D-pad / arrows to walk, ✕ / Space to talk.
- *               Walking into the Gym door reads the sign; ✕ challenges.
+ *               Walking into the Science Center's doors goes inside; the mat
+ *               by the door leads back out. Talking to the Gym Leader, Henry
+ *               Leitner, starts the battle.
  *   Battle      ✕ moves the text on. When a question opens, the presenter's
  *               deck opens a timed `choice` poll on the hub (phones on /join
  *               and decks that follow get the buttons for free). The hub's
@@ -29,7 +31,7 @@ import { VIEW_H, VIEW_W, drawBattle, drawOverworld, type BattleScene } from '../
 import { SLOPWHALE_NAME } from '../demo/gym/slopwhale'
 import DuckSprite from './viz/DuckSprite.vue'
 
-const props = withDefaults(defineProps<{ seconds?: number }>(), { seconds: 20 })
+const props = withDefaults(defineProps<{ seconds?: number; full?: boolean }>(), { seconds: 20, full: false })
 
 const live = useLive()
 const isActive = useIsSlideActive()
@@ -50,7 +52,7 @@ const controller = new Controller()
 const ow = ref<OverworldState>(world.state)
 const bs = ref<BattleState>(battle.state)
 const line = ref('')
-const fx: BattleScene = { clock: 0, monsterHurt: 0, duckHurt: 0, monsterGone: false, duckGone: false }
+const fx: BattleScene = { clock: 0, monsterHurt: 0, duckHurt: 0, monsterGone: false, duckGone: false, showLeader: true }
 const shake = ref(false)
 
 /** Answer picked with the controller when there is no hub (or no votes). */
@@ -59,11 +61,12 @@ const localMode = ref(false)
 /** When the hub poll for the current round was opened; guards double-apply. */
 let appliedPoll = ''
 
-world.onGym = () => {
+world.onBattle = () => {
   battle.start()
   scene.value = 'battle'
   fx.clock = 0
   fx.monsterGone = fx.duckGone = false
+  fx.showLeader = true
   sync()
 }
 
@@ -193,13 +196,14 @@ function step() {
 
   if (input.actionPressed) {
     if (phase === 'won' || phase === 'lost') {
-      // ✕ after the end: back to the Yard, standing at the door.
+      // ✕ after the end: back into the Gym, in front of Henry.
       scene.value = 'yard'
-      world.reset()
+      world.enter('gym', { col: 9, row: 3, facing: 'up' })
       sync()
       return
     }
     const opened = battle.advance()
+    if (battle.state.phase !== 'intro') fx.showLeader = false
     if (battle.state.phase === 'won') fx.monsterGone = true
     if (battle.state.phase === 'lost') fx.duckGone = true
     sync()
@@ -255,7 +259,7 @@ const concepts = computed(() => bs.value.round?.concepts.join(' · ') ?? '')
 </script>
 
 <template>
-  <div class="gym">
+  <div class="gym" :class="{ full }">
     <div v-if="mirroring" class="gym-mirror">
       <DuckSprite :size="48" />
       <div>
@@ -273,7 +277,7 @@ const concepts = computed(() => bs.value.round?.concepts.join(' · ') ?? '')
         <div class="text">{{ ow.mode.lines[ow.mode.index] }}</div>
         <div class="more">✕</div>
       </div>
-      <div v-else-if="scene === 'yard' && !focused" class="hint">Click, then walk with the arrows or the controller. ✕ talks.</div>
+      <div v-else-if="scene === 'yard' && ow.area === 'yard' && !focused && ow.sinceEnter > 60" class="hint">Click, then walk with the arrows or the controller. ✕ talks.</div>
 
       <!-- Battle: HP, dialogue, question -->
       <template v-if="scene === 'battle'">
@@ -326,20 +330,25 @@ const concepts = computed(() => bs.value.round?.concepts.join(' · ') ?? '')
   align-items: center;
   justify-content: center;
 }
+/* The whole slide, on a dark surround like a handheld's bezel. */
+.gym.full {
+  position: absolute;
+  inset: 0;
+  width: auto;
+  height: auto;
+  background: #182028;
+}
 .gym-frame {
   position: relative;
-  aspect-ratio: 3 / 2;
+  aspect-ratio: 10 / 7;
   height: 100%;
   max-width: 100%;
-  border-radius: 6px;
-  border: 1px solid #dee2e6;
   overflow: hidden;
   background: #fff;
   line-height: 0;
 }
 .gym-frame.focused {
-  border-color: #a51c30;
-  box-shadow: 0 0 0 3px rgba(165, 28, 48, 0.15);
+  box-shadow: 0 0 0 3px rgba(165, 28, 48, 0.5);
 }
 .gym-frame.shake {
   animation: shake 400ms ease;
@@ -369,7 +378,7 @@ const concepts = computed(() => bs.value.round?.concepts.join(' · ') ?? '')
 .hint {
   position: absolute;
   left: 50%;
-  bottom: 6%;
+  bottom: 1.5%;
   transform: translateX(-50%);
   padding: 0.3rem 0.8rem;
   border-radius: 999px;
