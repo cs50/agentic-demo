@@ -992,11 +992,11 @@ git history is the receipt.
 
 ---
 layout: concept-viz
-title: "Phones Out Again"
-caption: "The last stretch is played by the room. Scan if you haven't, or type the address."
+title: "Join the Room"
+caption: "The last part is played from your phone."
 ---
 
-<AudienceQR prompt="Scan to join. The CS50 Duck is about to need your answers." />
+<AudienceQR prompt="Scan to join, or type the address." />
 
 <!--
 The join page again, for anyone who put their phone away or arrived late. Each question in
