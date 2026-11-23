@@ -20,9 +20,9 @@ const changes = [
 
 /** Gate position per step: index of the first change that needs a person. */
 const positions = [
-  { gate: 0, name: 'Everything waits', note: 'Safe, and nothing ships until you\u2019ve read a CSS diff. You are the bottleneck.' },
+  { gate: 0, name: 'Everything waits', note: 'Safe. Nothing ships until you have read a CSS diff, so you are the bottleneck.' },
   { gate: 2, name: 'The gate where it belongs', note: 'Low-stakes changes go through on their own. Anything touching passwords, sessions or money waits for a human to read the diff.' },
-  { gate: 5, name: 'Dark factory', note: 'Lights out. The pipeline deploys a change to balance deduction at 3 a.m. because the tests passed. The tests the agent wrote.' },
+  { gate: 5, name: 'Dark factory', note: 'Lights out. At 3 a.m. the pipeline deploys a change to how balances are deducted because the tests passed. The agent wrote the tests.' },
 ]
 
 const { step, at } = useVizSteps(positions.length)

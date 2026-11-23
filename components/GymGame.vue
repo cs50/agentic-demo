@@ -43,6 +43,8 @@ const mirroring = computed(() => canFollow.value && following.value)
 
 const canvas = ref<HTMLCanvasElement | null>(null)
 const focused = ref(false)
+/** The first time the player does anything, the hint has done its job. */
+const touched = ref(false)
 
 // ------------------------------------------------------------------ game
 
@@ -197,6 +199,7 @@ function step() {
   const input = controller.poll()
   if (scene.value === 'yard') {
     if (transition >= 0 || ending >= 0) return // hold still under the flash, and under the fade
+    if (input.moveX || input.moveY || input.actionPressed) touched.value = true
     world.tick({ dx: Math.round(input.moveX), dy: Math.round(input.moveY), interact: input.actionPressed })
     ow.value = world.state
     if (world.state.mode.kind === 'done') ending = 0
@@ -348,7 +351,7 @@ const concepts = computed(() => bs.value.round?.concepts.join(' · ') ?? '')
         <div class="text">{{ ow.mode.lines[ow.mode.index] }}</div>
         <div class="more">✕</div>
       </div>
-      <div v-else-if="scene === 'yard' && ow.area === 'yard' && ow.mode.kind === 'walk' && !focused && ow.sinceEnter > 60" class="hint">Click, then walk with the arrows or the controller. ✕ talks.</div>
+      <div v-else-if="scene === 'yard' && ow.area === 'yard' && ow.mode.kind === 'walk' && !focused && !touched && ow.sinceEnter > 60" class="hint">Walk with the controller, or click and use the arrows. ✕ talks.</div>
 
       <!-- Battle: HP, dialogue, question -->
       <template v-if="scene === 'battle'">

@@ -27,13 +27,13 @@ const env = [
 const message = computed(() => {
   switch (step.value) {
     case 1:
-      return { text: 'Three jobs, all outside the model.', tone: '' }
+      return { text: 'All three jobs sit outside the model.', tone: '' }
     case 2:
       return { text: 'Before anything runs, the harness reads .schema and puts it in context. Now the model knows users has id, username, hash, cash.', tone: 'ok' }
     case 3:
       return { text: 'The model proposes DROP TABLE users "to start fresh". Permissions stops it and asks you.', tone: 'bad' }
     case 4:
-      return { text: 'The model proposes SELECT cash FROM users WHERE id = ?. Read-only, parameterised: through it goes.', tone: 'ok' }
+      return { text: 'The model proposes SELECT cash FROM users WHERE id = ?. It is read-only and parameterised, so through it goes.', tone: 'ok' }
     default:
       return { text: hint('Press → to label the rings.'), tone: '' }
   }

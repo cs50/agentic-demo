@@ -65,7 +65,7 @@ const history = computed(() => attempts.slice(0, Math.min(step.value, attempts.l
     </section>
 
     <section class="viz-card rules">
-      <div class="viz-label accent">The spec, as checks</div>
+      <div class="viz-label accent">The spec as a checklist</div>
       <ol>
         <li v-for="r in rules" :key="r.id" :class="state(r.id)" :title="r.tip">
           <span class="mark">
@@ -78,7 +78,7 @@ const history = computed(() => attempts.slice(0, Math.min(step.value, attempts.l
       </ol>
       <blockquote v-if="current" class="quote">{{ current.spec }}</blockquote>
       <div class="verdict viz-enter" :class="{ shown: at(attempts.length + 1) }">
-        Five inputs, four rules, one path through. You didn't write the code; you wrote <b>what the code must do</b>, and you can check it.
+        Five inputs, four rules, one way through. You didn't write the code. You wrote <b>what the code must do</b>, and you can check it.
       </div>
     </section>
   </div>

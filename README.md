@@ -32,7 +32,7 @@ Every C$50 Finance example is taken from the Problem Set 9 specification (the `b
 | 6, 12, 19, 27 | Part dividers | `section` |
 | 7–11, 13–18, 20–26, 28–42 | Ten concepts: title → visualization(s) → explanation / Finance example / takeaway. Concepts 4 and 8 have two visualization slides | `concept-title`, `concept-viz`, `concept-detail` |
 | 43–45 | Synthesis: effort table; the same as a chart; what doesn't go away | `default`, `concept-viz`, `default` |
-| 46–53 | Live demo: `mario.c` → the first prompt → what kind of controller? → language and shape → the riskiest assumption (one conversation, `AgentChat`) → the spec with its evidence → the experiment (`ControllerTest`) → play, then finish it (`LiveDemo`) | mixed |
+| 46–53 | Live demo: `mario.c` → the first prompt → what kind of controller? → language and shape → the riskiest assumption (one conversation, `AgentChat`) → the spec with its evidence → the experiment (`ControllerTest`) → finish the game (`LiveDemo`) | mixed |
 | 54–57 | Closing quote; a breath ("Harvard Yard"); the finale: Harvard Yard and the Science Center Gym (`GymGame`, the whole slide); end: "This Was CS50" | `quote`, `section`, `default`, `end` |
 
 Every slide carries presenter notes. On `concept-detail` slides the example appears on the first click and the takeaway on the second.

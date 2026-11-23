@@ -26,7 +26,7 @@ const categories: Category[] = [
   { id: 'steer', label: 'Steering', short: 'Steering', tip: 'Supplying context, choosing the next step, reviewing diffs.', shade: '#495057', ink: '#fff', group: 'compiler' },
   { id: 'spec', label: 'Specifying', short: 'Specifying', tip: 'Writing down what correct means.', shade: '#a51c30', ink: '#fff', group: 'engineering' },
   { id: 'guard', label: 'Guardrails', short: 'Guardrails', tip: 'Setting up the checks that cannot be talked out of it.', shade: '#c9566a', ink: '#fff', group: 'engineering' },
-  { id: 'verify', label: 'Judging evidence', short: 'Judging', tip: 'Reading test output, screenshots, diffs: the proof, not the code.', shade: '#efb3bd', ink: '#58151c', group: 'engineering' },
+  { id: 'verify', label: 'Judging evidence', short: 'Judging', tip: 'Reading test output, screenshots and diffs. The proof rather than the code.', shade: '#efb3bd', ink: '#58151c', group: 'engineering' },
 ]
 
 type Shares = Record<string, number>
@@ -107,7 +107,7 @@ function total(e: { shares: Shares }, group: Category['group']) {
       </div>
 
       <div class="verdict viz-enter" :class="{ shown: at(eras.length) }">
-        Left to right, translating falls from 85% to 10%; specifying, guarding and judging rise from 15% to 90%.
+        From left to right, translating falls from 85% to 10% while specifying, guarding and judging rise from 15% to 90%.
         <b>The rising part is what this course taught you to do.</b>
       </div>
     </section>

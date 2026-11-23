@@ -25,19 +25,19 @@ const agents: Agent[] = [
     name: 'Backend agent',
     job: 'Changes the routes.',
     context: ['the spec agent\u2019s note', 'app.py', '.schema'],
-    output: '/buy and /sell accept a pre-filled symbol; validation unchanged.',
+    output: '/buy and /sell accept a pre-filled symbol. Validation is unchanged.',
   },
   {
     name: 'Frontend agent',
     job: 'Changes the template.',
     context: ['the spec agent\u2019s note', 'index.html', 'layout.html'],
-    output: 'Two small forms per row; no symbol to type.',
+    output: 'Two small forms per row and no symbol to type.',
   },
   {
     name: 'QA agent',
     job: 'Runs the spec\u2019s test plan.',
     context: ['the "Testing" section', 'the running app', 'a fresh finance.db'],
-    output: 'Letters, zero, negatives, decimals, too many shares: all apologies. check50 passes.',
+    output: 'Letters, zero, negatives, decimals and too many shares all get an apology. check50 passes.',
   },
 ]
 
@@ -50,7 +50,7 @@ const done = computed(() => at(agents.length))
   <div class="viz lanes">
     <div class="request">
       <span class="viz-pill crimson">Feature</span>
-      <span>Let users buy more shares, or sell shares they own, from <span class="viz-mono">index</span> itself, without typing a symbol.</span>
+      <span>Let users buy more shares or sell shares they own from <span class="viz-mono">index</span> itself, without typing a symbol.</span>
     </div>
 
     <div class="grid">
@@ -75,7 +75,7 @@ const done = computed(() => at(agents.length))
     </div>
 
     <div class="verdict viz-enter" :class="{ shown: done }">
-      Each agent saw <b>three things</b> and produced one. Nobody held the whole project in their head. Where to cut was <b>your</b> decision.
+      Each agent saw <b>three things</b> and produced one. Nobody held the whole project in their head, and where to cut was <b>your</b> decision.
     </div>
   </div>
 </template>

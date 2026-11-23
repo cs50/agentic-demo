@@ -330,7 +330,7 @@ difference.
 ---
 layout: concept-viz
 concept: 4
-title: "The Agent Harness, as files on disk"
+title: "The Agent Harness on Disk"
 caption: "Four presses: context, permissions, sandbox, then the line between them."
 ---
 
@@ -468,7 +468,7 @@ A prompt is a request. A failing check is a **wall**.
 
 ::example::
 
-- The Finance hints warn: use `?` placeholders in `db.execute`; do **not** build queries with f-strings or `+`, lest you invite SQL injection.
+- The Finance hints say to use `?` placeholders in `db.execute` and never to build a query with f-strings, `format`, or `+`, because that invites SQL injection.
 - Rather than remind the agent of that in every prompt, add a check that **fails the build** whenever a string is concatenated into a query. Now the agent can't ship it.
 
 ::takeaway::
@@ -510,14 +510,14 @@ concept: 7
 title: Verification Artifacts
 ---
 
-When an agent writes a thousand lines, you won't read them all. So don't review the code. Review the **evidence** that it works: test output, a diff of the database, a screenshot, a recording.
+When an agent writes a thousand lines, you won't read them all. So don't review the code. Review the **evidence** that it works: test output, the database before and after, a screenshot, a recording.
 
 The question shifts from "is this code right?" to "does this proof convince me?"
 
 ::example::
 
 - To check `history`, don't read the Jinja template.
-- Run the spec's own test plan, recorded: register, buy 10 shares of NFLX, sell 4, and open `/history`. Two rows, each with the symbol, the price, the shares, and the date and time, in that order.
+- Run the spec's own test plan, recorded: register, buy 10 shares of NFLX, sell 4, and open `/history`. Two rows, each saying bought or sold, with the symbol, the price, the shares, and the date and time.
 - If the recording shows that, `history` works, whatever the template looks like.
 
 ::takeaway::
@@ -634,7 +634,7 @@ concept: 9
 title: The Software Factory
 ---
 
-Put all of it in the cloud and connect it to your repository. An issue comes in; a sandbox spins up; agents plan, implement, and test; a **pull request** comes out, with a summary of what changed and why.
+Put all of it in the cloud and connect it to your repository. An issue comes in. A sandbox spins up, agents plan, implement and test, and a **pull request** comes out with a summary of what changed and why.
 
 No one's laptop is involved.
 
@@ -683,7 +683,7 @@ concept: 10
 title: Human Approval Gates
 ---
 
-Where must a person sign off, and where may the machine proceed on its own? A "dark factory" is one with no people in it at all. Most engineers think that's a mistake for anything that matters.
+Where must a person sign off, and where may the machine proceed on its own? A "dark factory" is one with no people in it at all. For anything that matters, you want people in it.
 
 Drawing that line is a design decision, and someone is **accountable** for it.
 
@@ -779,7 +779,7 @@ layout: two-cols-header
 class: demo-nostalgia
 ---
 
-# Step 1 · Week 1
+# Mario from Week 1
 
 ::left::
 
@@ -891,7 +891,7 @@ Concept 7 before a line of game code exists.
 
 ---
 layout: concept-viz
-title: "What Must Hold, and How We Will Know"
+title: "What Must Hold and How We Will Know"
 caption: "One press per requirement. The last press is what we left out."
 ---
 
@@ -910,7 +910,7 @@ layout: default
 transition: view-transition
 ---
 
-# Step 6 · The Experiment
+# The Experiment
 
 <div class="lede">
 The small page the agent proposed. Press <b>✕</b>: the button lights up, the log says <code>Button 0 (CROSS): DOWN</code>, and the duck jumps.
@@ -934,7 +934,7 @@ Transitions API; Chrome and Safari. Elsewhere the slides just change.)
 layout: default
 ---
 
-# Step 7 · Play, Then Finish It
+# Finish the Game
 
 <div class="lede">
 The agent built the engine, the controller and the world. Two things are missing: nothing pulls the duck down, and there is no pyramid.
@@ -992,10 +992,11 @@ git history is the receipt.
 
 ---
 layout: section
+class: meanwhile
 transition: fade
 ---
 
-# Harvard Yard
+# Meanwhile, the CS50 Duck is wandering around Harvard Yard…
 
 <!--
 A breath before the game. Phones are still out from the votes; they will need them
