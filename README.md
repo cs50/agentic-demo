@@ -176,7 +176,9 @@ For a rehearsal against the hosted hub, `VITE_HUB_URL=wss://agentic.cs50.io` and
 
 `.env.local` is read by the dev server and by `pnpm hub` only; a production build never contains the token, whatever the file says. Without the file, open the deck once with `#presenter=TOKEN` (a fragment, so it never reaches the server or its logs); the token is stored in that browser and removed from the address bar (`#presenter=` forgets it). Every other copy of the deck, and every phone on `/join`, is audience.
 
-Which window to drive from: polls and the room's votes work from either the slide view or `/presenter`. Slide position is different. Under `pnpm dev` both windows publish it; on the hosted deck, Slidev publishes position only from `/presenter`, so if you ever present from the hosted copy, drive from `/presenter` or the room will not follow. If the deck's token is rejected (stale, rotated, `.env.local` still at `change-me`), the poll slides say **presenter token rejected** where they would show the headcount, and the deck does not follow anyone.
+Which window to drive from: polls and the room's votes work from either the slide view or `/presenter`. Slide position is different. Under `pnpm dev` both windows publish it; on the hosted deck, Slidev publishes position only from `/presenter`, so if you ever present from the hosted copy, drive from `/presenter` or the room will not follow. A window joins the hub when it is on a slide, so one opened on `/overview` or `/entry` starts publishing the moment you click into the deck. If the deck's token is rejected (stale, rotated, `.env.local` still at `change-me`), the poll slides say **presenter token rejected** where they would show the headcount, and the deck does not follow anyone.
+
+To check from the stage, in the presenter window's console: `__hub.state` (connected, role) and `__hubSync.channels.size`, which should be 2. If it is 0, Slidev never registered its sync channels in that window; slide position still reaches the room by way of the router, cursor and drawings do not, and a reload fixes it.
 
 **What the presenter can do**
 

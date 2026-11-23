@@ -13,6 +13,5 @@
 import { installHubSync, type RouterLike } from '../composables/hubSync'
 
 export default function setup({ router }: { router: RouterLike }) {
-  // Not awaited: the bridge waits for the router itself, and mounting should not wait for it.
-  void installHubSync(router)
+  installHubSync(router)
 }
