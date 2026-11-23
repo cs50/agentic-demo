@@ -13,6 +13,8 @@
  * move); the viewer's incoming states are handed to Slidev's own `onUpdate`,
  * which routes to the slide. Viewers never send: Slidev only lets localhost
  * viewers write, and the hub only accepts `sync` from the presenter anyway.
+ * Should Slidev register no channels in a window, position alone is bridged
+ * through the router instead (see installHubSync).
  *
  * Follow mode (viewers only). On by default. While following, every presenter
  * move is applied at once. Navigating by hand unlocks: the presenter's position
@@ -41,7 +43,6 @@ interface RouteLike {
 }
 export interface RouterLike {
   currentRoute: { value: RouteLike }
-  isReady: () => Promise<void>
   afterEach: (fn: (to: RouteLike, from: RouteLike, failure?: unknown) => void) => void
   replace: (to: { path: string; query?: Record<string, unknown> }) => Promise<unknown>
 }
@@ -78,8 +79,9 @@ function navOf(state: SyncState): NavPosition | null {
   return Number.isFinite(page) && page > 0 ? { page, clicks } : null
 }
 
+/** Page and clicks from a slide route (`/12` or `/presenter/12`, `?clicks=`); null elsewhere. */
 function routeNav(route: RouteLike): NavPosition | null {
-  if (route.name !== 'play') return null
+  if (route.name !== 'play' && route.name !== 'presenter') return null
   const no = Array.isArray(route.params.no) ? route.params.no[0] : route.params.no
   const page = Number(no)
   const clicks = Number(route.query.clicks ?? 0)
@@ -89,7 +91,19 @@ function routeNav(route: RouteLike): NavPosition | null {
 const same = (a: NavPosition | null, b: NavPosition | null) => !!a && !!b && a.page === b.page && a.clicks === b.clicks
 
 function apply(channel: string, state: SyncState) {
-  channels.get(channel)?.(state)
+  const onUpdate = channels.get(channel)
+  if (onUpdate) {
+    onUpdate(state)
+    return
+  }
+  // Slidev has not registered this channel in this window (see the fallback
+  // note in installHubSync). A following deck can still be moved by the router.
+  if (isNavChannel(channel) && canFollow.value && router) {
+    const nav = navOf(state)
+    if (nav && !same(routeNav(router.currentRoute.value), nav)) {
+      router.replace({ path: `/${nav.page}`, query: { ...router.currentRoute.value.query, clicks: nav.clicks } })
+    }
+  }
 }
 
 function receive(channel: string, state: SyncState) {
@@ -140,37 +154,42 @@ let installed = false
 
 // For on-stage diagnostics from DevTools.
 if (import.meta.env.DEV && typeof window !== 'undefined') {
-  ;(window as any).__hubSync = { channels, held, following, presenterNav, canFollow, follow, unlock }
+  ;(window as any).__hubSync = { channels, states, held, following, presenterNav, canFollow, follow, unlock }
+}
+
+/** Is this window the live deck: a slide route, not print or export? Overview, entry and notes are not. */
+function isLiveRoute(route: RouteLike): boolean {
+  return (route.name === 'play' || route.name === 'presenter') && !('print' in route.query)
+}
+
+/** Slidev names the position channel after the deck title, which it also puts in the document title. */
+function navChannelKey(): string {
+  for (const key of channels.keys()) if (isNavChannel(key)) return key
+  return `${document.title} - shared`
 }
 
 /**
- * Called once from setup/main.ts. Only the live deck (play and presenter
- * routes) connects; overview, print and export stay offline. The exporter
- * renders the play route with `?print`, so that query is checked too.
+ * Called once from setup/main.ts, before the router has resolved anything.
+ *
+ * Nothing here waits on the router. The transport is registered with Slidev
+ * right away, so its channels are captured whether Slidev sets them up before
+ * or after this runs; the hub is connected as soon as the window is on a slide
+ * route, and a window that starts on /overview or /entry joins when it
+ * navigates into the deck. (An earlier version checked the route once, after
+ * `isReady()`, and returned; a window that started anywhere else never
+ * bridged, however far it went afterwards.)
+ *
+ * Fallback. If Slidev registers no channels in this window, position is still
+ * bridged through the router: the presenter publishes page and clicks from
+ * `afterEach`, and `apply` navigates a viewer that has no channel handler.
+ * Cursor and drawings need the channels and are simply not bridged then.
  */
-export async function installHubSync(r: RouterLike) {
+export function installHubSync(r: RouterLike) {
   if (installed || typeof window === 'undefined') return
   installed = true
   router = r
-  await r.isReady()
-  const route = r.currentRoute.value
-  if ((route.name !== 'play' && route.name !== 'presenter') || 'print' in route.query) return
 
   const hub = useHub()
-  hub.connect()
-
-  // A deck whose presenter token was rejected is audience by the hub's rules,
-  // but it is the lecturer's screen: it must not be steered by stale sync.
-  const isViewer = computed(() => hub.state.connected && hub.state.role === 'audience' && !hub.state.presenterRejected)
-  watch(
-    [isViewer, () => r.currentRoute.value.name],
-    ([viewer, route]) => {
-      canFollow.value = viewer && route === 'play'
-      // Styling hook: a following deck hides Slidev's toolbar (styles/index.css).
-      document.documentElement.classList.toggle('hub-viewer', canFollow.value)
-    },
-    { immediate: true },
-  )
 
   // Presenter -> hub. Slidev calls `write` on every change of a channel's state.
   addSyncMethod({
@@ -188,15 +207,29 @@ export async function installHubSync(r: RouterLike) {
     },
   })
 
-  // Hub -> viewer.
+  /** Where the presenter is: Slidev's channel states, or, with none registered, page and clicks from the route. */
+  function publishPosition() {
+    if (states.size) {
+      for (const [channel, state] of states) pending.set(channel, state)
+    } else {
+      const nav = routeNav(r.currentRoute.value)
+      if (nav) pending.set(navChannelKey(), { ...nav, lastUpdate: { id: 'route', type: 'presenter', time: Date.now() } })
+    }
+    if (pending.size && !sendTimer) sendTimer = window.setTimeout(() => flushSends(hub.publishSync), SEND_EVERY_MS)
+  }
+
+  /** Everything the hub should hold: the live demo's source and where the presenter is. */
+  function publishAll() {
+    for (const file of LIVE_FILES) hub.publishLiveSource(file, sourceOf(file).value)
+    publishPosition()
+  }
+
+  // Hub -> viewer. Listening before connecting, so the first snapshot is never missed.
   hub.on((msg: ServerMessage) => {
     if (msg.type === 'state' && msg.you.role === 'presenter') {
       // A fresh snapshot means the hub's copy may be empty (connect, reconnect,
-      // reset): publish the live demo's source and where the presenter is right
-      // now, so the room is not left on a position from the last rehearsal.
-      for (const file of LIVE_FILES) hub.publishLiveSource(file, sourceOf(file).value)
-      for (const [channel, state] of states) pending.set(channel, state)
-      if (!sendTimer) sendTimer = window.setTimeout(() => flushSends(hub.publishSync), SEND_EVERY_MS)
+      // reset): publish, so the room is not left on a position from the last rehearsal.
+      publishAll()
       return
     }
     if (hub.state.role === 'presenter' || hub.state.presenterRejected) return
@@ -214,10 +247,41 @@ export async function installHubSync(r: RouterLike) {
     }
   })
 
-  // A navigation that lands away from the presenter was the viewer's own.
-  // A cancelled or redirected one landed nowhere and says nothing.
+  // Connect once the window is on a slide route. A component (the QR slide, the
+  // game) may have connected first; then the snapshot has already come and gone,
+  // and a presenter publishes now instead.
+  const live = computed(() => isLiveRoute(r.currentRoute.value))
+  watch(
+    live,
+    (on) => {
+      if (!on) return
+      if (hub.isPresenter.value) publishAll()
+      else hub.connect()
+    },
+    { immediate: true },
+  )
+
+  // A deck whose presenter token was rejected is audience by the hub's rules,
+  // but it is the lecturer's screen: it must not be steered by stale sync.
+  // Synchronous, so `canFollow` is right by the time a snapshot is applied.
+  const isViewer = computed(() => hub.state.connected && hub.state.role === 'audience' && !hub.state.presenterRejected)
+  watch(
+    [isViewer, () => r.currentRoute.value.name],
+    ([viewer, route]) => {
+      canFollow.value = viewer && route === 'play'
+      // Styling hook: a following deck hides Slidev's toolbar (styles/index.css).
+      document.documentElement.classList.toggle('hub-viewer', canFollow.value)
+    },
+    { immediate: true, flush: 'sync' },
+  )
+
   r.afterEach((to, _from, failure) => {
-    if (failure || !canFollow.value || !following.value || !presenterNav.value) return
+    if (failure) return
+    // Presenter without Slidev channels: position comes from the route (the fallback above).
+    if (hub.isPresenter.value && !states.size && live.value) publishPosition()
+    // Viewer: a navigation that lands away from the presenter was the viewer's own.
+    // A cancelled or redirected one landed nowhere and says nothing.
+    if (!canFollow.value || !following.value || !presenterNav.value) return
     const nav = routeNav(to)
     if (nav && !same(nav, presenterNav.value)) following.value = false
   })
@@ -225,5 +289,13 @@ export async function installHubSync(r: RouterLike) {
   // Presenter -> hub: the live demo's source as it changes (a save on the laptop).
   for (const file of LIVE_FILES) {
     watch(sourceOf(file), (content) => hub.publishLiveSource(file, content))
+  }
+
+  // Said once, on stage, if it ever happens again: the room cannot follow cursor
+  // or drawings from this window, and position is going through the fallback.
+  if (import.meta.env.DEV) {
+    window.setTimeout(() => {
+      if (live.value && !channels.size) console.warn('[hub] Slidev registered no sync channels in this window; position is bridged through the router, cursor and drawings are not.')
+    }, 10_000)
   }
 }
