@@ -21,11 +21,16 @@ const cycle = (vals: number[]) => {
   return () => vals[i++ % vals.length]
 }
 
+const TEN = ['LLM', 'Chatbot', 'Tool calling', 'Harness', 'Specification', 'Guardrails', 'Verification', 'Multi-agent', 'Software factory', 'Approval gates']
+
 describe('the rounds', () => {
-  it('cover the ten concepts once each, with unique poll ids and a valid answer', () => {
-    const concepts = ROUNDS.flatMap((r) => r.concepts)
-    expect(concepts).toHaveLength(10)
-    expect(new Set(concepts).size).toBe(10)
+  it('cover all ten concepts, are enough for a full battle, and each has a valid answer', () => {
+    const concepts = new Set(ROUNDS.flatMap((r) => r.concepts))
+    for (const c of TEN) expect(concepts.has(c), c).toBe(true)
+    // Ten hits to win, and up to two misses on the way: the pool must not run out.
+    expect(ROUNDS.length).toBeGreaterThanOrEqual(MAX_HP / HIT + Math.ceil(MAX_HP / DUCK_HIT) - 1)
+    // The right answer is not always in the same place.
+    expect(new Set(ROUNDS.map((r) => r.correct)).size).toBeGreaterThan(2)
     expect(new Set(ROUNDS.map((r) => r.id)).size).toBe(ROUNDS.length)
     for (const r of ROUNDS) {
       expect(r.options.length).toBeGreaterThanOrEqual(2)
@@ -55,12 +60,22 @@ describe('the battle', () => {
     return b
   }
 
-  it('a room that is always right wins after four rounds', () => {
-    const b = play([true, true, true, true, true])
+  it('a room that is always right wins after ten rounds, and not before', () => {
+    const b = play(Array(14).fill(true))
     expect(b.state.phase).toBe('won')
     expect(b.state.monsterHp).toBe(0)
     expect(b.state.duckHp).toBe(MAX_HP)
-    expect(b.state.score).toBe(4)
+    expect(b.state.score).toBe(10)
+  })
+
+  it('never declares a faint while the bar still shows HP', () => {
+    // Every pattern of answers that ends the battle ends it at exactly zero HP for the loser.
+    for (let mask = 0; mask < 1 << 12; mask++) {
+      const answers = Array.from({ length: 14 }, (_, i) => ((mask >> i) & 1) === 1)
+      const b = play(answers)
+      if (b.state.phase === 'won') expect(b.state.monsterHp).toBe(0)
+      if (b.state.phase === 'lost') expect(b.state.duckHp).toBe(0)
+    }
   })
 
   it('a room that is always wrong loses after three', () => {
@@ -70,11 +85,12 @@ describe('the battle', () => {
     expect(b.state.monsterHp).toBe(MAX_HP)
   })
 
-  it('with the moves exhausted, more HP wins', () => {
-    const b = play([true, false, true, false, true])
+  it('two misses on the way still ends in a win at zero HP, after twelve rounds', () => {
+    const b = play([true, false, true, true, true, false, true, true, true, true, true, true])
     expect(b.state.phase).toBe('won')
-    expect(b.state.monsterHp).toBe(MAX_HP - 3 * HIT)
+    expect(b.state.monsterHp).toBe(0)
     expect(b.state.duckHp).toBe(MAX_HP - 2 * DUCK_HIT)
+    expect(b.state.score).toBe(10)
   })
 
   it('ignores an answer outside the question phase and ✕ during it', () => {
@@ -112,7 +128,7 @@ describe('the battle', () => {
     b.advance()
     expect(b.line()).toMatch(/Go! CS50 DUCK/)
     b.advance()
-    expect(b.line()).toMatch(/CONFIDENT NONSENSE/)
+    expect(b.line()).toMatch(/absolutely right/)
   })
 })
 
