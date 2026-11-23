@@ -8,6 +8,7 @@
  */
 
 import { Controller, type ControllerState } from './controller'
+import { DUCK_COLS, DUCK_ROWS_N, drawDuck } from './duck'
 import { TILE, isSolid, type World } from './world'
 
 export const FPS = 60
@@ -17,8 +18,10 @@ export const JUMP_VELOCITY = -14
 export const MOVE_SPEED = 4.5
 export const MAX_FALL = 16
 
-const PLAYER_W = 24
-const PLAYER_H = 30
+/** The player is the CS50 duck sprite at 2 device pixels per sprite pixel. */
+const DUCK_SCALE = 2
+const PLAYER_W = DUCK_COLS * DUCK_SCALE // 28
+const PLAYER_H = DUCK_ROWS_N * DUCK_SCALE // 28
 
 const COLORS = {
   bg: '#ffffff',
@@ -28,9 +31,6 @@ const COLORS = {
   blockFill: 'rgba(165, 28, 48, 0.08)',
   blockStroke: '#a51c30',
   blockGlyph: '#a51c30',
-  player: '#212529',
-  playerCap: '#a51c30',
-  playerEye: '#ffffff',
 }
 
 interface Player {
@@ -310,16 +310,8 @@ export class Engine {
       }
     }
 
-    // Player
+    // Player: the CS50 duck, facing the way it last moved
     const p = this.player
-    ctx.fillStyle = COLORS.player
-    ctx.fillRect(Math.round(p.x), Math.round(p.y), PLAYER_W, PLAYER_H)
-    // Cap
-    ctx.fillStyle = COLORS.playerCap
-    ctx.fillRect(Math.round(p.x) - 2, Math.round(p.y), PLAYER_W + 4, 6)
-    // Eye (shows facing direction)
-    ctx.fillStyle = COLORS.playerEye
-    const eyeX = p.facing === 1 ? p.x + PLAYER_W - 8 : p.x + 4
-    ctx.fillRect(Math.round(eyeX), Math.round(p.y) + 10, 4, 4)
+    drawDuck(ctx, p.x, p.y, p.facing, DUCK_SCALE)
   }
 }
