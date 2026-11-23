@@ -991,6 +991,20 @@ git history is the receipt.
 -->
 
 ---
+layout: concept-viz
+title: "Join the Room"
+caption: "The last part is played from your phone."
+---
+
+<AudienceQR prompt="Scan to join, or type the address." />
+
+<!--
+The join page again, for anyone who put their phone away or arrived late. Each question in
+the battle opens as a vote on this page, and the room's answer decides whether the duck
+takes the hit. Give it a few seconds, watch the count, then go.
+-->
+
+---
 layout: section
 class: meanwhile
 transition: fade
