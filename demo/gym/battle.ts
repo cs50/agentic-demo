@@ -323,7 +323,7 @@ export class Battle {
         return 'The room decides…'
       case 'resolve':
         return last!.correct
-          ? `It had no effect! The duck used ${round!.counter.toUpperCase()}.`
+          ? `"${round!.move}" had no effect! The duck used ${round!.counter.toUpperCase()}.`
           : `"${round!.move}" hits the duck.`
       case 'explain':
         return round!.explanation
