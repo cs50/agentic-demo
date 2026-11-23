@@ -2,9 +2,9 @@
  * The Gym battle and the two areas, as rules: no canvas, no hub.
  */
 import { describe, expect, it } from 'vitest'
-import { AREAS, COLS, GYM, ROWS, YARD, YARD_DOORSTEP } from '../demo/gym/areas'
+import { AREAS, BEFORE_LEADER, COLS, GYM, ROWS, YARD, YARD_DOORSTEP } from '../demo/gym/areas'
 import { Battle, DUCK_HIT, HIT, MAX_HP, ROUNDS } from '../demo/gym/battle'
-import { NPCS } from '../demo/gym/npcs'
+import { AFTER_WIN, CLOSING, NPCS } from '../demo/gym/npcs'
 import { Overworld } from '../demo/gym/overworld'
 import { SLOPPYCLAUDE } from '../demo/gym/sloppyclaude'
 import { DUCK_BACK, DUCK_SIDE, DUCK_SIDE_BLINK, DUCK_SIDE_HURT, STATUE, outlined, personSprite, spriteSize } from '../demo/gym/sprites'
@@ -164,8 +164,8 @@ describe('walking', () => {
 
   it('from the spawn, straight up the path, into the Gym; the mat leads back out', () => {
     const w = new Overworld(() => 0)
-    hold(w, { dy: -1 }, 8 * 8) // row 12 → row 4, the plaza
-    expect(w.tile).toEqual({ col: 9, row: 4 })
+    hold(w, { dy: -1 }, 8 * 10) // row 16 → row 6, the plaza
+    expect(w.tile).toEqual({ col: 15, row: 6 })
     expect(w.state.area).toBe('yard')
     w.tick({ ...idle, dy: -1 }) // into the doors
     expect(w.state.area).toBe('gym')
@@ -179,7 +179,7 @@ describe('walking', () => {
 
   it('facing the sign and pressing ✕ reads it without going in', () => {
     const w = new Overworld(() => 0)
-    hold(w, { dy: -1 }, 8 * 8)
+    hold(w, { dy: -1 }, 8 * 10)
     tap(w)
     expect(w.state.mode).toMatchObject({ kind: 'talk', speaker: 'Sign' })
     expect(w.state.area).toBe('yard')
@@ -187,11 +187,11 @@ describe('walking', () => {
 
   it('talking to the student pages through their lines and closes', () => {
     const w = new Overworld(() => 0)
-    hold(w, { dy: -1 }, 8 * 7) // row 5, the cross path
-    expect(w.tile).toEqual({ col: 9, row: 5 })
-    hold(w, { dx: -1 }, 8) // col 8; the student is at col 7
+    hold(w, { dy: -1 }, 8 * 8) // row 8, the cross path
+    expect(w.tile).toEqual({ col: 15, row: 8 })
+    hold(w, { dx: -1 }, 8 * 2) // col 13; the student is at col 12
     w.tick({ ...idle, dx: -1 }) // blocked by them, but now facing left
-    expect(w.tile).toEqual({ col: 8, row: 5 })
+    expect(w.tile).toEqual({ col: 13, row: 8 })
     tap(w)
     expect(w.state.mode).toMatchObject({ kind: 'talk', speaker: 'Student', index: 0 })
     for (let i = 0; i < NPCS.student.lines.length; i++) tap(w)
@@ -203,8 +203,8 @@ describe('walking', () => {
     let battles = 0
     w.onBattle = () => battles++
     w.enter('gym')
-    hold(w, { dy: -1 }, 8 * 8) // up to row 3, under the dais
-    expect(w.tile).toEqual({ col: 9, row: 3 })
+    hold(w, { dy: -1 }, 8 * 12) // up to row 3, under the dais
+    expect(w.tile).toEqual({ col: 15, row: 3 })
     tap(w)
     expect(w.state.mode).toMatchObject({ kind: 'talk', speaker: 'Gym Leader Henry', then: 'battle' })
     for (let i = 0; i < NPCS.leitner.lines.length; i++) tap(w)
@@ -233,7 +233,30 @@ describe('walking', () => {
     expect(seen.size).toBeGreaterThan(3) // it went somewhere
     expect(paused).toBeGreaterThan(120) // and stood still long enough to be caught
     const henry = w.state.actors.find((a) => a.id === 'leitner')!
-    expect([henry.x / 16, henry.y / 16]).toEqual([9, 2]) // Henry does not wander
+    expect([henry.x / 16, henry.y / 16]).toEqual([15, 2]) // Henry does not wander
+  })
+
+  it('after the battle: Henry speaks, David walks over and says his line, then it is done', () => {
+    const w = new Overworld(() => 0)
+    w.enter('gym', BEFORE_LEADER)
+    w.say('leitner', AFTER_WIN, 'closing')
+    expect(w.state.mode).toMatchObject({ kind: 'talk', speaker: 'Gym Leader Henry', then: 'closing' })
+    expect(w.state.facing).toBe('up')
+    for (let i = 0; i < AFTER_WIN.length; i++) tap(w)
+    w.tick(idle)
+    expect(w.state.mode).toMatchObject({ kind: 'cutscene', actor: 'malan' })
+    // David is at (10, 9); the duck at (15, 3). He needs to end up one tile away.
+    for (let i = 0; i < 60 * 10 && w.state.mode.kind === 'cutscene'; i++) w.tick({ ...idle, dx: 1, interact: true }) // input is ignored
+    const david = w.state.actors.find((a) => a.id === 'malan')!
+    const dist = Math.abs(david.x / 16 - 15) + Math.abs(david.y / 16 - 3)
+    expect(dist).toBe(1)
+    expect(w.state.mode).toMatchObject({ kind: 'talk', speaker: 'David', lines: CLOSING, then: 'done' })
+    tap(w)
+    w.tick(idle)
+    expect(w.state.mode.kind).toBe('done')
+    // Nothing moves any more.
+    hold(w, { dy: 1 }, 20)
+    expect(w.tile).toEqual({ col: 15, row: 3 })
   })
 })
 

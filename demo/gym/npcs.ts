@@ -95,3 +95,13 @@ export const PLAQUE: string[] = [
 
 /** What the Gym's sign says before you go in. */
 export const GYM_DOOR_LINES: string[] = ['SCIENCE CENTER GYM', 'Leader: Henry Leitner. One monster.']
+
+/** What the Gym Leader says after the battle, by outcome. */
+export const AFTER_WIN: string[] = [
+  'Well fought. You did not take its word for it. You asked, you checked, and you were right to.',
+  'That is the whole course in one sentence. Take the badge, and take the habit.',
+]
+export const AFTER_LOSS: string[] = ["Not yet. Let's go over that again, at the board. Come and talk to me when you're ready."]
+
+/** What David says when he walks over at the very end. */
+export const CLOSING: string[] = ['This was CS50…']

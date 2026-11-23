@@ -19,7 +19,7 @@
  * is following the presenter shows a note instead of a second game, like
  * MarioGame; its owner votes through the AudienceChoice overlay.
  */
-import { useIsSlideActive } from '@slidev/client'
+import { useIsSlideActive, useNav } from '@slidev/client'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useHub } from '../composables/useHub'
 import { canFollow, following } from '../composables/hubSync'
@@ -27,7 +27,9 @@ import { useLive } from '../composables/useLive'
 import { Controller } from '../demo/mario/controller'
 import { Battle, MAX_HP, pollIdFor, type BattleState } from '../demo/gym/battle'
 import { Overworld, type OverworldState } from '../demo/gym/overworld'
-import { TRANSITION_FRAMES, VIEW_H, VIEW_W, drawBattle, drawOverworld, drawTransition, freshScene, type BattleScene } from '../demo/gym/render'
+import { BEFORE_LEADER } from '../demo/gym/areas'
+import { AFTER_LOSS, AFTER_WIN } from '../demo/gym/npcs'
+import { TRANSITION_FRAMES, VIEW_H, VIEW_W, drawBattle, drawFade, drawOverworld, drawTransition, freshScene, type BattleScene } from '../demo/gym/render'
 import { SLOPPYCLAUDE_NAME } from '../demo/gym/sloppyclaude'
 import DuckSprite from './viz/DuckSprite.vue'
 
@@ -35,6 +37,7 @@ const props = withDefaults(defineProps<{ seconds?: number; full?: boolean }>(), 
 
 const live = useLive()
 const isActive = useIsSlideActive()
+const nav = useNav()
 const hub = useHub()
 const mirroring = computed(() => canFollow.value && following.value)
 
@@ -58,6 +61,9 @@ const shake = ref(false)
 let transition = -1
 /** True while an intro animation (ball, burst, hop) is playing; ✕ waits for it. */
 const animating = ref(false)
+/** Frames into the fade that ends the game; -1 otherwise. When it completes, the deck moves on. */
+let ending = -1
+const ENDING_FRAMES = 75
 /** Reactive mirror of the bits of fx the template needs. */
 const monsterOut = ref(false)
 
@@ -190,9 +196,10 @@ let prevMoveY = 0
 function step() {
   const input = controller.poll()
   if (scene.value === 'yard') {
-    if (transition >= 0) return // hold still under the flash
+    if (transition >= 0 || ending >= 0) return // hold still under the flash, and under the fade
     world.tick({ dx: Math.round(input.moveX), dy: Math.round(input.moveY), interact: input.actionPressed })
     ow.value = world.state
+    if (world.state.mode.kind === 'done') ending = 0
     return
   }
 
@@ -240,9 +247,11 @@ function step() {
 
   if (input.actionPressed && !animating.value && fx.slideIn >= 1) {
     if (phase === 'won' || phase === 'lost') {
-      // ✕ after the end: back into the Gym, in front of Henry.
+      // ✕ after the end: back into the Gym, in front of Henry, who has something to say.
+      // After a win, David then walks over for the last word and the deck moves on.
       scene.value = 'yard'
-      world.enter('gym', { col: 9, row: 3, facing: 'up' })
+      world.enter('gym', BEFORE_LEADER)
+      world.say('leitner', phase === 'won' ? AFTER_WIN : AFTER_LOSS, phase === 'won' ? 'closing' : undefined)
       sync()
       return
     }
@@ -273,6 +282,14 @@ function frame(t: number) {
       transition++
       if (transition >= TRANSITION_FRAMES) beginBattle()
     }
+    if (ending >= 0) {
+      drawFade(ctx, ending / ENDING_FRAMES)
+      ending++
+      if (ending === ENDING_FRAMES) {
+        // The story is told: on to the last slide. The game stops with the slide.
+        if (live) nav.next()
+      }
+    }
   } else drawBattle(ctx, fx)
 }
 
@@ -284,6 +301,8 @@ function start() {
   canvas.value.height = VIEW_H
   controller.attachKeyboard(canvas.value)
   listenForResults()
+  ending = -1
+  transition = -1
   last = performance.now()
   acc = 0
   raf = requestAnimationFrame(frame)
@@ -329,7 +348,7 @@ const concepts = computed(() => bs.value.round?.concepts.join(' · ') ?? '')
         <div class="text">{{ ow.mode.lines[ow.mode.index] }}</div>
         <div class="more">✕</div>
       </div>
-      <div v-else-if="scene === 'yard' && ow.area === 'yard' && !focused && ow.sinceEnter > 60" class="hint">Click, then walk with the arrows or the controller. ✕ talks.</div>
+      <div v-else-if="scene === 'yard' && ow.area === 'yard' && ow.mode.kind === 'walk' && !focused && ow.sinceEnter > 60" class="hint">Click, then walk with the arrows or the controller. ✕ talks.</div>
 
       <!-- Battle: HP, dialogue, question -->
       <template v-if="scene === 'battle'">
@@ -400,7 +419,7 @@ const concepts = computed(() => bs.value.round?.concepts.join(' · ') ?? '')
 }
 .gym-frame {
   position: relative;
-  aspect-ratio: 10 / 7;
+  aspect-ratio: 16 / 9;
   height: 100%;
   max-width: 100%;
   overflow: hidden;

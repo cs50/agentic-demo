@@ -10,7 +10,7 @@
 
 import { AREAS, YARD_DOORSTEP, type Area, type Placement } from './areas'
 import { EXIT_MAT, GYM_DOOR, STATUE_TILE, TILE } from './tiles'
-import { GYM_DOOR_LINES, NPCS, PLAQUE, type Npc } from './npcs'
+import { CLOSING, GYM_DOOR_LINES, NPCS, PLAQUE, type Npc } from './npcs'
 import type { Facing } from './sprites'
 
 export interface OverworldInput {
@@ -21,10 +21,17 @@ export interface OverworldInput {
   interact: boolean
 }
 
+/** What follows a conversation, if anything. */
+export type Then = 'battle' | 'closing' | 'done'
+
 export type Mode =
   | { kind: 'walk' }
-  | { kind: 'talk'; speaker: string; lines: string[]; index: number; then?: 'battle' }
+  | { kind: 'talk'; speaker: string; lines: string[]; index: number; then?: Then }
   | { kind: 'battle' }
+  /** Someone is walking over to the duck; input is ignored until they arrive. */
+  | { kind: 'cutscene'; actor: string }
+  /** The story is over; the component takes it from here. */
+  | { kind: 'done' }
 
 /** A person as placed and moving. */
 export interface Actor {
@@ -83,7 +90,7 @@ export class Overworld {
   private mode: Mode = { kind: 'walk' }
   private actors: Actor[] = []
   private sinceEnter = 0
-  private pendingBattle = false
+  private pendingThen: Then | null = null
 
   /** Called when the leader's lines end: the component starts the battle. */
   onBattle: (() => void) | null = null
@@ -145,13 +152,90 @@ export class Overworld {
   /** One frame. */
   tick(input: OverworldInput) {
     this.sinceEnter++
+    if (this.mode.kind === 'cutscene') {
+      this.stepCutscene()
+      return
+    }
     this.stepDuck(input)
     if (this.mode.kind === 'walk') this.stepActors()
-    if (this.pendingBattle && this.mode.kind === 'walk') {
-      this.pendingBattle = false
-      this.mode = { kind: 'battle' }
-      this.onBattle?.()
+    if (this.pendingThen && this.mode.kind === 'walk') {
+      const then = this.pendingThen
+      this.pendingThen = null
+      if (then === 'battle') {
+        this.mode = { kind: 'battle' }
+        this.onBattle?.()
+      } else if (then === 'closing') {
+        this.mode = { kind: 'cutscene', actor: 'malan' }
+      } else if (then === 'done') {
+        this.mode = { kind: 'done' }
+      }
     }
+  }
+
+  /**
+   * Make someone speak to the duck, as a script rather than because the duck
+   * pressed ✕: the Gym Leader after the battle, for instance. They turn to face
+   * each other.
+   */
+  say(npcId: string, lines: string[], then?: Then) {
+    const actor = this.actors.find((a) => a.npc.id === npcId)
+    if (!actor) return
+    const dc = actor.col - this.col
+    const dr = actor.row - this.row
+    if (Math.abs(dr) >= Math.abs(dc)) {
+      this.facing = dr < 0 ? 'up' : 'down'
+    } else this.facing = dc < 0 ? 'left' : 'right'
+    actor.facing = opposite(this.facing)
+    this.mode = { kind: 'talk', speaker: actor.npc.name, lines, index: 0, then }
+  }
+
+  /** The cutscene: the actor walks to a tile beside the duck, then speaks. */
+  private stepCutscene() {
+    if (this.mode.kind !== 'cutscene') return
+    const a = this.actors.find((x) => x.npc.id === this.mode.actor)
+    if (!a) {
+      this.mode = { kind: 'done' }
+      return
+    }
+    if (a.progress > 0) {
+      a.progress++
+      if (a.progress >= STEP_FRAMES) {
+        a.progress = 0
+        a.from = { col: a.col, row: a.row }
+      }
+      return
+    }
+    // Arrived next to the duck?
+    if (Math.abs(a.col - this.col) + Math.abs(a.row - this.row) === 1) {
+      this.say(a.npc.id, CLOSING, 'done')
+      return
+    }
+    // One step closer, along the longer axis first; around an obstacle if need be.
+    const dc = Math.sign(this.col - a.col)
+    const dr = Math.sign(this.row - a.row)
+    const tries: Facing[] = []
+    if (Math.abs(this.col - a.col) >= Math.abs(this.row - a.row)) {
+      if (dc) tries.push(dc < 0 ? 'left' : 'right')
+      if (dr) tries.push(dr < 0 ? 'up' : 'down')
+    } else {
+      if (dr) tries.push(dr < 0 ? 'up' : 'down')
+      if (dc) tries.push(dc < 0 ? 'left' : 'right')
+    }
+    tries.push(...FACINGS.filter((f) => !tries.includes(f)))
+    for (const f of tries) {
+      const d = DIRS[f]
+      const nc = a.col + d.dc
+      const nr = a.row + d.dr
+      if (!this.isFree(nc, nr)) continue
+      a.facing = f
+      a.from = { col: a.col, row: a.row }
+      a.col = nc
+      a.row = nr
+      a.progress = 1
+      return
+    }
+    // Boxed in: speak from here.
+    this.say(a.npc.id, CLOSING, 'done')
   }
 
   private stepDuck(input: OverworldInput) {
@@ -161,12 +245,12 @@ export class Overworld {
         if (m.index + 1 < m.lines.length) this.mode = { ...m, index: m.index + 1 }
         else {
           this.mode = { kind: 'walk' }
-          if (m.then === 'battle') this.pendingBattle = true
+          if (m.then) this.pendingThen = m.then
         }
       }
       return
     }
-    if (this.mode.kind === 'battle') return
+    if (this.mode.kind === 'battle' || this.mode.kind === 'done') return
 
     if (this.progress > 0) {
       this.progress++

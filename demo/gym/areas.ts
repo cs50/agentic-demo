@@ -1,8 +1,8 @@
 /**
  * areas.ts — the two places in the game, each one screen: Harvard Yard and
  * the inside of the Science Center Gym. One character per 16 px tile; the
- * legend is each area's tileset (tiles.ts). Both are 20×14 tiles, so the
- * whole area fits the view and nothing scrolls.
+ * legend is each area's tileset (tiles.ts). Both are 32×18 tiles (16:9), so
+ * the whole area fills the slide and nothing scrolls.
  *
  * Yard:   . , ground   g grass   = path   T tree   L lamppost   P signpost
  *         ^ / roofs    # o brick, with window   c w concrete, with window
@@ -31,65 +31,76 @@ export interface Area {
   spawn: { col: number; row: number; facing: Facing }
 }
 
-export const COLS = 20
-export const ROWS = 14
+export const COLS = 32
+export const ROWS = 18
 
 export const YARD: Area = {
   id: 'yard',
   tiles: YARD_TILES,
   rows: [
-    'TTTTTT////////TTTTTT',
-    'T.....cwwccwwc.....T',
-    'T^^^^^cwwYcwwc^^^^^T',
-    'T#o#o#cccddccc#oo#oT',
-    'T##D##========IIIIIT',
-    'T=============sssssT',
-    'T..J.....==...L....T',
-    'T.T......==......T.T',
-    'Tgggg....==....ggggT',
-    'TgggL....==....PgggT',
-    'Tgggg....==....ggggT',
-    'T.T.P....==......T.T',
-    'T........==........T',
-    'TTTTTTTTTTTTTTTTTTTT',
+    'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT',
+    'T.........////////////.........T',
+    'T..,..T...cwwccwwccwwc...T.,...T',
+    'T^^^^^^^^.cccccccccccc.^^^^^^^^T',
+    'T#o#oo#o#.cwwccYwccwwc.#oo##oo#T',
+    'T########.cccccddccccc.#IIIIII#T',
+    'T###D###L==============LsssssssT',
+    'T========......==......========T',
+    'T.==J=========================.T',
+    'T.============================.T',
+    'T..T.........P.==...........T..T',
+    'T.gggggg.......==.......gggggg.T',
+    'T.ggLggg.......==.......gggLgg.T',
+    'T.gggggg.......==.......gggggg.T',
+    'T.gggggg.......==.......gggggg.T',
+    'T......P.T.....==.....T.P......T',
+    'T..T...........==...........T..T',
+    'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT',
   ],
   npcs: [
-    { npc: 'student', col: 7, row: 5, facing: 'down' },
-    { npc: 'brian', col: 4, row: 6, facing: 'left' },
-    { npc: 'kelly', col: 12, row: 4, facing: 'down' },
-    { npc: 'carter', col: 16, row: 5, facing: 'down' },
-    { npc: 'colton', col: 13, row: 9, facing: 'left' },
+    { npc: 'student', col: 12, row: 8, facing: 'down' },
+    { npc: 'brian', col: 5, row: 8, facing: 'left' },
+    { npc: 'kelly', col: 18, row: 6, facing: 'down' },
+    { npc: 'carter', col: 26, row: 7, facing: 'down' },
+    { npc: 'colton', col: 23, row: 12, facing: 'left' },
   ],
-  spawn: { col: 9, row: 12, facing: 'up' },
+  spawn: { col: 15, row: 16, facing: 'up' },
 }
 
 export const GYM: Area = {
   id: 'gym',
   tiles: GYM_TILES,
   rows: [
-    'VVVVVVVVVVVVVVVVVVVV',
-    'WWWWBBWWWWWWWWBBWWWW',
-    'V       AAAA       V',
-    'V                  V',
-    'V  I            I  V',
-    'V                  V',
-    'V                  V',
-    'V  I            I  V',
-    'V                  V',
-    'V                  V',
-    'V  I            I  V',
-    'V                  V',
-    'V        MM        V',
-    'VVVVVVVVVVVVVVVVVVVV',
+    'VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV',
+    'VWWWWWBBWWWWWWBBBBWWWWWWBBWWWWWV',
+    'V             AAAA             V',
+    'V                              V',
+    'V                              V',
+    'V   I                      I   V',
+    'V                              V',
+    'V                              V',
+    'V                              V',
+    'V   I                      I   V',
+    'V                              V',
+    'V                              V',
+    'V                              V',
+    'V   I                      I   V',
+    'V                              V',
+    'V                              V',
+    'V              MM              V',
+    'VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV',
   ],
   npcs: [
-    { npc: 'leitner', col: 9, row: 2, facing: 'down' },
-    { npc: 'malan', col: 6, row: 7, facing: 'down' },
+    { npc: 'leitner', col: 15, row: 2, facing: 'down' },
+    { npc: 'malan', col: 10, row: 9, facing: 'down' },
   ],
-  spawn: { col: 9, row: 11, facing: 'up' },
+  spawn: { col: 15, row: 15, facing: 'up' },
 }
 
 export const AREAS: Record<Area['id'], Area> = { yard: YARD, gym: GYM }
 
 /** Where the duck lands when it leaves the Gym: just outside the doors. */
-export const YARD_DOORSTEP = { col: 9, row: 4, facing: 'down' as const }
+export const YARD_DOORSTEP = { col: 15, row: 6, facing: 'down' as const }
+
+/** Where the duck stands after a battle: in front of the Gym Leader. */
+export const BEFORE_LEADER = { col: 15, row: 3, facing: 'up' as const }

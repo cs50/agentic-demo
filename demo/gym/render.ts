@@ -11,8 +11,8 @@ import { SLOPPYCLAUDE, SLOPPYCLAUDE_H, SLOPPYCLAUDE_W } from './sloppyclaude'
 import { BALL, DUCK_SIDE, DUCK_SIDE_BLINK, DUCK_SIDE_HURT, STATUE, drawSprite, duckWalk, personSprite, type Sprite } from './sprites'
 import { STATUE_TILE, TILE, type TileDef } from './tiles'
 
-export const VIEW_W = COLS * TILE // 320
-export const VIEW_H = ROWS * TILE // 224
+export const VIEW_W = COLS * TILE // 512
+export const VIEW_H = ROWS * TILE // 288
 
 // ---------------------------------------------------------------- overworld
 
@@ -95,7 +95,7 @@ export function drawTransition(ctx: CanvasRenderingContext2D, t: number) {
     }
     return
   }
-  const bars = 8
+  const bars = 9
   const h = VIEW_H / bars
   const u = Math.min(1, (t - 36) / 34)
   const ease = u * u * (3 - 2 * u)
@@ -105,6 +105,12 @@ export function drawTransition(ctx: CanvasRenderingContext2D, t: number) {
     const x = i % 2 === 0 ? 0 : VIEW_W - w
     ctx.fillRect(x, i * h, w, h + 1)
   }
+}
+
+/** Fade to black, `u` 0..1, drawn over whatever is on screen. */
+export function drawFade(ctx: CanvasRenderingContext2D, u: number) {
+  ctx.fillStyle = `rgba(24, 32, 40, ${Math.min(1, Math.max(0, u))})`
+  ctx.fillRect(0, 0, VIEW_W, VIEW_H)
 }
 
 // ------------------------------------------------------------------- battle
@@ -138,11 +144,12 @@ export function freshScene(): BattleScene {
   return { clock: 0, monsterHurt: 0, duckHurt: 0, monsterGone: false, duckGone: false, slideIn: 0, leader: 0, ball: -1, burst: 0, monster: 0, duckIn: -1, duckCheer: 0 }
 }
 
-const MONSTER_SCALE = 3
-const DUCK_SCALE = 3
-const LEADER_SCALE = 2
-const MONSTER_AT = { x: 236, y: 86 } // platform centre
-const DUCK_AT = { x: 76, y: 138 }
+const MONSTER_SCALE = 4
+const DUCK_SCALE = 4
+const LEADER_SCALE = 3
+const MONSTER_AT = { x: 380, y: 112 } // platform centre
+const DUCK_AT = { x: 124, y: 182 }
+const FLOOR_Y = 136
 
 export function drawBattle(ctx: CanvasRenderingContext2D, scene: BattleScene) {
   ctx.imageSmoothingEnabled = false
@@ -150,9 +157,9 @@ export function drawBattle(ctx: CanvasRenderingContext2D, scene: BattleScene) {
   ctx.fillRect(0, 0, VIEW_W, VIEW_H)
 
   ctx.fillStyle = '#e8ecd8'
-  ctx.fillRect(0, 104, VIEW_W, VIEW_H - 104)
+  ctx.fillRect(0, FLOOR_Y, VIEW_W, VIEW_H - FLOOR_Y)
   ctx.fillStyle = '#c0c8b0'
-  ctx.fillRect(0, 104, VIEW_W, 2)
+  ctx.fillRect(0, FLOOR_Y, VIEW_W, 2)
 
   // The two sides slide in as the screen opens.
   const slide = (1 - scene.slideIn) * VIEW_W
@@ -160,14 +167,14 @@ export function drawBattle(ctx: CanvasRenderingContext2D, scene: BattleScene) {
   const leftX = DUCK_AT.x - slide
 
   ctx.fillStyle = '#d8dcc8'
-  ellipse(ctx, rightX, MONSTER_AT.y, 56, 10)
-  ellipse(ctx, leftX, DUCK_AT.y, 44, 8)
+  ellipse(ctx, rightX, MONSTER_AT.y, 76, 13)
+  ellipse(ctx, leftX, DUCK_AT.y, 58, 10)
 
   // The Gym Leader, then walking off to the right.
   if (scene.leader < 1) {
     const { sprite } = personSprite(NPCS.leitner.look, scene.leader > 0 ? 'right' : 'down', scene.leader > 0 && Math.floor(scene.clock / 6) % 2 ? 1 : 0)
-    const x = rightX - (16 * LEADER_SCALE) / 2 + scene.leader * 120
-    const y = MONSTER_AT.y - 16 * LEADER_SCALE + 6
+    const x = rightX - (16 * LEADER_SCALE) / 2 + scene.leader * 170
+    const y = MONSTER_AT.y - 16 * LEADER_SCALE + 8
     drawSprite(ctx, sprite, x, y, LEADER_SCALE, false)
   }
 
@@ -175,25 +182,25 @@ export function drawBattle(ctx: CanvasRenderingContext2D, scene: BattleScene) {
   if (scene.ball >= 0 && scene.ball < 1) {
     // From the leader's hand (he is a little way into his walk) down onto the platform.
     const u = scene.ball
-    const x0 = rightX + 64
-    const y0 = MONSTER_AT.y - 22
+    const x0 = rightX + 90
+    const y0 = MONSTER_AT.y - 30
     const x = x0 + (rightX - x0) * u
-    const y = y0 + (MONSTER_AT.y - 8 - y0) * u - 34 * Math.sin(Math.PI * u)
-    drawSprite(ctx, BALL, Math.round(x) - 5, Math.round(y) - 5, 1)
+    const y = y0 + (MONSTER_AT.y - 10 - y0) * u - 46 * Math.sin(Math.PI * u)
+    drawSprite(ctx, BALL, Math.round(x) - 10, Math.round(y) - 10, 2)
   }
 
   // The burst when it opens.
   if (scene.burst > 0) {
-    const r = (12 - scene.burst) * 6 + 8
+    const r = (12 - scene.burst) * 8 + 10
     ctx.fillStyle = `rgba(248, 248, 240, ${scene.burst / 12})`
-    ellipse(ctx, rightX, MONSTER_AT.y - 20, r, r * 0.8)
+    ellipse(ctx, rightX, MONSTER_AT.y - 28, r, r * 0.8)
     ctx.strokeStyle = '#f8f8f0'
     ctx.lineWidth = 2
     for (let i = 0; i < 8; i++) {
       const a = (i / 8) * Math.PI * 2
       ctx.beginPath()
-      ctx.moveTo(rightX + Math.cos(a) * r * 0.6, MONSTER_AT.y - 20 + Math.sin(a) * r * 0.5)
-      ctx.lineTo(rightX + Math.cos(a) * r, MONSTER_AT.y - 20 + Math.sin(a) * r * 0.8)
+      ctx.moveTo(rightX + Math.cos(a) * r * 0.6, MONSTER_AT.y - 28 + Math.sin(a) * r * 0.5)
+      ctx.lineTo(rightX + Math.cos(a) * r, MONSTER_AT.y - 28 + Math.sin(a) * r * 0.8)
       ctx.stroke()
     }
   }
@@ -206,22 +213,22 @@ export function drawBattle(ctx: CanvasRenderingContext2D, scene: BattleScene) {
     // Grows out of the ball: an integer scale so the pixels stay crisp.
     const sc = Math.max(1, Math.round(MONSTER_SCALE * scene.monster))
     const x = rightX - (SLOPPYCLAUDE_W * sc) / 2 + shake
-    const y = MONSTER_AT.y - SLOPPYCLAUDE_H * sc + 4
+    const y = MONSTER_AT.y - SLOPPYCLAUDE_H * sc + 6
     drawSprite(ctx, sprite, x, y, sc)
   }
 
   if (!scene.duckGone && scene.duckIn >= 0) {
     const u = Math.min(1, scene.duckIn)
     // Two hops in from the left.
-    let hop = u < 1 ? Math.abs(Math.sin(u * Math.PI * 2)) * 22 : 0
+    let hop = u < 1 ? Math.abs(Math.sin(u * Math.PI * 2)) * 28 : 0
     // Idle: a slow breath (one pixel), and a hop of joy when a round goes the room's way.
     if (u === 1 && scene.duckHurt === 0) {
       hop += Math.floor(scene.clock / 32) % 2 === 1 ? 1 : 0
-      if (scene.duckCheer > 0) hop += Math.abs(Math.sin((scene.duckCheer / 36) * Math.PI * 2)) * 14
+      if (scene.duckCheer > 0) hop += Math.abs(Math.sin((scene.duckCheer / 36) * Math.PI * 2)) * 18
     }
     const shake = scene.duckHurt > 0 ? (scene.duckHurt % 4 < 2 ? 2 : -2) : 0
-    const x = leftX - 120 * (1 - u) - (16 * DUCK_SCALE) / 2 + shake
-    const y = DUCK_AT.y - 16 * DUCK_SCALE + 4 - hop
+    const x = leftX - 180 * (1 - u) - (16 * DUCK_SCALE) / 2 + shake
+    const y = DUCK_AT.y - 16 * DUCK_SCALE + 6 - hop
     // Side profile, facing the monster, so the eye and beak read. The face
     // changes when hit, and it blinks every few seconds otherwise.
     const blink = scene.clock % 190 < 7

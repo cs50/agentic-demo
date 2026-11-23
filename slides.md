@@ -1113,6 +1113,21 @@ git history is the receipt.
 -->
 
 ---
+layout: section
+---
+
+<div class="section-kicker">One more thing</div>
+
+# Harvard Yard
+
+<div class="section-sub">The Science Center is a Gym now. The Gym Leader has one monster, and the room fights it.</div>
+
+<!--
+A breath before the game. Phones are still out from the votes; they will need them
+again in a minute. "You've watched the duck all evening. Now you get to walk it."
+-->
+
+---
 layout: default
 class: gym-slide
 ---
@@ -1142,14 +1157,16 @@ If the room isn't connected (no hub, or nobody voted), the panel says so and the
 controller picks: ↑ ↓ then ✕. ✕ while a vote is open closes it early. Keyboard works
 too: arrows, Space, Enter.
 
-Win: Sloppyclaude faints, the AI Slop Defender badge. Lose: "Come back after Week 11", and ✕
-puts the duck back in the Yard for a rematch (the hub treats it as new polls).
+Win: Sloppyclaude faints, the AI Slop Defender badge. ✕ returns to the Gym, where Henry has
+a few parting words; then David walks over, says the only thing he says, and the screen
+fades to the last slide on its own. Lose: Henry sends you back to the board; walk up and
+talk to him again for a rematch (the hub treats it as new polls).
 -->
 
 ---
 layout: end
 ---
 
-# That's It
+# This Was CS50
 
 <div class="end-meta">The deck, the game, and how both were built: <code>github.com/cs50/agentic-demo</code></div>

@@ -24,7 +24,7 @@ The deck follows the course website's look: a white page, crimson `#a51c30` as t
 
 Every C$50 Finance example is taken from the Problem Set 9 specification (the `buy` rules, the `history` columns, the hints about `?` placeholders, the "Testing" list, the personal touches). The demo's `mario.c` is the CS50 classic; this year's Problem Set 1 used Seats, which the slides and notes acknowledge.
 
-## Deck structure (59 slides)
+## Deck structure (60 slides)
 
 | Slides | Content | Layout |
 | --- | --- | --- |
@@ -33,7 +33,7 @@ Every C$50 Finance example is taken from the Problem Set 9 specification (the `b
 | 8–12, 14–19, 21–27, 29–43 | Ten concepts: title → visualization(s) → explanation / Finance example / takeaway. Concepts 4 and 8 have two visualization slides | `concept-title`, `concept-viz`, `concept-detail` |
 | 44–46 | Synthesis: effort table; the same as a chart; what doesn't go away | `default`, `concept-viz`, `default` |
 | 47–56 | Live demo: `mario.c` → the first prompt → what kind of controller? → language and shape → the riskiest assumption (one conversation, `AgentChat`) → the spec with its evidence → the experiment (`ControllerTest`) → play, then finish it (`LiveDemo`) → the room decides, twice (`GameChoice`) | mixed |
-| 57–59 | Closing quote; the finale: Harvard Yard and the Science Center Gym (`GymGame`); end | `quote`, `default`, `end` |
+| 57–60 | Closing quote; a breath ("One more thing · Harvard Yard"); the finale: Harvard Yard and the Science Center Gym (`GymGame`, the whole slide); end: "This Was CS50" | `quote`, `section`, `default`, `end` |
 
 Every slide carries presenter notes. On `concept-detail` slides the example appears on the first click and the takeaway on the second.
 
@@ -192,7 +192,7 @@ All of this is inert in the overview, the "next slide" preview, and `pnpm export
 
 **Capacity.** `pnpm hub:loadtest [ws://host/ws] [N]` simulates the room: N phones join, vote at once, and follow 20 slide changes and 10 live-file saves while the hub's memory is watched. On a laptop, 500 phones vote with a p95 round-trip of ~10 ms and the hub grows by about 10 MB; it exits non-zero if a vote is lost or fan-out is slow, so it can gate a deploy.
 
-**The finale** (`<GymGame :seconds>`, the last slide before the end). The duck walks a top-down Harvard Yard with the controller or the arrow keys and challenges the Science Center Gym. The Gym Leader's one monster, Sloppyclaude, uses five moves, each a kind of AI slop, and each comes with a question from the lecture. When a question opens, the presenter's deck opens it as a timed `choice` poll (the same mechanism as "the room decides"), so phones on `/join` and decks that follow show the answers as buttons; when the hub closes it, the winning answer decides who takes the hit. Four correct answers win. With no hub connected, or when a vote closes with nobody having voted, the panel says so and the controller answers: ↑ ↓ then ✕. ✕ while a vote is open closes it early. Poll ids are `gym-1` … `gym-5`, suffixed `#2`, `#3` on a rematch so the hub does not treat them as repeats. Questions, moves and explanations live in `demo/gym/battle.ts`; NPC dialogue in `demo/gym/npcs.ts`.
+**The finale** (`<GymGame :seconds>`, the last slide before the end). The duck walks a top-down Harvard Yard with the controller or the arrow keys and challenges the Science Center Gym. The Gym Leader's one monster, Sloppyclaude, uses five moves, each a kind of AI slop, and each comes with a question from the lecture. When a question opens, the presenter's deck opens it as a timed `choice` poll (the same mechanism as "the room decides"), so phones on `/join` and decks that follow show the answers as buttons; when the hub closes it, the winning answer decides who takes the hit. Four correct answers win. After the battle Henry has a few parting words; after a win, David walks over for the last word and the deck fades to the final slide by itself. With no hub connected, or when a vote closes with nobody having voted, the panel says so and the controller answers: ↑ ↓ then ✕. ✕ while a vote is open closes it early. Poll ids are `gym-1` … `gym-5`, suffixed `#2`, `#3` on a rematch so the hub does not treat them as repeats. Questions, moves and explanations live in `demo/gym/battle.ts`; NPC dialogue in `demo/gym/npcs.ts`.
 
 ## Controller notes
 
