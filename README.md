@@ -1,6 +1,6 @@
 # The Agentic Software Engineer — CS50 lecture deck
 
-Interactive slide deck (Slidev) plus a playable, PS4-controller-driven Mario game embedded in the slides.
+Interactive slide deck (Slidev) plus a playable, PS4-controller-driven platformer embedded in the slides: the CS50 duck on the Week 1 Mario pyramid.
 Spec: [`agentic-coding-lecture-spec.md`](./agentic-coding-lecture-spec.md).
 
 ## Run
@@ -23,7 +23,7 @@ The deck follows the course website's look: a white page, crimson `#a51c30` as t
 
 Every C$50 Finance example is taken from the Problem Set 9 specification (the `buy` rules, the `history` columns, the hints about `?` placeholders, the "Testing" list, the personal touches). The demo's `mario.c` is the CS50 classic; this year's Problem Set 1 used Seats, which the slides and notes acknowledge.
 
-## Deck structure (50 slides)
+## Deck structure (52 slides)
 
 | Slides | Content | Layout |
 | --- | --- | --- |
@@ -31,8 +31,8 @@ Every C$50 Finance example is taken from the Problem Set 9 specification (the `b
 | 4, 10, 17, 25 | Part dividers | `section` |
 | 5–9, 11–16, 18–24, 26–40 | Ten concepts: title → visualization(s) → explanation / Finance example / takeaway. Concepts 4 and 8 have two visualization slides | `concept-title`, `concept-viz`, `concept-detail` |
 | 41–43 | Synthesis: effort table; the same as a chart; what doesn't go away | `default`, `concept-viz`, `default` |
-| 44–49 | Live demo: `mario.c` → just ask → say what you mean → `test_controller` → play and change the level → closing quote | mixed |
-| 50 | End | `end` |
+| 44–51 | Live demo: `mario.c` → just ask → four design decisions → say what you mean → the spec with its evidence → `test_controller` → play and change the level → closing quote | mixed |
+| 52 | End | `end` |
 
 Every slide carries presenter notes. On `concept-detail` slides the example appears on the first click and the takeaway on the second.
 
@@ -58,6 +58,8 @@ On-slide cues about what to press ("Press → to ask") are off; the presenter no
 | 9 Factory | `FactoryPipeline` | 6 | one Finance issue ("add cash") from issue to pull request, one stage per press |
 | 10 Approval gates | `ApprovalDial` | 3 | moves the gate: everything waits, the sensible middle, the dark factory |
 | Synthesis | `EffortChart` | 4 | adds an era to the stacked bars; every segment is labeled; hovering a segment or legend entry lights that category in every bar |
+| Demo | `DecisionCards` | 8 | four design decisions behind the game, two presses each: the options (ask the room), then our pick and what the others would have cost |
+| Demo | `DemoSpec` | 7 | the game's requirements, each paired with the artifact that proves it; the last press is what was left out on purpose |
 
 All live in `components/viz/`, share `CodeSnippet` (Shiki, via one highlighter in `highlighter.ts`) and `Tip` (hover/focus tooltip), use only the deck's design tokens, and respect `prefers-reduced-motion`.
 
@@ -85,7 +87,8 @@ All live in `components/viz/`, share `CodeSnippet` (Shiki, via one highlighter i
 | `components/LiveEditor.vue` | Edit: a Monaco editor bound two ways to `level.ts`. Disk changes appear in the editor; edits autosave back to disk. |
 | `demo/mario/editorSync.ts` | The editor's sync bookkeeping (what was sent, what is believed to be on disk), kept pure so `tests/` can cover echo, conflict, and failed-write cases. |
 | `vite.config.ts` | Dev-server channel that writes `level.ts` (and only that file) for the editor, accepting writes only from this machine; turns off Vite's full-screen error overlay in favor of the game's error strip. |
-| `components/ControllerTest.vue` | The "verification first" diagnostic: live button/axis events on a slide. |
+| `components/ControllerTest.vue` | The "verify first" diagnostic: a DualShock 4 drawing (`viz/DualShock.vue`) whose buttons and sticks follow the real controller, the duck acting on the same inputs, and the stdout-style log. |
+| `demo/mario/duck.ts` | The CS50 duck as a 14×14 pixel sprite: one pixel map drawn on the game canvas (`drawDuck`) and as SVG on slides (`viz/DuckSprite.vue`). |
 | `styles/index.css` | Design tokens (crimson, Bootstrap neutrals), bundled PT Sans, shared banner/section/table styles. |
 | `pnpm-workspace.yaml` | Allows `playwright-chromium`'s install script (pnpm ≥ 10 blocks build scripts by default) so `pnpm export` works after a fresh install. |
 
