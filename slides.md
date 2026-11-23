@@ -804,6 +804,23 @@ src: ./demo/live.md
 ---
 
 ---
+layout: concept-viz
+kicker: Before any code
+title: "Four Decisions"
+caption: "Two presses per decision: the options, then our pick."
+---
+
+<DecisionCards />
+
+<!--
+Step 2½ (3 min). The vague prompt failed because nobody made these decisions; the model
+made them by accident. Take each in two presses. First press: the question and three
+options. Ask the room: "which would you pick?" Take an answer or two. Second press: our
+pick, why, and what the others would have cost. The concept labels (Design, Verification,
+Specification) tie each back to the first half of the lecture.
+-->
+
+---
 layout: default
 ---
 
@@ -816,7 +833,7 @@ layout: default
 
 <v-clicks>
 
-- `controller.ts`: reads the gamepad. Knows that **Cross** means jump and the **left stick** means move. Knows nothing about Mario.
+- `controller.ts`: reads the gamepad. Knows that **Cross** means jump and the **left stick** means move. Knows nothing about the duck.
 - `engine.ts`: 60 frames per second, collisions, gravity of `0.8 px/frame²`, a jump of `-14 px/frame`. Knows nothing about controllers.
 - `level.ts`: the pyramid, as a loop inside a loop. The one file we'll keep editing.
 
@@ -845,20 +862,40 @@ slide is the verification artifact.
 -->
 
 ---
+layout: concept-viz
+kicker: The specification
+title: "What Must Hold, and How We Will Know"
+caption: "One press per requirement. The last press is what we left out."
+---
+
+<DemoSpec />
+
+<!--
+Step 3½ (2 min). Concept 5 and Concept 7 applied to tonight. Each row is a requirement
+in the left column and the artifact that proves it in the middle: a line in a log, a
+number on a HUD, a count of rows on a canvas. Point out that every proof is something you
+look at, not code you read. Last press: what is deliberately not in the spec. Finance's
+spec did the same ("You don't need to worry about race conditions").
+-->
+
+---
 layout: default
 ---
 
-# Verify First: `test_controller`
+# Verify First
 
 <div class="lede">
-Press <b>✕</b> on the controller and look for <code>Button 0 (CROSS): DOWN</code>.
+<code>test_controller</code>. Press <b>✕</b>: the button lights up, the log says <code>Button 0 (CROSS): DOWN</code>, and the duck jumps.
 </div>
 
 <ControllerTest />
 
 <!--
-Run the diagnostic, press ✕, show the log. Nobody has read the controller code; everybody
-has seen it work. That's Concept 7.
+Run the diagnostic. Press a button so the browser exposes the controller; the status bar
+turns green and names it. Move the left stick: the stick on the drawing moves and the
+duck walks. Press ✕: the button lights, the log prints "Button 0 (CROSS): DOWN", and the
+duck jumps. Three views of one event. Nobody has read the controller code; everybody has
+seen it work. That's Concept 7, and it is rows 1 and 2 of the previous slide, checked.
 -->
 
 ---
@@ -868,7 +905,7 @@ layout: default
 # Step 4 · Play, Then Change the Level
 
 <div class="lede">
-Ask the agent to edit <code>level.ts</code>, or click <b>Edit</b> and type. Either way, the level rebuilds under Mario without a reload.
+Ask the agent to edit <code>level.ts</code>, or click <b>Edit</b> and type. Either way, the level rebuilds under the duck without a reload.
 </div>
 
 <div class="grid grid-cols-[1.05fr_1fr] gap-4 items-start" style="height: 400px">
@@ -877,7 +914,7 @@ Ask the agent to edit <code>level.ts</code>, or click <b>Edit</b> and type. Eith
 </div>
 
 <!--
-Step 4 (2 min). Pick up the controller and run Mario up and over the pyramid.
+Step 4 (2 min). Pick up the controller and run the duck up and over the pyramid.
 
 Then change level.ts, two ways:
 
