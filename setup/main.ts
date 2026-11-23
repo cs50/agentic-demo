@@ -10,9 +10,9 @@
  * pnpm keeps it out of reach (same reason vite.config.ts imports nothing
  * from 'vite').
  */
-import { installHubSync } from '../composables/hubSync'
+import { installHubSync, type RouterLike } from '../composables/hubSync'
 
-export default function setup({ router }: { router: any }) {
+export default function setup({ router }: { router: RouterLike }) {
   // Not awaited: the bridge waits for the router itself, and mounting should not wait for it.
   void installHubSync(router)
 }

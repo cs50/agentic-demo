@@ -48,6 +48,11 @@ const secondsLeft = computed(() => {
 })
 
 const mine = computed(() => hub.state.vote)
+/** Set when a tap did not reach the hub; cleared by the next successful tap. */
+const voteFailed = ref(false)
+function castVote(i: number) {
+  voteFailed.value = !hub.vote(i)
+}
 </script>
 
 <template>
@@ -67,7 +72,7 @@ const mine = computed(() => hub.state.vote)
             class="ac-opt"
             :class="{ mine: mine === i, winner: result?.winner === i, faded: result && result.winner !== i }"
             :disabled="!open"
-            @click="hub.vote(i)"
+            @click="castVote(i)"
           >
             <span class="ac-key">{{ String.fromCharCode(65 + i) }}</span>
             <span>{{ label }}</span>
@@ -78,6 +83,7 @@ const mine = computed(() => hub.state.vote)
             <span v-if="mine !== null">You picked <b>{{ poll.options[mine] }}</b>. </span>
             The room chose <b>{{ poll.options[result.winner] }}</b>.
           </template>
+          <template v-else-if="voteFailed">Not connected; try again in a moment.</template>
           <template v-else-if="mine !== null">Got it. You can still change your mind.</template>
           <template v-else>Tap to choose.</template>
         </div>

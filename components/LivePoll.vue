@@ -15,7 +15,7 @@
  * the poll has closed, and its options are tappable while it is open, so a
  * phone that follows the deck can vote without switching to /join.
  */
-import { computed, onMounted, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useHub } from '../composables/useHub'
 import { useLive } from '../composables/useLive'
 import { useVizSteps } from '../composables/useVizSteps'
@@ -50,7 +50,12 @@ const status = computed<'pending' | 'open' | 'closed'>(() => (poll.value ? (poll
 const tally = computed(() => (hub.state.tally?.pollId === props.id ? hub.state.tally : null))
 const total = computed(() => tally.value?.total ?? 0)
 const myVote = computed(() => (poll.value ? hub.state.vote : null))
-const canVote = computed(() => live && status.value === 'open' && !hub.isPresenter.value)
+const canVote = computed(() => live && status.value === 'open' && hub.state.connected && !hub.isPresenter.value)
+/** Set when a tap did not reach the hub (socket down between the poll opening and the tap). */
+const voteFailed = ref(false)
+function castVote(i: number) {
+  voteFailed.value = !hub.vote(i)
+}
 
 const rows = computed(() =>
   props.options.map((label, i) => {
@@ -72,7 +77,8 @@ const spokenJoin = computed(() => hub.joinUrl().replace(/^https?:\/\//, ''))
         <template v-else-if="status === 'closed'">Closed</template>
         <template v-else>Poll</template>
       </span>
-      <span v-if="live && hub.state.connected" class="lp-room">
+      <span v-if="live && hub.state.presenterRejected" class="lp-room viz-bad">presenter token rejected</span>
+      <span v-else-if="live && hub.state.connected" class="lp-room">
         <b>{{ hub.state.audienceCount }}</b> in the room
       </span>
       <span v-else-if="live" class="lp-room viz-warn">hub offline</span>
@@ -88,7 +94,7 @@ const spokenJoin = computed(() => hub.joinUrl().replace(/^https?:\/\//, ''))
         class="lp-opt"
         :class="{ mine: myVote === r.i, leading: status === 'closed' && r.leading, votable: canVote }"
         :disabled="!canVote"
-        @click="canVote && hub.vote(r.i)"
+        @click="canVote && castVote(r.i)"
       >
         <span class="lp-key">{{ String.fromCharCode(65 + r.i) }}</span>
         <span class="lp-label">{{ r.label }}</span>
@@ -100,6 +106,7 @@ const spokenJoin = computed(() => hub.joinUrl().replace(/^https?:\/\//, ''))
     <div class="lp-foot">
       <template v-if="status === 'open'">
         <span v-if="hub.isPresenter"><b>{{ total }}</b> {{ total === 1 ? 'vote' : 'votes' }} so far</span>
+        <span v-else-if="voteFailed" class="viz-warn">Not connected; try again in a moment</span>
         <span>Vote at <b class="viz-mono">{{ spokenJoin }}</b></span>
       </template>
       <template v-else-if="status === 'closed'">

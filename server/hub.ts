@@ -18,7 +18,16 @@
  *   - Only an authenticated presenter may open or close polls, publish slide
  *     position (`sync`) or live source, or reset. A wrong token demotes the
  *     connection to the audience rather than dropping it.
+ *   - A socket's identity is fixed at its first hello. A later hello may change
+ *     the name or present a token; it cannot become another voter.
  *   - There is one session at a time. `reset` clears it for the next lecture.
+ *
+ * Accepted residual risk: the audience is anonymous by design (no login), so
+ * one device that opens several sockets with several ids is several voters.
+ * The hub keeps one honest socket to one vote and rate-limits every socket
+ * (server/index.ts); it does not try to tell two phones from one phone with
+ * two tabs. A join nonce would close that gap at the cost of making every
+ * client load /join first; not worth it for a lecture-hall show of hands.
  */
 
 import {
@@ -41,7 +50,6 @@ export type Target =
   | { kind: 'conn'; id: string }
   | { kind: 'role'; role: Role }
   | { kind: 'all' }
-  | { kind: 'all-except'; id: string }
 
 export interface Outbound {
   to: Target
@@ -78,7 +86,6 @@ type PollRequest = { id: string; kind: Poll['kind']; question: string; options: 
 const toConn = (id: string): Target => ({ kind: 'conn', id })
 const toRole = (role: Role): Target => ({ kind: 'role', role })
 const toAll: Target = { kind: 'all' }
-const toAllExcept = (id: string): Target => ({ kind: 'all-except', id })
 
 export class Hub {
   private readonly token: string
@@ -107,8 +114,18 @@ export class Hub {
 
   /** A socket said hello. Registers it and returns its first messages. */
   connect(connId: string, hello: HelloMessage): Outbound[] {
+    return this.register(connId, hello, undefined)
+  }
+
+  /**
+   * `connect` and a re-sent `hello` meet here. On a re-hello the socket keeps
+   * the identity it joined with (`clientId`) and its message clock: a second
+   * hello may change a name or present a token, never mint a new voter.
+   */
+  private register(connId: string, hello: HelloMessage, previous: Connection | undefined): Outbound[] {
     const out: Outbound[] = []
-    const clientId = typeof hello.clientId === 'string' && hello.clientId ? hello.clientId.slice(0, 64) : connId
+    const clientId =
+      previous?.clientId ?? (typeof hello.clientId === 'string' && hello.clientId ? hello.clientId.slice(0, 64) : connId)
     const name = cleanName(hello.name)
 
     let role: Role = 'audience'
@@ -118,9 +135,9 @@ export class Hub {
     }
 
     const before = this.audienceCount()
-    this.connections.set(connId, { connId, clientId, role, name, lastMessageAt: 0 })
+    this.connections.set(connId, { connId, clientId, role, name, lastMessageAt: previous?.lastMessageAt ?? 0 })
     out.push({ to: toConn(connId), msg: this.snapshot(connId) })
-    if (role === 'presenter') {
+    if (role === 'presenter' && previous?.role !== 'presenter') {
       // A presenter arriving late still gets the room's messages so far.
       for (const m of this.messages) out.push({ to: toConn(connId), msg: { type: 'message', ...m } })
     }
@@ -166,9 +183,9 @@ export class Hub {
 
     switch (msg.type) {
       case 'hello':
-        // Re-registering keeps things simple for a client that reconnects its state machine.
-        this.connections.delete(connId)
-        return this.connect(connId, msg)
+        // A client that re-sends hello (a name change, a token presented late)
+        // keeps the identity and clock it joined with; see register().
+        return this.register(connId, msg, conn)
       case 'vote':
         return this.vote(conn, msg.pollId, msg.option)
       case 'message':
@@ -387,7 +404,5 @@ export function targets(target: Target, connId: string, role: Role): boolean {
       return target.id === connId
     case 'role':
       return target.role === role
-    case 'all-except':
-      return target.id !== connId
   }
 }

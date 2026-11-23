@@ -26,6 +26,7 @@ import { currentPhysics, onPhysicsChange, physicsReady } from '../demo/mario/liv
 const props = withDefaults(defineProps<{ compact?: boolean }>(), { compact: false })
 
 const { $renderContext } = useSlideContext()
+// Not useLive(): the export wants one drawn frame of the game, so print mode counts.
 const isLive = ['slide', 'presenter'].includes($renderContext.value)
 const isActive = useIsSlideActive()
 /** A viewer following the presenter watches the presenter's game, not a copy. */
@@ -152,8 +153,9 @@ function focusCanvas() {
 // remounts (where onSlideEnter would not re-fire); the watch covers navigation.
 onMounted(() => isActive.value && start())
 watch(isActive, (active) => (active ? start() : stop()))
-// Unlocking while on this slide hands the viewer a playable game; following again takes it back.
-watch(mirroring, (m) => (m ? stop() : isActive.value && start()))
+// Unlocking while on this slide hands the viewer a playable game; following again
+// takes it back. flush: 'post' so the canvas exists by the time start() looks for it.
+watch(mirroring, (m) => (m ? stop() : isActive.value && start()), { flush: 'post' })
 onBeforeUnmount(stop)
 </script>
 

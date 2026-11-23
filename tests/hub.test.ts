@@ -65,6 +65,39 @@ describe('joining', () => {
     const out = hub.handle('ghost', { type: 'vote', pollId: 'q1', option: 0 })
     expect(ofType(out, 'error')[0].msg.reason).toMatch(/hello/)
   })
+
+  it('a second hello changes the name, never the voter or the clock', () => {
+    const { hub, now } = makeHub({ t: 5000 })
+    hub.connect('p', presenterHello())
+    hub.connect('a', audienceHello('phone-1', 'Ada'))
+    hub.handle('p', { type: 'poll:open', poll })
+    hub.handle('a', { type: 'vote', pollId: 'q1', option: 0 })
+    hub.handle('a', { type: 'message', text: 'first' })
+
+    // The console-loop attack: a fresh clientId per hello, then another vote.
+    for (let i = 0; i < 5; i++) {
+      const out = hub.handle('a', { ...audienceHello(`fake-${i}`, 'Grace'), type: 'hello' })
+      expect(ofType(out, 'audience')).toHaveLength(0) // still one device
+      hub.handle('a', { type: 'vote', pollId: 'q1', option: 1 })
+    }
+    expect(hub.audienceCount()).toBe(1)
+    expect(hub.tally()).toEqual({ pollId: 'q1', counts: [0, 1, 0], total: 1 }) // one voter, last choice
+    expect(hub.snapshot('a').you).toMatchObject({ clientId: 'phone-1', name: 'Grace' })
+    expect(hub.snapshot('a').vote).toBe(1)
+    // And the message clock survived: still inside the one-per-second window.
+    now.t = 5100
+    expect(ofType(hub.handle('a', { type: 'message', text: 'again' }), 'error')[0].msg.reason).toMatch(/per second/)
+  })
+
+  it('a late token turns an audience socket into a presenter, once', () => {
+    const { hub } = makeHub()
+    hub.connect('a', audienceHello('x', 'Ada'))
+    hub.handle('a', { type: 'message', text: 'hello' })
+    const out = hub.handle('a', { type: 'hello', role: 'presenter', clientId: 'ignored', token: TOKEN })
+    expect(hub.roleOf('a')).toBe('presenter')
+    expect(ofType(out, 'message').map((o) => o.msg.text)).toEqual(['hello']) // replayed on promotion
+    expect(ofType(hub.handle('a', { type: 'hello', role: 'presenter', clientId: 'ignored', token: TOKEN }), 'message')).toHaveLength(0)
+  })
 })
 
 describe('polls', () => {
@@ -279,6 +312,5 @@ describe('targets', () => {
     expect(targets({ kind: 'conn', id: 'x' }, 'x', 'audience')).toBe(true)
     expect(targets({ kind: 'conn', id: 'x' }, 'y', 'audience')).toBe(false)
     expect(targets({ kind: 'role', role: 'presenter' }, 'x', 'audience')).toBe(false)
-    expect(targets({ kind: 'all-except', id: 'x' }, 'x', 'presenter')).toBe(false)
   })
 })

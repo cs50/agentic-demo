@@ -310,8 +310,11 @@
     ws.addEventListener('error', () => ws.close())
   }
 
+  /** True when the message went out; false when the socket is down, so the caller can say so. */
   function send(msg) {
-    if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(msg))
+    if (!ws || ws.readyState !== WebSocket.OPEN) return false
+    ws.send(JSON.stringify(msg))
+    return true
   }
 
   function onMessage(msg) {
@@ -368,8 +371,11 @@
 
   function vote(i) {
     if (!poll || !poll.open) return
-    send({ type: 'vote', pollId: poll.id, option: i })
-    // Optimistic: the ack confirms it (and corrects it if refused).
+    if (!send({ type: 'vote', pollId: poll.id, option: i })) {
+      toast('Not connected. Try again in a moment.')
+      return
+    }
+    // Optimistic now that it is on the wire; the ack confirms it.
     myVote = i
     render()
   }
@@ -378,7 +384,10 @@
   function sendText() {
     const text = textEl.value.trim()
     if (!text) return
-    send({ type: 'message', text })
+    if (!send({ type: 'message', text })) {
+      toast('Not connected. Try again in a moment.')
+      return
+    }
     textEl.value = ''
     hintEl.textContent = 'Sent.'
     setTimeout(() => (hintEl.textContent = 'Only the presenter sees messages.'), 1500)

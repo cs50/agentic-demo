@@ -11,13 +11,19 @@
  * origin, which is right for the hosted deck (the hub serves it).
  *
  * Who it is: a presenter if a token is known, else audience. The token is
- * never in the built bundle. Open the deck once with `?presenter=TOKEN` and it
- * is kept in localStorage (`?presenter=` forgets it); under `pnpm dev` it can
- * also come from VITE_PRESENTER_TOKEN in .env.local. Audience devices share
- * the same `hub:clientId` key as /join, so a phone that voted on the join
- * page and then follows the deck is still one voter.
+ * never in the built bundle and never in a URL the server sees. Open the deck
+ * once with `#presenter=TOKEN` (the fragment stays in the browser; query
+ * strings end up in nginx logs) and it is kept in localStorage; `#presenter=`
+ * forgets it. Under `pnpm dev` it can also come from VITE_PRESENTER_TOKEN in
+ * .env.local. Audience devices share the same `hub:clientId` key as /join, so
+ * a phone that voted on the join page and then follows the deck is still one
+ * voter.
+ *
+ * Slide position and the live demo's source arrive here too but are consumed
+ * by composables/hubSync.ts straight from the message listener (`on`), not
+ * kept in `state`: 500 phones need not hold a copy of the drawings.
  */
-import { computed, reactive, readonly, shallowRef } from 'vue'
+import { computed, reactive, readonly, shallowRef, watch } from 'vue'
 import {
   WS_PATH,
   type AudienceMessage,
@@ -26,7 +32,6 @@ import {
   type PollResult,
   type Role,
   type ServerMessage,
-  type SyncState,
   type Tally,
 } from '../server/protocol'
 
@@ -40,6 +45,12 @@ const state = reactive({
   connected: false,
   /** What the server says we are, once it has answered `hello`. */
   role: 'audience' as Role,
+  /**
+   * True when this deck offered a presenter token and the hub turned it down
+   * (stale localStorage, `.env.local` out of date, a rotated environment
+   * property). The deck is then audience, and the lecturer needs to know.
+   */
+  presenterRejected: false,
   audienceCount: 0,
   poll: null as Poll | null,
   tally: null as Tally | null,
@@ -47,9 +58,6 @@ const state = reactive({
   /** This device's vote on the current poll. */
   vote: null as number | null,
   messages: [] as AudienceMessage[],
-  /** Latest Slidev shared state per channel, as published by the presenter. */
-  sync: {} as Record<string, SyncState>,
-  liveSource: {} as Record<string, string>,
   /** Server clock minus ours, for countdowns. */
   clockSkew: 0,
 })
@@ -59,6 +67,8 @@ const socket = shallowRef<WebSocket | null>(null)
 let wanted = false
 let backoff = 1000
 let retryTimer = 0
+/** Whether the last `hello` carried a token, so a `state` reply of `audience` means it was rejected. */
+let offeredToken = false
 
 // ------------------------------------------------------------- identity
 
@@ -80,16 +90,28 @@ function clientId(): string {
   return id
 }
 
-/** `?presenter=TOKEN` stores the token; `?presenter=` forgets it. In dev, .env.local can supply it. */
-function presenterToken(): string | null {
-  const s = storage()
+/**
+ * `#presenter=TOKEN` in the address bar when the deck loads stores the token;
+ * `#presenter=` forgets it. Read and removed at module load, before Slidev's
+ * router is created, so the router never sees it, it is not left in history,
+ * and the fragment never reaches a server. In dev, .env.local can supply the
+ * token instead.
+ */
+function takeFragmentToken(): string | null {
   if (typeof window === 'undefined') return null
-  const param = new URLSearchParams(window.location.search).get('presenter')
-  if (param !== null) {
-    if (param) s?.setItem(TOKEN_KEY, param)
-    else s?.removeItem(TOKEN_KEY)
-  }
-  const stored = s?.getItem(TOKEN_KEY) ?? null
+  const hash = window.location.hash.replace(/^#/, '')
+  const param = hash ? new URLSearchParams(hash).get('presenter') : null
+  if (param === null) return null
+  const s = storage()
+  if (param) s?.setItem(TOKEN_KEY, param)
+  else s?.removeItem(TOKEN_KEY)
+  window.history.replaceState(window.history.state, '', window.location.pathname + window.location.search)
+  return param || null
+}
+takeFragmentToken()
+
+function presenterToken(): string | null {
+  const stored = storage()?.getItem(TOKEN_KEY) ?? null
   if (stored) return stored
   // Only under `pnpm dev`: a production build must never carry the token, since
   // the hosted deck is what the room loads. Vite reads VITE_* from .env.local.
@@ -123,6 +145,7 @@ function connect() {
     backoff = 1000
     state.connected = true
     const token = presenterToken()
+    offeredToken = !!token
     send({
       type: 'hello',
       role: token ? 'presenter' : 'audience',
@@ -155,13 +178,6 @@ function connect() {
   ws.addEventListener('error', () => ws.close())
 }
 
-function disconnect() {
-  wanted = false
-  window.clearTimeout(retryTimer)
-  socket.value?.close()
-  socket.value = null
-}
-
 function send(msg: ClientMessage): boolean {
   const ws = socket.value
   if (!ws || ws.readyState !== WebSocket.OPEN) return false
@@ -173,13 +189,12 @@ function apply(msg: ServerMessage) {
   switch (msg.type) {
     case 'state':
       state.role = msg.you.role
+      state.presenterRejected = offeredToken && msg.you.role !== 'presenter'
       state.poll = msg.poll
       state.tally = msg.tally
       state.result = msg.result
       state.vote = msg.vote
       state.audienceCount = msg.audienceCount
-      state.sync = msg.sync
-      state.liveSource = msg.liveSource
       state.clockSkew = msg.now - Date.now()
       break
     case 'audience':
@@ -215,10 +230,8 @@ function apply(msg: ServerMessage) {
       if (state.messages.length > 200) state.messages.splice(0, state.messages.length - 200)
       break
     case 'sync':
-      state.sync = { ...state.sync, [msg.channel]: msg.state }
-      break
     case 'live-source':
-      state.liveSource = { ...state.liveSource, [msg.file]: msg.content }
+      // Consumed by composables/hubSync.ts through `on`; nothing is kept here.
       break
     case 'error':
       if (import.meta.env.DEV) console.warn(`[hub] ${msg.reason}`)
@@ -240,14 +253,16 @@ function closePoll(pollId: string) {
   return send({ type: 'poll:close', pollId })
 }
 
-function vote(option: number) {
+/** Casts a vote. False when nothing was sent (no open poll, or the socket is down), so the UI can say so. */
+function vote(option: number): boolean {
   const poll = state.poll
   if (!poll?.open) return false
-  state.vote = option // optimistic; the ack confirms
-  return send({ type: 'vote', pollId: poll.id, option })
+  if (!send({ type: 'vote', pollId: poll.id, option })) return false
+  state.vote = option // optimistic, now that it is on the wire; the ack confirms
+  return true
 }
 
-function publishSync(channel: string, syncState: SyncState) {
+function publishSync(channel: string, syncState: Record<string, unknown>) {
   if (!isPresenter.value) return false
   return send({ type: 'sync', channel, state: syncState })
 }
@@ -276,8 +291,6 @@ const hubApi = {
   state: readonly(state),
   isPresenter,
   connect,
-  disconnect,
-  send,
   on,
   openPoll,
   closePoll,
@@ -289,5 +302,13 @@ const hubApi = {
   joinUrl,
 }
 
-// For on-stage diagnostics from DevTools: window.__hub.state.audienceCount, window.__hub.reset()
-if (import.meta.env.DEV && typeof window !== 'undefined') (window as any).__hub = hubApi
+// For on-stage diagnostics from DevTools (window.__hub.state.audienceCount,
+// window.__hub.reset()): always under `pnpm dev`, and on any deck the hub has
+// accepted as presenter, so the hosted deck's presenter has it too. Every
+// action it exposes is role-checked by the hub anyway.
+if (typeof window !== 'undefined') {
+  if (import.meta.env.DEV) (window as any).__hub = hubApi
+  watch(isPresenter, (p) => {
+    if (p) (window as any).__hub = hubApi
+  })
+}

@@ -39,10 +39,10 @@ interface RouteLike {
   params: Record<string, string | string[]>
   query: Record<string, unknown>
 }
-interface RouterLike {
+export interface RouterLike {
   currentRoute: { value: RouteLike }
   isReady: () => Promise<void>
-  afterEach: (fn: (to: RouteLike) => void) => void
+  afterEach: (fn: (to: RouteLike, from: RouteLike, failure?: unknown) => void) => void
   replace: (to: { path: string; query?: Record<string, unknown> }) => Promise<unknown>
 }
 
@@ -159,7 +159,9 @@ export async function installHubSync(r: RouterLike) {
   const hub = useHub()
   hub.connect()
 
-  const isViewer = computed(() => hub.state.connected && hub.state.role === 'audience')
+  // A deck whose presenter token was rejected is audience by the hub's rules,
+  // but it is the lecturer's screen: it must not be steered by stale sync.
+  const isViewer = computed(() => hub.state.connected && hub.state.role === 'audience' && !hub.state.presenterRejected)
   watch(
     [isViewer, () => r.currentRoute.value.name],
     ([viewer, route]) => (canFollow.value = viewer && route === 'play'),
@@ -193,7 +195,7 @@ export async function installHubSync(r: RouterLike) {
       if (!sendTimer) sendTimer = window.setTimeout(() => flushSends(hub.publishSync), SEND_EVERY_MS)
       return
     }
-    if (hub.state.role === 'presenter') return
+    if (hub.state.role === 'presenter' || hub.state.presenterRejected) return
     switch (msg.type) {
       case 'state':
         for (const [channel, state] of Object.entries(msg.sync)) receive(channel, state)
@@ -209,8 +211,9 @@ export async function installHubSync(r: RouterLike) {
   })
 
   // A navigation that lands away from the presenter was the viewer's own.
-  r.afterEach((to) => {
-    if (!canFollow.value || !following.value || !presenterNav.value) return
+  // A cancelled or redirected one landed nowhere and says nothing.
+  r.afterEach((to, _from, failure) => {
+    if (failure || !canFollow.value || !following.value || !presenterNav.value) return
     const nav = routeNav(to)
     if (nav && !same(nav, presenterNav.value)) following.value = false
   })

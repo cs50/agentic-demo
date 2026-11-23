@@ -89,19 +89,37 @@ type Applied = { preset: string; file: string | null; ok: boolean; error?: strin
 const applied = ref<Applied | null>(null)
 let appliedClose = 0
 
-watch(result, async (r) => {
-  if (!r || !live || !hub.isPresenter.value) return
-  // One write per close, however many times the result is re-derived.
+/**
+ * The winner is written only when the verdict arrives live, never from the
+ * snapshot a reconnect or reload brings: a snapshot may describe a vote that
+ * closed minutes ago, and writing it then would clobber whatever the lecturer
+ * has edited since. If the deck was away when the vote closed, the panel says
+ * so and the presenter asks again.
+ */
+onMounted(() => {
+  if (!live) return
+  const off = hub.on((msg) => {
+    if (msg.type !== 'poll:result' || msg.pollId !== props.id || !hub.isPresenter.value) return
+    void applyWinner(msg.winner)
+  })
+  onBeforeUnmount(off)
+})
+
+async function applyWinner(winner: number) {
+  // Both presenter windows hear the same result; one write per close is enough.
   const closedAt = poll.value?.closesAt ?? 0
-  if (closedAt === appliedClose) return
+  if (closedAt && closedAt === appliedClose) return
   appliedClose = closedAt
-  const choice = props.choices[r.winner]
+  const choice = props.choices[winner]
   if (!choice) return
   const file = targetOf(choice.preset)
   applied.value = null
   const outcome = await applyPreset(choice.preset)
   applied.value = { preset: choice.preset, file: file ? file.split('/').pop()! : null, ...outcome }
-})
+}
+
+/** A result that is on screen but was not written by this deck instance. */
+const missedResult = computed(() => !!result.value && !applied.value && hub.isPresenter.value && appliedClose !== (poll.value?.closesAt ?? 0))
 
 const rows = computed(() =>
   props.choices.map((c, i) => {
@@ -118,7 +136,9 @@ const showCounts = computed(() => !!tally.value && (hub.isPresenter.value || !op
     <div class="gc-head">
       <span class="viz-label accent">The room decides</span>
       <span v-if="secondsLeft !== null" class="gc-clock" :class="{ late: secondsLeft <= 5 }">{{ secondsLeft }}s</span>
+      <span v-else-if="live && hub.state.presenterRejected" class="gc-room viz-bad">presenter token rejected</span>
       <span v-else-if="live && hub.state.connected" class="gc-room"><b>{{ hub.state.audienceCount }}</b> in the room</span>
+      <span v-else-if="live" class="gc-room viz-warn">hub offline</span>
     </div>
 
     <p class="gc-question">{{ question }}</p>
@@ -142,6 +162,7 @@ const showCounts = computed(() => !!tally.value && (hub.isPresenter.value || !op
           <template v-if="applied.ok">{{ applied.file }} updated</template>
           <template v-else>{{ applied.error }}</template>
         </span>
+        <span v-else-if="missedResult" class="viz-warn">closed while this deck was away; not written. Press ← then → to ask again</span>
         <span v-else-if="hub.isPresenter" class="gc-muted">writing…</span>
       </template>
       <template v-else-if="open">

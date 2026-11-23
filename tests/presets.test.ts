@@ -3,6 +3,8 @@
  * will load the winner the moment the vote closes, mid-lecture, with no one
  * reading it first.
  */
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { adaptPhysics } from '../demo/mario/livePhysics'
 import { PRESETS, presetNames, targetOf } from '../demo/mario/presets'
@@ -47,5 +49,12 @@ describe('presets', () => {
 
   it('a name that is not a preset has no target', () => {
     expect(targetOf('duck-mode')).toBeNull()
+  })
+
+  it('every preset a slide offers the room exists', () => {
+    const slides = readFileSync(resolve(import.meta.dirname, '..', 'slides.md'), 'utf8')
+    const offered = [...slides.matchAll(/preset:\s*'([^']+)'/g)].map((m) => m[1])
+    expect(offered.length).toBeGreaterThan(0)
+    for (const name of offered) expect(presetNames(), `slides.md offers ${name}`).toContain(name)
   })
 })

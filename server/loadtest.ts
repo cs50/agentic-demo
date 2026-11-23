@@ -4,8 +4,8 @@
  *   pnpm hub:loadtest                       500 phones against ws://localhost:8080/ws
  *   pnpm hub:loadtest wss://host/ws 300     another hub, another size
  *
- * Needs PRESENTER_TOKEN (default "dev", the hub's own default) so the script
- * can act as the presenter. What it measures:
+ * Needs PRESENTER_TOKEN (the hub's; `pnpm hub:loadtest` reads .env.local) so
+ * the script can act as the presenter. What it measures:
  *
  *   join       all N connect and say hello; how long until the last snapshot
  *   vote       a poll opens, every phone votes at once; round-trip to ack
@@ -23,7 +23,11 @@ import WebSocket from 'ws'
 
 const url = process.argv[2] ?? 'ws://localhost:8080/ws'
 const N = Number(process.argv[3] ?? 500)
-const token = process.env.PRESENTER_TOKEN ?? 'dev'
+const token = process.env.PRESENTER_TOKEN
+if (!token) {
+  console.error('PRESENTER_TOKEN is not set; the load test needs the hub\'s token to act as presenter (see .env.example).')
+  process.exit(2)
+}
 const healthUrl = url.replace(/^ws/, 'http').replace(/\/ws$/, '/health')
 
 const NAV = 'The Agentic Software Engineer — CS50 - shared'
