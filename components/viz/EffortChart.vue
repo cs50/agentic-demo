@@ -46,7 +46,8 @@ const hovered = ref<string | null>(null)
 
 /** Enough room for a word? Otherwise show just the number; below that, nothing (tooltip still works). */
 function labelFor(c: Category, pct: number) {
-  if (pct >= 14) return `${c.short} ${pct}%`
+  // Bars are ~600px wide: 20% is ~120px, enough for a short word and a number at 0.66rem.
+  if (pct >= 20) return `${c.short} ${pct}%`
   if (pct >= 5) return `${pct}%`
   return ''
 }
@@ -202,10 +203,15 @@ function total(e: { shares: Shares }, group: Category['group']) {
   opacity: 0.35;
 }
 .seg-label {
-  font-size: 0.72rem;
+  display: inline-block;
+  box-sizing: border-box;
+  font-size: 0.66rem;
   font-weight: 700;
   white-space: nowrap;
   padding: 0 0.2rem;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .seg-label:empty {
   display: none;

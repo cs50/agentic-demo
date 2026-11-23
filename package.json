@@ -7,7 +7,8 @@
     "dev": "slidev --open",
     "build": "slidev build",
     "export": "slidev export --output slides-export.pdf",
-    "test": "vitest run"
+    "test": "vitest run",
+    "audit:layout": "node --experimental-strip-types scripts/audit-layout.ts"
   },
   "devDependencies": {
     "@fontsource/pt-sans": "^5.3.0",

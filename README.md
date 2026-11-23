@@ -7,9 +7,13 @@ Spec: [`agentic-coding-lecture-spec.md`](./agentic-coding-lecture-spec.md).
 
 ```sh
 pnpm install
-pnpm dev          # http://localhost:3030  (presenter view: /presenter)
-pnpm export       # writes slides-export.pdf as an offline backup
+pnpm dev            # http://localhost:3030  (presenter view: /presenter)
+pnpm export         # writes slides-export.pdf as an offline backup
+pnpm test           # unit tests (editor sync, error messages)
+pnpm audit:layout   # loads every slide at every click and reports anything cut off
 ```
+
+`audit:layout` needs a dev server on port 3031 (`pnpm exec slidev --port 3031`); pass another port, and optionally a slide range, as `pnpm audit:layout -- 3030 36-50`. It takes a few minutes for the whole deck and exits non-zero if any element is clipped, so it can gate a release. Run it after any layout change; a glance at a slide's final state misses clipping at earlier clicks and inside cards.
 
 The deck makes no network requests at runtime: PT Sans is bundled from npm.
 

@@ -104,7 +104,6 @@ const done = computed(() => at(agents.length))
   padding: 0.6rem 0.7rem;
   transition: all 300ms;
   min-height: 0;
-  overflow: hidden;
 }
 .lane.idle {
   opacity: 0.45;
@@ -154,6 +153,7 @@ const done = computed(() => at(agents.length))
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
+  min-height: 0;
 }
 .ctx li {
   padding: 0.15rem 0.4rem;

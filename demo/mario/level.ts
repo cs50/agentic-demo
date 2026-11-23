@@ -1,7 +1,7 @@
 /**
  * level.ts — THIS is the file the agent edits live.
- * It is CS50's classic mario.c in TypeScript: each string is one row,
- * each '#' becomes a solid block. Rows sit on the ground, centered.
+ * CS50's classic mario.c in TypeScript: each string is one
+ * row, each '#' a solid block, sitting on the ground.
  */
 
 export const HEIGHT = 8

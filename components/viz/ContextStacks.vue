@@ -74,7 +74,7 @@ const verdict = computed(() => at(jobs.length + 2))
         </div>
       </section>
 
-      <section class="viz-card team-card viz-enter" :class="{ shown: showTeam }">
+      <section v-show="showTeam" class="viz-card team-card">
         <div class="head">
           <span class="viz-label accent">Four agents</span>
           <span class="sub">one job each, handed along</span>
@@ -108,18 +108,28 @@ const verdict = computed(() => at(jobs.length + 2))
 }
 .cols {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 34rem);
+  justify-content: center;
   gap: 0.8rem;
   min-height: 0;
-  transition: grid-template-columns 400ms;
 }
 .cols.team {
   grid-template-columns: 1fr 1.6fr;
+  justify-content: stretch;
 }
 .solo,
 .team-card {
   padding: 0.7rem 0.9rem;
   overflow: hidden;
+}
+.team-card {
+  animation: rise 320ms ease both;
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
 }
 .head {
   display: flex;

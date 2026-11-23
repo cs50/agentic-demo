@@ -205,9 +205,9 @@ pre {
   display: block;
   font-size: 0.72rem;
   color: var(--cs50-body);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.35;
 }
 .note {
   grid-column: 2;

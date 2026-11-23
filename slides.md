@@ -768,7 +768,7 @@ class: demo-nostalgia
 
 <div class="lede">Mario, a CS50 classic (and Seats, which you wrote, uses the same loops)</div>
 
-<<< ./demo/mario.c c {16-28}{maxHeight:'330px'}
+<<< ./demo/mario.c#loop c
 
 ::right::
 
