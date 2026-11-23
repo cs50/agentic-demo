@@ -8,7 +8,7 @@ import { AREAS, COLS, ROWS } from './areas'
 import { NPCS } from './npcs'
 import type { OverworldState } from './overworld'
 import { SLOPPYCLAUDE, SLOPPYCLAUDE_H, SLOPPYCLAUDE_W } from './sloppyclaude'
-import { BALL, DUCK_SIDE, DUCK_SIDE_HURT, STATUE, drawSprite, duckWalk, personSprite, type Sprite } from './sprites'
+import { BALL, DUCK_SIDE, DUCK_SIDE_BLINK, DUCK_SIDE_HURT, STATUE, drawSprite, duckWalk, personSprite, type Sprite } from './sprites'
 import { STATUE_TILE, TILE, type TileDef } from './tiles'
 
 export const VIEW_W = COLS * TILE // 320
@@ -130,10 +130,12 @@ export interface BattleScene {
   monster: number
   /** The duck's hop in, 0..1; -1 before it has been called. */
   duckIn: number
+  /** Frames left of the duck's little victory hop after a round goes the room's way. */
+  duckCheer: number
 }
 
 export function freshScene(): BattleScene {
-  return { clock: 0, monsterHurt: 0, duckHurt: 0, monsterGone: false, duckGone: false, slideIn: 0, leader: 0, ball: -1, burst: 0, monster: 0, duckIn: -1 }
+  return { clock: 0, monsterHurt: 0, duckHurt: 0, monsterGone: false, duckGone: false, slideIn: 0, leader: 0, ball: -1, burst: 0, monster: 0, duckIn: -1, duckCheer: 0 }
 }
 
 const MONSTER_SCALE = 3
@@ -211,12 +213,20 @@ export function drawBattle(ctx: CanvasRenderingContext2D, scene: BattleScene) {
   if (!scene.duckGone && scene.duckIn >= 0) {
     const u = Math.min(1, scene.duckIn)
     // Two hops in from the left.
-    const hop = u < 1 ? Math.abs(Math.sin(u * Math.PI * 2)) * 22 : 0
+    let hop = u < 1 ? Math.abs(Math.sin(u * Math.PI * 2)) * 22 : 0
+    // Idle: a slow breath (one pixel), and a hop of joy when a round goes the room's way.
+    if (u === 1 && scene.duckHurt === 0) {
+      hop += Math.floor(scene.clock / 32) % 2 === 1 ? 1 : 0
+      if (scene.duckCheer > 0) hop += Math.abs(Math.sin((scene.duckCheer / 36) * Math.PI * 2)) * 14
+    }
     const shake = scene.duckHurt > 0 ? (scene.duckHurt % 4 < 2 ? 2 : -2) : 0
     const x = leftX - 120 * (1 - u) - (16 * DUCK_SCALE) / 2 + shake
     const y = DUCK_AT.y - 16 * DUCK_SCALE + 4 - hop
-    // Side profile, facing the monster, so the eye and beak read; the face changes when hit.
-    drawSprite(ctx, scene.duckHurt > 0 ? DUCK_SIDE_HURT : DUCK_SIDE, Math.round(x), Math.round(y), DUCK_SCALE)
+    // Side profile, facing the monster, so the eye and beak read. The face
+    // changes when hit, and it blinks every few seconds otherwise.
+    const blink = scene.clock % 190 < 7
+    const sprite = scene.duckHurt > 0 ? DUCK_SIDE_HURT : blink ? DUCK_SIDE_BLINK : DUCK_SIDE
+    drawSprite(ctx, sprite, Math.round(x), Math.round(y), DUCK_SCALE)
   }
 }
 

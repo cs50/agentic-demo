@@ -73,6 +73,12 @@ const DUCK_BASE: Sprite = { rows: DUCK_ROWS, palette: DUCK_PALETTE }
 /** Side view, facing right, outlined: 16×16. */
 export const DUCK_SIDE: Sprite = outlined(DUCK_BASE)
 
+/** Side profile, blinking: the eye closed for a few frames, nothing else changes. */
+export const DUCK_SIDE_BLINK: Sprite = outlined({
+  palette: DUCK_PALETTE,
+  rows: DUCK_ROWS.map((row, r) => (r === 3 ? '..DYYYDDYD....' : r === 4 ? '..DYYYYYYDOO..' : row)),
+})
+
 /**
  * Side profile, hurt: eye squeezed shut, beak open. Same rows as the game's
  * duck with the face redrawn, so it is unmistakably the same bird.

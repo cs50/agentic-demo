@@ -7,7 +7,7 @@ import { Battle, DUCK_HIT, HIT, MAX_HP, ROUNDS } from '../demo/gym/battle'
 import { NPCS } from '../demo/gym/npcs'
 import { Overworld } from '../demo/gym/overworld'
 import { SLOPPYCLAUDE } from '../demo/gym/sloppyclaude'
-import { DUCK_BACK, DUCK_SIDE, STATUE, outlined, personSprite, spriteSize } from '../demo/gym/sprites'
+import { DUCK_BACK, DUCK_SIDE, DUCK_SIDE_BLINK, DUCK_SIDE_HURT, STATUE, outlined, personSprite, spriteSize } from '../demo/gym/sprites'
 import { EXIT_MAT, GYM_DOOR, GYM_TILES, YARD_TILES } from '../demo/gym/tiles'
 
 const idle = { dx: 0, dy: 0, interact: false }
@@ -239,7 +239,7 @@ describe('walking', () => {
 
 describe('sprites', () => {
   it('are rectangular, and the outline grows a sprite by one on each side', () => {
-    for (const s of [DUCK_BACK, DUCK_SIDE, STATUE, SLOPPYCLAUDE.idleA, SLOPPYCLAUDE.idleB, SLOPPYCLAUDE.hurt]) {
+    for (const s of [DUCK_BACK, DUCK_SIDE, DUCK_SIDE_BLINK, DUCK_SIDE_HURT, STATUE, SLOPPYCLAUDE.idleA, SLOPPYCLAUDE.idleB, SLOPPYCLAUDE.hurt]) {
       const { w } = spriteSize(s)
       for (const row of s.rows) expect(row).toHaveLength(w)
     }

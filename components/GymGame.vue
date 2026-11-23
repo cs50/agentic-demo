@@ -112,8 +112,10 @@ function resolve(winner: number, total: number) {
   const r = battle.state.round
   if (!r || battle.state.phase !== 'question') return
   battle.pollClosed(winner, total)
-  if (battle.state.last?.correct) fx.monsterHurt = 40
-  else {
+  if (battle.state.last?.correct) {
+    fx.monsterHurt = 40
+    fx.duckCheer = 36
+  } else {
     fx.duckHurt = 40
     shake.value = true
     setTimeout(() => (shake.value = false), 500)
@@ -198,6 +200,7 @@ function step() {
   fx.clock++
   if (fx.monsterHurt > 0) fx.monsterHurt--
   if (fx.duckHurt > 0) fx.duckHurt--
+  if (fx.duckCheer > 0) fx.duckCheer--
   if (fx.slideIn < 1) fx.slideIn = Math.min(1, fx.slideIn + 1 / 24)
   const phase = battle.state.phase
 
