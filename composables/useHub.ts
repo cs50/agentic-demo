@@ -10,11 +10,12 @@
  * Where it connects: VITE_HUB_URL (see .env.example), else the page's own
  * origin, which is right for the hosted deck (the hub serves it).
  *
- * Who it is: a presenter if a token is stored, else audience. The token is
- * never in the bundle. Open the deck once with `?presenter=TOKEN` and it is
- * kept in localStorage; `?presenter=` (empty) forgets it. Audience devices
- * share the same `hub:clientId` key as /join, so a phone that voted on the
- * join page and then follows the deck is still one voter.
+ * Who it is: a presenter if a token is known, else audience. The token is
+ * never in the built bundle. Open the deck once with `?presenter=TOKEN` and it
+ * is kept in localStorage (`?presenter=` forgets it); under `pnpm dev` it can
+ * also come from VITE_PRESENTER_TOKEN in .env.local. Audience devices share
+ * the same `hub:clientId` key as /join, so a phone that voted on the join
+ * page and then follows the deck is still one voter.
  */
 import { computed, reactive, readonly, shallowRef } from 'vue'
 import {
@@ -79,7 +80,7 @@ function clientId(): string {
   return id
 }
 
-/** `?presenter=TOKEN` stores the token; `?presenter=` forgets it. */
+/** `?presenter=TOKEN` stores the token; `?presenter=` forgets it. In dev, .env.local can supply it. */
 function presenterToken(): string | null {
   const s = storage()
   if (typeof window === 'undefined') return null
@@ -88,7 +89,12 @@ function presenterToken(): string | null {
     if (param) s?.setItem(TOKEN_KEY, param)
     else s?.removeItem(TOKEN_KEY)
   }
-  return s?.getItem(TOKEN_KEY) ?? null
+  const stored = s?.getItem(TOKEN_KEY) ?? null
+  if (stored) return stored
+  // Only under `pnpm dev`: a production build must never carry the token, since
+  // the hosted deck is what the room loads. Vite reads VITE_* from .env.local.
+  if (import.meta.env.DEV) return (import.meta.env.VITE_PRESENTER_TOKEN as string | undefined)?.trim() || null
+  return null
 }
 
 // ---------------------------------------------------------------- urls

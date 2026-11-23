@@ -9,8 +9,8 @@
     "export": "slidev export --output slides-export.pdf",
     "test": "vitest run",
     "demo": "node --experimental-strip-types scripts/demo.ts",
-    "hub": "node --experimental-strip-types server/index.ts",
-    "hub:loadtest": "node --experimental-strip-types server/loadtest.ts",
+    "hub": "node --env-file-if-exists=.env.local --experimental-strip-types server/index.ts",
+    "hub:loadtest": "node --env-file-if-exists=.env.local --experimental-strip-types server/loadtest.ts",
     "postinstall": "pnpm --dir server install --ignore-workspace --frozen-lockfile --reporter=silent",
     "audit:layout": "node --experimental-strip-types scripts/audit-layout.ts"
   },

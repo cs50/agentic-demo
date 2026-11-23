@@ -163,13 +163,16 @@ The audience joins from their phones. A QR code on slide 2 points at `/join`, a 
 
 **Running it locally**
 
+Copy `.env.example` to `.env.local` (gitignored) and fill it in. It holds everything the laptop needs: `VITE_HUB_URL` (which hub the deck talks to; the QR slide encodes the same host) and `PRESENTER_TOKEN` (the hub's secret, with `VITE_PRESENTER_TOKEN=${PRESENTER_TOKEN}` so the dev deck is the presenter without any URL tricks). Then:
+
 ```sh
-PORT=8099 pnpm hub                       # the hub; PRESENTER_TOKEN unset means "dev"
-echo 'VITE_HUB_URL=ws://localhost:8099' > .env.local
-pnpm dev                                 # then open http://localhost:3030/1?presenter=dev
+pnpm dev                                 # the deck, as presenter, against the hub in .env.local
+pnpm hub                                 # optional: a local hub on :8080, using the same token
 ```
 
-`?presenter=TOKEN` stores the token in the browser (`?presenter=` forgets it); from then on that browser's deck is the presenter, in both the slide view and `/presenter`. Every other copy of the deck, and every phone on `/join`, is audience. Phones on the same network cannot reach `localhost`, so for a real rehearsal use the hosted hub (below) and the production token.
+For a rehearsal against the hosted hub, `VITE_HUB_URL=wss://agentic.cs50.io` and the production token (`eb printenv`). For a hub on this laptop, `VITE_HUB_URL=ws://localhost:8080` and any token; phones on the same network cannot reach `localhost`, so that is for working on the deck, not the room.
+
+`.env.local` is read by the dev server and by `pnpm hub` only; a production build never contains the token, whatever the file says. Without the file, `?presenter=TOKEN` on the deck's URL stores the token in that browser (`?presenter=` forgets it). Either way, that browser's deck is the presenter in both the slide view and `/presenter`; every other copy of the deck, and every phone on `/join`, is audience.
 
 **What the presenter can do**
 
@@ -181,7 +184,7 @@ pnpm dev                                 # then open http://localhost:3030/1?pre
 
 All of this is inert in the overview, the "next slide" preview, and `pnpm export`, and a copy of the deck with no hub reachable simply says so.
 
-**Hosting.** Pushes to `main` build the deck and deploy it with the hub as one Docker container to Elastic Beanstalk (`.github/workflows/main.yml`, `Dockerfile`), where the hosted deck connects to its own origin and needs no `VITE_HUB_URL`. The environment must stay at one instance (the room's state is in that process's memory) and needs `PRESENTER_TOKEN` set as an environment property; `.ebextensions/hub.config` records the rest. With the EB CLI installed, `eb status`, `eb logs` and `eb printenv` work from the repo (`.elasticbeanstalk/config.yml`). When exporting the PDF for the lecture, keep `.env.local` pointed at the hosted hub so the QR code on slide 2 encodes the right address.
+**Hosting.** Pushes to `main` build the deck and deploy it with the hub as one Docker container to Elastic Beanstalk (`.github/workflows/main.yml`, `Dockerfile`), where the hosted deck connects to its own origin and needs no `VITE_HUB_URL`. The environment must stay at one instance (the room's state is in that process's memory), needs `PRESENTER_TOKEN` set as an environment property, and its instances need a public IP (`aws:ec2:vpc AssociatePublicIpAddress=true`; without it they never reach the Beanstalk service and the launch times out). `.ebextensions/hub.config` records the rest. With the EB CLI installed, `eb status`, `eb logs` and `eb printenv` work from the repo (`.elasticbeanstalk/config.yml`). When exporting the PDF for the lecture, keep `.env.local` pointed at the hosted hub so the QR code on slide 2 encodes the right address.
 
 **Capacity.** `pnpm hub:loadtest [ws://host/ws] [N]` simulates the room: N phones join, vote at once, and follow 20 slide changes and 10 live-file saves while the hub's memory is watched. On a laptop, 500 phones vote with a p95 round-trip of ~10 ms and the hub grows by about 10 MB; it exits non-zero if a vote is lost or fan-out is slow, so it can gate a deploy.
 
