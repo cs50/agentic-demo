@@ -30,10 +30,6 @@ class: text-center
 Systems, Specifications, and Autonomous Software Factories Beyond CS50
 </div>
 
-<div class="cover-meta">
-CS50 · Week 10
-</div>
-
 <!--
 Welcome back. You've just finished C$50 Finance and submitted your final project
 proposals. Today's lecture is about what happens when writing the code itself is no
