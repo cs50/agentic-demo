@@ -21,7 +21,7 @@ interface Node {
 
 const before: Node[] = [
   { label: 'Specification', sub: 'handed to you', tip: 'The problem set: "render an apology if shares is not a positive integer".' },
-  { label: 'You', sub: 'translate it into code', tip: 'English in, C, Python and SQL out. The human compiler.', you: true },
+  { label: 'You', sub: 'translate it into code', tip: 'English in and code out. You were the compiler.', you: true },
   { label: 'Code', sub: 'app.py, finance.db', tip: 'Every line typed by you.' },
   { label: 'check50', sub: 'someone else\u2019s tests', tip: 'You did not write the tests; the staff did.' },
 ]
@@ -29,9 +29,9 @@ const before: Node[] = [
 const after: Node[] = [
   { label: 'You', sub: 'decide what to build', tip: 'The feature, the scope, the trade-offs.', you: true },
   { label: 'Specification', sub: 'you write it', tip: 'What correct means: inputs, outputs, and what must always hold.', you: true },
-  { label: 'Agent', sub: 'writes, runs, iterates', tip: 'Turns the spec into code, runs it, reads the errors, tries again.', agent: true },
+  { label: 'Agent', sub: 'writes, runs and tries again', tip: 'Turns the spec into code, runs it, reads the errors, tries again.', agent: true },
   { label: 'Code', sub: 'app.py, finance.db', tip: 'Still the same files. You may not read every line.' },
-  { label: 'You', sub: 'judge the evidence', tip: 'Tests, screenshots, diffs: does the proof convince you?', you: true },
+  { label: 'You', sub: 'judge the evidence', tip: 'Tests, screenshots and diffs. Does the proof convince you?', you: true },
 ]
 </script>
 

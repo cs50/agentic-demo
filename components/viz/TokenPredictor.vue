@@ -101,7 +101,7 @@ const lines = computed(() => code.value.trimEnd().split('\n'))
         </li>
       </ol>
       <div class="verdict viz-enter" :class="{ shown: at(steps.length + 1) }">
-        Five times it picked the <b>most likely</b> line. Twice, the <b>correct</b> line was the runner-up.
+        Five times it picked the <b>most likely</b> line. Twice the <b>correct</b> line was the runner-up.
         Nothing here knows what <code class="viz-mono">lookup</code> returns.
       </div>
     </section>

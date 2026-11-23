@@ -76,7 +76,7 @@ const ticked = computed(() => (at(4) ? 5 : at(3) ? 2 : 0))
       </ul>
 
       <div class="verdict viz-enter" :class="{ shown: at(4) }">
-        Two rows, five requirements, all met. <b>history works</b>, and you never opened the template.
+        Two rows meet all five requirements. <b>history works</b>, and you never opened the template.
       </div>
     </section>
   </div>

@@ -39,7 +39,7 @@ const loops = computed(() => visible.value.filter((e) => e.newLoop).length)
 const done = computed(() => at(events.length))
 
 const nodes: { id: Phase; label: string; tip: string; cx: number; cy: number }[] = [
-  { id: 'think', label: 'Think', tip: 'Decide what to do next, from the goal and what was just observed.', cx: 100, cy: 48 },
+  { id: 'think', label: 'Think', tip: 'Decide what to do next from the goal and what was just observed.', cx: 100, cy: 48 },
   { id: 'act', label: 'Act', tip: 'Call a tool: edit a file, run a command, query the database.', cx: 168, cy: 150 },
   { id: 'observe', label: 'Observe', tip: 'Read the result: exit code, output, error, HTTP status.', cx: 32, cy: 150 },
 ]

@@ -62,7 +62,7 @@ const merged = computed(() => at(4))
         <p>Every user, every hash.</p>
       </div>
       <div class="hint viz-enter" :class="{ shown: at(3) }">
-        The spec's hint, verbatim: use <span class="viz-mono">?</span> placeholders; do <b>not</b> use f-strings, <span class="viz-mono">format</span>, or <span class="viz-mono">+</span>.
+        The spec's hint: use <span class="viz-mono">?</span> placeholders, and do <b>not</b> use f-strings, <span class="viz-mono">format</span>, or <span class="viz-mono">+</span>.
       </div>
     </section>
 

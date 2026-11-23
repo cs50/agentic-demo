@@ -59,7 +59,7 @@ const verdict = computed(() => at(jobs.length + 2))
       <section class="viz-card solo">
         <div class="head">
           <span class="viz-label accent">One agent</span>
-          <span class="sub">does all four jobs, in order</span>
+          <span class="sub">does all four jobs one after another</span>
         </div>
         <div class="jobs">
           <span v-for="(j, i) in jobs" :key="j.name" class="viz-pill" :class="{ crimson: doneJobs === i + 1, ok: doneJobs > i + 1 }">{{ i + 1 }}. {{ j.name }}</span>
@@ -70,14 +70,14 @@ const verdict = computed(() => at(jobs.length + 2))
           <li v-if="!soloStack.length" class="empty">&nbsp;</li>
         </ul>
         <div class="count">
-          <b>{{ soloStack.length }}</b> things<span v-if="doneJobs === jobs.length">, four of them its own output. It now tests its own work.</span>
+          <b>{{ soloStack.length }}</b> things<span v-if="doneJobs === jobs.length">. Four are its own output, so it is now testing its own work.</span>
         </div>
       </section>
 
       <section v-show="showTeam" class="viz-card team-card">
         <div class="head">
           <span class="viz-label accent">Four agents</span>
-          <span class="sub">one job each, handed along</span>
+          <span class="sub">each does one job and hands it on</span>
         </div>
         <div class="four">
           <div v-for="(j, i) in jobs" :key="j.name" class="mini">
@@ -86,7 +86,7 @@ const verdict = computed(() => at(jobs.length + 2))
               <li v-for="n in j.needs" :key="n">{{ n }}</li>
             </ul>
             <div class="count small">
-              <Tip :text="`Sees only these three. ${i === 3 ? 'Fresh eyes: it did not write the code it is testing.' : 'Everything else is noise to this job.'}`" side="top">
+              <Tip :text="`Sees only these three. ${i === 3 ? 'Fresh eyes. It did not write the code it is testing.' : 'Everything else is noise to this job.'}`" side="top">
                 <b>3</b> things
               </Tip>
             </div>
@@ -96,7 +96,7 @@ const verdict = computed(() => at(jobs.length + 2))
     </div>
 
     <div class="verdict viz-enter" :class="{ shown: verdict }">
-      Same model, same four jobs. One agent carries <b>{{ soloStack.length }}</b> things and grades its own homework. Four agents carry <b>3</b> each, and the tester never saw the code being written.
+      The same model doing the same four jobs. Alone, it carries <b>{{ soloStack.length }}</b> things and grades its own homework. As four agents, each carries <b>3</b>, and the tester never saw the code being written.
     </div>
   </div>
 </template>

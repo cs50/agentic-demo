@@ -330,7 +330,7 @@ difference.
 ---
 layout: concept-viz
 concept: 4
-title: "The Agent Harness, as files on disk"
+title: "The Agent Harness on Disk"
 caption: "Four presses: context, permissions, sandbox, then the line between them."
 ---
 
@@ -468,7 +468,7 @@ A prompt is a request. A failing check is a **wall**.
 
 ::example::
 
-- The Finance hints warn: use `?` placeholders in `db.execute`; do **not** build queries with f-strings, `format`, or `+`, lest you invite SQL injection.
+- The Finance hints say to use `?` placeholders in `db.execute` and never to build a query with f-strings, `format`, or `+`, because that invites SQL injection.
 - Rather than remind the agent of that in every prompt, add a check that **fails the build** whenever a string is concatenated into a query. Now the agent can't ship it.
 
 ::takeaway::
@@ -634,7 +634,7 @@ concept: 9
 title: The Software Factory
 ---
 
-Put all of it in the cloud and connect it to your repository. An issue comes in; a sandbox spins up; agents plan, implement, and test; a **pull request** comes out, with a summary of what changed and why.
+Put all of it in the cloud and connect it to your repository. An issue comes in. A sandbox spins up, agents plan, implement and test, and a **pull request** comes out with a summary of what changed and why.
 
 No one's laptop is involved.
 
@@ -779,7 +779,7 @@ layout: two-cols-header
 class: demo-nostalgia
 ---
 
-# Step 1 · Week 1
+# Mario from Week 1
 
 ::left::
 
@@ -891,7 +891,7 @@ Concept 7 before a line of game code exists.
 
 ---
 layout: concept-viz
-title: "What Must Hold, and How We Will Know"
+title: "What Must Hold and How We Will Know"
 caption: "One press per requirement. The last press is what we left out."
 ---
 
@@ -910,7 +910,7 @@ layout: default
 transition: view-transition
 ---
 
-# Step 6 · The Experiment
+# The Experiment
 
 <div class="lede">
 The small page the agent proposed. Press <b>✕</b>: the button lights up, the log says <code>Button 0 (CROSS): DOWN</code>, and the duck jumps.
@@ -934,7 +934,7 @@ Transitions API; Chrome and Safari. Elsewhere the slides just change.)
 layout: default
 ---
 
-# Step 7 · Play, Then Finish It
+# Finish the Game
 
 <div class="lede">
 The agent built the engine, the controller and the world. Two things are missing: nothing pulls the duck down, and there is no pyramid.
