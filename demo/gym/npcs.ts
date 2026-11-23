@@ -31,9 +31,9 @@ export const NPCS: Record<string, Npc> = {
     name: 'Brian',
     look: { hair: '#3a2a1a', shirt: '#4878c8' },
     lines: [
-      'The plaque says John Harvard, Founder, 1638.',
-      'Wrong man, wrong role, wrong year. People still rub the shoe.',
-      'Read the plaque yourself. Then check it.',
+      'Founder, 1638, and not even his face. Three hallucinations on one plaque.',
+      'So this predates language models. Somebody vibe-coded a statue in 1884 and nobody ran the tests.',
+      'The output looked confident, so they shipped it. Sound familiar?',
     ],
   },
   kelly: {
@@ -46,7 +46,11 @@ export const NPCS: Record<string, Npc> = {
     id: 'carter',
     name: 'Carter',
     look: { hair: '#5a3a1a', shirt: '#e0a030' },
-    lines: ['Widener Library. Three and a half million books, none of them hallucinated.', 'Well. Mostly.'],
+    lines: [
+      'Widener. Three and a half million books on fifty-seven miles of shelves.',
+      'Finding one by walking the stacks is a linear search. Ask the catalog instead: SELECT * FROM books WHERE title LIKE "%duck%";',
+      'One row back, with a call number. That is what an index is for. Also: none of these books are hallucinated. Mostly.',
+    ],
   },
   colton: {
     id: 'colton',
