@@ -991,6 +991,20 @@ git history is the receipt.
 -->
 
 ---
+layout: concept-viz
+title: "Phones Out Again"
+caption: "The last stretch is played by the room. Scan if you haven't, or type the address."
+---
+
+<AudienceQR prompt="Scan to join. The CS50 Duck is about to need your answers." />
+
+<!--
+The join page again, for anyone who put their phone away or arrived late. Each question in
+the battle opens as a vote on this page, and the room's answer decides whether the duck
+takes the hit. Give it a few seconds, watch the count, then go.
+-->
+
+---
 layout: section
 class: meanwhile
 transition: fade
