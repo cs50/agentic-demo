@@ -44,6 +44,40 @@ longer the hard part.
 ---
 layout: concept-viz
 kicker: Before we begin
+title: "Take Out Your Phone"
+caption: "Leave this up while people arrive. The count is live."
+---
+
+<AudienceQR />
+
+<!--
+Up while people settle. Phones out, scan, or type the address. The page is tiny and
+loads on anything. A name is optional. From here they can vote, send me a message, or
+follow the slides on their own screen. Watch the count climb; when it levels off, go.
+-->
+
+---
+layout: concept-viz
+kicker: Before we begin
+title: "What Should You Learn Next?"
+caption: "Press → to open the poll, → again to close it."
+---
+
+<LivePoll
+  id="learn-next"
+  question="You've learned C, Python, SQL and JavaScript. Which language should you learn next?"
+  :options="['Rust', 'Go', 'TypeScript', 'Something else entirely']"
+/>
+
+<!--
+Press: the poll opens on every phone. Give it twenty seconds; read the room. Press: it
+closes and everyone sees the bars. Don't comment on the answer yet. "Let's see what the
+index says." Next slide.
+-->
+
+---
+layout: concept-viz
+kicker: Before we begin
 title: "What Should You Learn Next?"
 caption: "Four presses. Hover a line or a label."
 ---
