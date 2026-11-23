@@ -15,9 +15,9 @@
  * the poll has closed, and its options are tappable while it is open, so a
  * phone that follows the deck can vote without switching to /join.
  */
-import { useSlideContext } from '@slidev/client'
 import { computed, onMounted, watch } from 'vue'
 import { useHub } from '../composables/useHub'
+import { useLive } from '../composables/useLive'
 import { useVizSteps } from '../composables/useVizSteps'
 
 const props = withDefaults(
@@ -33,8 +33,7 @@ const props = withDefaults(
 )
 
 const hub = useHub()
-const { $renderContext } = useSlideContext()
-const live = ['slide', 'presenter'].includes($renderContext.value)
+const live = useLive()
 const { step } = useVizSteps(2)
 
 onMounted(() => live && hub.connect())

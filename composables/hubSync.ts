@@ -145,15 +145,16 @@ if (import.meta.env.DEV && typeof window !== 'undefined') {
 
 /**
  * Called once from setup/main.ts. Only the live deck (play and presenter
- * routes) connects; overview, print and export stay offline.
+ * routes) connects; overview, print and export stay offline. The exporter
+ * renders the play route with `?print`, so that query is checked too.
  */
 export async function installHubSync(r: RouterLike) {
   if (installed || typeof window === 'undefined') return
   installed = true
   router = r
   await r.isReady()
-  const name = r.currentRoute.value.name
-  if (name !== 'play' && name !== 'presenter') return
+  const route = r.currentRoute.value
+  if ((route.name !== 'play' && route.name !== 'presenter') || 'print' in route.query) return
 
   const hub = useHub()
   hub.connect()

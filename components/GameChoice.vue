@@ -14,9 +14,9 @@
  * tallied by the hub; this panel only shows it, so a reloaded tab or the
  * presenter view draws the same thing.
  */
-import { useSlideContext } from '@slidev/client'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useHub } from '../composables/useHub'
+import { useLive } from '../composables/useLive'
 import { useVizSteps } from '../composables/useVizSteps'
 import { applyPreset, targetOf } from '../demo/mario/presets'
 
@@ -39,8 +39,7 @@ const props = withDefaults(
 )
 
 const hub = useHub()
-const { $renderContext } = useSlideContext()
-const live = ['slide', 'presenter'].includes($renderContext.value)
+const live = useLive()
 const { step } = useVizSteps(1)
 
 onMounted(() => live && hub.connect())

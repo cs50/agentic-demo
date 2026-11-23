@@ -106,9 +106,15 @@ async function handleHttp(req: IncomingMessage, res: ServerResponse) {
   }
 
   if (pathname === '/health') {
-    res
-      .writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' })
-      .end(JSON.stringify({ ok: true, connections: hub.connectionCount(), audience: hub.audienceCount() }))
+    res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }).end(
+      JSON.stringify({
+        ok: true,
+        connections: hub.connectionCount(),
+        audience: hub.audienceCount(),
+        rssMb: Math.round(process.memoryUsage().rss / 1048576),
+        uptimeS: Math.round(process.uptime()),
+      }),
+    )
     return
   }
 

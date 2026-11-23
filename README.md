@@ -9,13 +9,14 @@ Spec: [`agentic-coding-lecture-spec.md`](./agentic-coding-lecture-spec.md).
 pnpm install
 pnpm dev            # http://localhost:3030  (presenter view: /presenter)
 pnpm export         # writes slides-export.pdf as an offline backup
-pnpm test           # unit tests (editor sync, error messages)
+pnpm test           # unit tests (editor sync, error messages, hub rules, presets)
 pnpm audit:layout   # loads every slide at every click and reports anything cut off
+pnpm hub            # the audience hub on :8080 (see "The room", below)
 ```
 
 `audit:layout` needs a dev server on port 3031 (`pnpm exec slidev --port 3031`); pass another port, and optionally a slide range, as `pnpm audit:layout -- 3030 36-50`. It takes a few minutes for the whole deck and exits non-zero if any element is clipped, so it can gate a release. Run it after any layout change; a glance at a slide's final state misses clipping at earlier clicks and inside cards.
 
-The deck makes no network requests at runtime: PT Sans is bundled from npm.
+The deck makes no network requests at runtime beyond its own audience hub: PT Sans is bundled from npm, and the QR code is drawn in the browser.
 
 ## Design
 
@@ -23,16 +24,16 @@ The deck follows the course website's look: a white page, crimson `#a51c30` as t
 
 Every C$50 Finance example is taken from the Problem Set 9 specification (the `buy` rules, the `history` columns, the hints about `?` placeholders, the "Testing" list, the personal touches). The demo's `mario.c` is the CS50 classic; this year's Problem Set 1 used Seats, which the slides and notes acknowledge.
 
-## Deck structure (54 slides)
+## Deck structure (58 slides)
 
 | Slides | Content | Layout |
 | --- | --- | --- |
-| 1–4 | Title; the hook ("What Should You Learn Next?"); "An Inversion"; the same inversion as a picture | `cover`, `concept-viz`, `two-cols-header`, `concept-viz` |
-| 5, 11, 18, 26 | Part dividers | `section` |
-| 6–10, 12–17, 19–25, 27–41 | Ten concepts: title → visualization(s) → explanation / Finance example / takeaway. Concepts 4 and 8 have two visualization slides | `concept-title`, `concept-viz`, `concept-detail` |
-| 42–44 | Synthesis: effort table; the same as a chart; what doesn't go away | `default`, `concept-viz`, `default` |
-| 45–53 | Live demo: `mario.c` → the first prompt → what kind of controller? → language and shape → the riskiest assumption (one conversation, `AgentChat`) → the spec with its evidence → the experiment (`ControllerTest`) → play, then finish it (`LiveDemo`) → closing quote | mixed |
-| 54 | End | `end` |
+| 1–6 | Title; "Take Out Your Phone" (`AudienceQR`); a live poll (`LivePoll`); the hook ("What Should You Learn Next?"); "An Inversion"; the same inversion as a picture | `cover`, `concept-viz` ×3, `two-cols-header`, `concept-viz` |
+| 7, 13, 20, 28 | Part dividers | `section` |
+| 8–12, 14–19, 21–27, 29–43 | Ten concepts: title → visualization(s) → explanation / Finance example / takeaway. Concepts 4 and 8 have two visualization slides | `concept-title`, `concept-viz`, `concept-detail` |
+| 44–46 | Synthesis: effort table; the same as a chart; what doesn't go away | `default`, `concept-viz`, `default` |
+| 47–56 | Live demo: `mario.c` → the first prompt → what kind of controller? → language and shape → the riskiest assumption (one conversation, `AgentChat`) → the spec with its evidence → the experiment (`ControllerTest`) → play, then finish it (`LiveDemo`) → the room decides, twice (`GameChoice`) | mixed |
+| 57–58 | Closing quote; end | `quote`, `end` |
 
 Every slide carries presenter notes. On `concept-detail` slides the example appears on the first click and the takeaway on the second.
 
@@ -98,6 +99,15 @@ All live in `components/viz/`, share `CodeSnippet` (Shiki, via one highlighter i
 | `demo/mario/duck.ts` | The CS50 duck as a 14×14 pixel sprite: one pixel map drawn on the game canvas (`drawDuck`) and as SVG on slides (`viz/DuckSprite.vue`). |
 | `styles/index.css` | Design tokens (crimson, Bootstrap neutrals), bundled PT Sans, shared banner/section/table styles. |
 | `pnpm-workspace.yaml` | Allows `playwright-chromium`'s install script (pnpm ≥ 10 blocks build scripts by default) so `pnpm export` works after a fresh install. |
+| `server/` | The audience hub: `index.ts` (HTTP + websocket, serves `dist/` and `/join`), `hub.ts` (the session's rules, pure), `protocol.ts` (the messages, shared with the deck), `public/join.html` (the phone page), `loadtest.ts`. Its own `package.json`; `ws` is the only dependency. |
+| `composables/useHub.ts` | The deck's one connection to the hub, as reactive state plus actions. Presenter if a token is stored (`?presenter=TOKEN`), audience otherwise. |
+| `composables/hubSync.ts` | Registers the hub as a Slidev sync transport, so the room follows the presenter; follow/unlock; mirrors the live files' text to viewers. |
+| `composables/useLive.ts` | Whether a component is on a slide being presented (not overview, preview, or print), so hub components stay inert elsewhere. |
+| `setup/main.ts`, `global-bottom.vue` | Slidev hooks: install the sync bridge; render the Follow pill and the vote overlay over every slide. |
+| `components/AudienceQR.vue`, `LivePoll.vue`, `GameChoice.vue` | The join slide; a poll driven by →; a timed vote whose winner is written into the game. |
+| `components/FollowControl.vue`, `AudienceChoice.vue` | What a viewer sees: the Following / Unlocked pill, and a vote as an overlay wherever they are in the deck. |
+| `demo/mario/presets/`, `presets.ts` | Complete `level.ts` / `physics.ts` variants the room can vote for, and the write-through that applies the winner. `pnpm test` checks each is a working live file. |
+| `Dockerfile`, `.github/workflows/main.yml`, `.ebextensions/`, `.platform/`, `.elasticbeanstalk/` | Hosting (see "The room"). |
 
 ## The live demo (Step 7)
 
@@ -146,6 +156,34 @@ Rules: `buildLevel()` must return `string[]`; `#` is solid, anything else is air
 - Changes to `vite.config.ts` (the write channel) need a dev-server restart; the slide's editor will report *write failed* until then.
 - If you insert or remove a slide *before* a slide that uses `<<<` snippet imports, Slidev 53.1 can render that snippet as raw text until the dev server restarts. Finalize slide order before the lecture, or restart `pnpm dev` once after reordering.
 - Slidev reserves `title` in slide frontmatter (it drives the table of contents), so layouts read it from the `frontmatter` prop rather than as a direct prop.
+
+## The room (audience hub)
+
+The audience joins from their phones. A QR code on slide 2 points at `/join`, a page small enough to load on lecture-hall wifi, where they can vote, send the presenter a message, or follow the slides on their own screen. Everything goes through one websocket on one small Node process, `server/`, which also serves the built deck. There is no login: a name is optional, and a device is identified by a random id kept in `localStorage`, so one phone is one vote however often it reconnects.
+
+**Running it locally**
+
+```sh
+PORT=8099 pnpm hub                       # the hub; PRESENTER_TOKEN unset means "dev"
+echo 'VITE_HUB_URL=ws://localhost:8099' > .env.local
+pnpm dev                                 # then open http://localhost:3030/1?presenter=dev
+```
+
+`?presenter=TOKEN` stores the token in the browser (`?presenter=` forgets it); from then on that browser's deck is the presenter, in both the slide view and `/presenter`. Every other copy of the deck, and every phone on `/join`, is audience. Phones on the same network cannot reach `localhost`, so for a real rehearsal use the hosted hub (below) and the production token.
+
+**What the presenter can do**
+
+- **Poll** (`<LivePoll id question :options>`): → opens it on every phone, → again closes it. The presenter sees the bars move; the room sees them when it closes. A poll's `id` must be unique in the deck.
+- **The room decides** (`<GameChoice id question :choices :seconds>`): → opens a timed vote. When it closes the hub names a winner (ties go to the option that got there first) and the presenter's deck writes that choice's preset over `level.ts` or `physics.ts` through the dev server, so the running game changes. Choices name files in `demo/mario/presets/` by stem: `level-*` replaces `level.ts`, `physics-*` replaces `physics.ts`. To offer something new, add a file there; `pnpm test` checks it loads.
+- **Follow along.** The presenter's slide, click, laser pointer and drawings are published to the room; a phone following the deck moves with them. Following is on by default. Navigating by hand unlocks (the pill in the corner reads *Unlocked*); tapping it jumps back to the presenter and follows again. During the live demo the text of `level.ts` and `physics.ts` is mirrored too, so the code pane animates on phones; the game itself stays on the big screen, and a following phone shows a note where the canvas would be.
+- **Messages** arrive in the presenter's deck (`useHub().state.messages`); there is no slide for them yet.
+- **Reset** between lectures from the presenter's DevTools: `__hub.reset()` clears the poll, votes, messages and positions; connections stay.
+
+All of this is inert in the overview, the "next slide" preview, and `pnpm export`, and a copy of the deck with no hub reachable simply says so.
+
+**Hosting.** Pushes to `main` build the deck and deploy it with the hub as one Docker container to Elastic Beanstalk (`.github/workflows/main.yml`, `Dockerfile`), where the hosted deck connects to its own origin and needs no `VITE_HUB_URL`. The environment must stay at one instance (the room's state is in that process's memory) and needs `PRESENTER_TOKEN` set as an environment property; `.ebextensions/hub.config` records the rest. With the EB CLI installed, `eb status`, `eb logs` and `eb printenv` work from the repo (`.elasticbeanstalk/config.yml`). When exporting the PDF for the lecture, keep `.env.local` pointed at the hosted hub so the QR code on slide 2 encodes the right address.
+
+**Capacity.** `pnpm hub:loadtest [ws://host/ws] [N]` simulates the room: N phones join, vote at once, and follow 20 slide changes and 10 live-file saves while the hub's memory is watched. On a laptop, 500 phones vote with a p95 round-trip of ~10 ms and the hub grows by about 10 MB; it exits non-zero if a vote is lost or fan-out is slow, so it can gate a deploy.
 
 ## Controller notes
 

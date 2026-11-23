@@ -8,10 +8,10 @@
  * page's origin on the hosted deck) and is drawn in the browser, so no network
  * request is needed and the deck still has none at runtime beyond the hub.
  */
-import { useSlideContext } from '@slidev/client'
 import QRCode from 'qrcode'
 import { computed, onMounted, ref } from 'vue'
 import { useHub } from '../composables/useHub'
+import { useLive } from '../composables/useLive'
 
 const props = withDefaults(
   defineProps<{
@@ -24,8 +24,7 @@ const props = withDefaults(
 )
 
 const hub = useHub()
-const { $renderContext } = useSlideContext()
-const live = ['slide', 'presenter'].includes($renderContext.value)
+const live = useLive()
 
 const url = computed(() => props.url ?? hub.joinUrl())
 /** The address as people read it aloud: no scheme, no trailing slash. */
