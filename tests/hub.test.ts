@@ -306,6 +306,65 @@ describe('reset', () => {
   })
 })
 
+describe('sessions', () => {
+  const sessionHello = (session: string, clientId = 'p1'): HelloMessage => ({ ...presenterHello(clientId), session })
+
+  function roomWithState() {
+    const { hub } = makeHub()
+    hub.connect('p', sessionHello('run-1'))
+    hub.connect('a', audienceHello('x'))
+    hub.handle('p', { type: 'poll:open', poll })
+    hub.handle('a', { type: 'vote', pollId: 'q1', option: 0 })
+    hub.handle('p', { type: 'sync', channel: 'nav', state: { page: 40 } })
+    hub.handle('p', { type: 'live-source', file: 'demo/mario/level.ts', content: 'x' })
+    return hub
+  }
+
+  it('a presenter from a new run clears the room and re-snapshots everyone else', () => {
+    const hub = roomWithState()
+    const out = hub.connect('p2', sessionHello('run-2', 'p2'))
+    const mine = stateFor(out, 'p2')
+    expect(mine.poll).toBeNull()
+    expect(mine.sync).toEqual({})
+    expect(mine.liveSource).toEqual({})
+    const phone = stateFor(out, 'a')
+    expect(phone).toBeDefined()
+    expect(phone.poll).toBeNull()
+    expect(phone.vote).toBeNull()
+    expect(phone.sync).toEqual({})
+    expect(hub.audienceCount()).toBe(1) // connections survive
+  })
+
+  it('the same run again (a reconnect, a second window) keeps everything', () => {
+    const hub = roomWithState()
+    for (const [conn, client] of [
+      ['p-again', 'p1'],
+      ['p-window-2', 'p1-presenter-view'],
+    ] as const) {
+      const out = hub.connect(conn, sessionHello('run-1', client))
+      const s = stateFor(out, conn)
+      expect(s.poll?.id).toBe('q1')
+      expect(s.sync).toEqual({ nav: { page: 40 } })
+      expect(ofType(out, 'state')).toHaveLength(1) // nobody else re-snapshotted
+    }
+  })
+
+  it('a presenter without a run id, and any audience hello, clear nothing', () => {
+    const hub = roomWithState()
+    expect(stateFor(hub.connect('hosted', presenterHello('hosted')), 'hosted').poll?.id).toBe('q1')
+    const out = hub.connect('b', { ...audienceHello('phone-2'), session: 'run-99' })
+    expect(stateFor(out, 'b').poll?.id).toBe('q1')
+    expect(stateFor(hub.connect('p3', sessionHello('run-1', 'p3')), 'p3').poll?.id).toBe('q1') // still run-1
+  })
+
+  it('a rejected token with a run id is audience and clears nothing', () => {
+    const hub = roomWithState()
+    const out = hub.connect('bad', { ...sessionHello('run-2', 'bad'), token: 'nope' })
+    expect(stateFor(out, 'bad').you.role).toBe('audience')
+    expect(stateFor(out, 'bad').poll?.id).toBe('q1')
+  })
+})
+
 describe('targets', () => {
   it('match the way the server delivers', () => {
     expect(targets({ kind: 'all' }, 'x', 'audience')).toBe(true)

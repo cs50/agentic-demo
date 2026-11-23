@@ -63,6 +63,14 @@ export interface HelloMessage {
   name?: string
   /** Presenters only. */
   token?: string
+  /**
+   * Presenters only: an id for this run of the presenter's deck (`pnpm dev`
+   * mints one per start). A presenter whose id differs from the room's current
+   * one begins a new lecture, and the hub clears the previous session first.
+   * Reconnects and second windows of the same run carry the same id and clear
+   * nothing. Absent on the hosted deck, which never resets by connecting.
+   */
+  session?: string
 }
 
 export interface VoteMessage {
