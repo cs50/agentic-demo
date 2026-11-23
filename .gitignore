@@ -17,3 +17,7 @@ slides-export.pptx
 *.local
 .idea/
 *.log
+
+# EB CLI state (saved configs, logs); config.yml is the shared part
+.elasticbeanstalk/*
+!.elasticbeanstalk/config.yml
