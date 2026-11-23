@@ -1,0 +1,58 @@
+# Deploys the deck and its audience hub to Elastic Beanstalk, the way the other
+# CS50 apps do (cs50/deploy-to-eb): zip the working directory, upload it, and
+# update the environment, which builds the Dockerfile on the instance.
+#
+# Every push installs, tests and builds. Only main (or a manual run of any
+# branch: `gh workflow run main.yml --ref my-branch`) deploys.
+#
+# The deck is built here, not in the Dockerfile: the image then needs no
+# toolchain, and the instance never compiles Monaco. node_modules is removed
+# before zipping, since the bundle limit is 512 MB and ours is far above that.
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # Queue deployments rather than cancel them: cancelling the job would not cancel the Elastic Beanstalk update
+    concurrency:
+      group: deploy-agentic-cs50-io-staging
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: install
+        run: pnpm install --frozen-lockfile
+        env:
+          # playwright-chromium is only for `pnpm export`; no need for a browser here
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
+
+      - name: test
+        run: pnpm test
+
+      - name: build
+        run: pnpm build
+
+      - name: trim the bundle
+        if: ${{ github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' }}
+        run: rm -rf node_modules server/node_modules
+
+      - name: deploy
+        if: ${{ github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' }}
+        uses: cs50/deploy-to-eb@main
+        with:
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          app_name: agentic-cs50-io
+          env_name: agentic-cs50-io-staging

@@ -9,6 +9,9 @@
     "export": "slidev export --output slides-export.pdf",
     "test": "vitest run",
     "demo": "node --experimental-strip-types scripts/demo.ts",
+    "hub": "node --env-file-if-exists=.env.local --experimental-strip-types server/index.ts",
+    "hub:loadtest": "node --env-file-if-exists=.env.local --experimental-strip-types server/loadtest.ts",
+    "postinstall": "pnpm --dir server install --ignore-workspace --frozen-lockfile --reporter=silent",
     "audit:layout": "node --experimental-strip-types scripts/audit-layout.ts"
   },
   "devDependencies": {
@@ -16,7 +19,9 @@
     "@shikijs/magic-move": "4.6.0",
     "@slidev/cli": "^53.1.0",
     "@slidev/theme-default": "^0.25.0",
+    "@types/qrcode": "^1.5.6",
     "playwright-chromium": "^1.65.1",
+    "qrcode": "^1.5.4",
     "shiki": "4.6.0",
     "vitest": "^5.1.1",
     "vue": "^3.5.46"

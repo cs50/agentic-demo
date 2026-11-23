@@ -1,0 +1,19 @@
+{
+  "name": "agentic-demo-hub",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Audience hub for the lecture deck: serves the built slides and relays polls, votes, slide position and live source over a websocket.",
+  "scripts": {
+    "start": "node --experimental-strip-types index.ts"
+  },
+  "engines": {
+    "node": ">=22.6"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.5.12"
+  }
+}

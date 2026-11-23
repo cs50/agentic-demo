@@ -1,0 +1,10 @@
+# Only server/ and dist/ are copied into the image (see Dockerfile). Keep the
+# rest out of the build context, and never let a local node_modules shadow the
+# one the Dockerfile installs from the lockfile.
+node_modules
+**/node_modules
+.git
+.pnpm-store
+slides-export*
+*.log
+.env*

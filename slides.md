@@ -44,6 +44,40 @@ longer the hard part.
 ---
 layout: concept-viz
 kicker: Before we begin
+title: "Take Out Your Phone"
+caption: "Leave this up while people arrive. The count is live."
+---
+
+<AudienceQR />
+
+<!--
+Up while people settle. Phones out, scan, or type the address. The page is tiny and
+loads on anything. A name is optional. From here they can vote, send me a message, or
+follow the slides on their own screen. Watch the count climb; when it levels off, go.
+-->
+
+---
+layout: concept-viz
+kicker: Before we begin
+title: "What Should You Learn Next?"
+caption: "Press → to open the poll, → again to close it."
+---
+
+<LivePoll
+  id="learn-next"
+  question="You've learned C, Python, SQL and JavaScript. Which language should you learn next?"
+  :options="['Rust', 'Go', 'TypeScript', 'Something else entirely']"
+/>
+
+<!--
+Press: the poll opens on every phone. Give it twenty seconds; read the room. Press: it
+closes and everyone sees the bars. Don't comment on the answer yet. "Let's see what the
+index says." Next slide.
+-->
+
+---
+layout: concept-viz
+kicker: Before we begin
 title: "What Should You Learn Next?"
 caption: "Four presses. Hover a line or a label."
 ---
@@ -988,6 +1022,78 @@ The solution file is copied over the live one; the game and the panel update at 
 no reload. `pnpm demo reset` puts both files back to their starting state.
 
 If the controller isn't detected, click the canvas and use the arrow keys and space.
+-->
+
+---
+layout: default
+---
+
+# Step 8 · The Room Decides
+
+<div class="lede">
+The game works. Now the specification changes, and the people changing it are the ones holding the phones.
+</div>
+
+<div class="room-decides">
+  <GameChoice
+    id="gravity"
+    question="Where should the duck play next?"
+    :seconds="20"
+    :choices="[
+      { label: 'Earth · gravity 0.8', preset: 'physics-earth' },
+      { label: 'The Moon · a sixth of that', preset: 'physics-moon' },
+      { label: 'Jupiter · two and a half times', preset: 'physics-jupiter' },
+    ]"
+  />
+  <MarioGame compact />
+</div>
+
+<!--
+Step 8 (3 min). The room has watched the agent change the game from a sentence. Now
+they get to be the sentence. Press →: a twenty-second vote opens on every phone and on
+every deck that is following. Read the options aloud; the bars move as they tap.
+
+When the clock runs out the hub names the winner and the deck writes that preset over
+physics.ts, the same path the agent used. The duck's next jump is on the Moon, or on
+Jupiter. Pick up the controller and show it.
+
+The point to make: nothing about the engine changed. A specification changed, the file
+that held it changed, and the system kept running. That is what a boundary buys you.
+
+The presets are files in demo/mario/presets/: level-*.ts replaces level.ts, physics-*.ts
+replaces physics.ts. To offer a different menu, add a file and name it in the slide.
+If the dev server isn't running, the vote still works but nothing is written; the panel
+says so.
+-->
+
+---
+layout: default
+---
+
+# Step 8 · The Room Decides, Again
+
+<div class="lede">
+Same question, other file.
+</div>
+
+<div class="room-decides">
+  <GameChoice
+    id="level"
+    question="What should the duck climb?"
+    :seconds="20"
+    :choices="[
+      { label: 'The Week 1 pyramid', preset: 'level-pyramid' },
+      { label: 'Mario, more comfortable', preset: 'level-more' },
+      { label: 'Towers', preset: 'level-towers' },
+    ]"
+  />
+  <MarioGame compact />
+</div>
+
+<!--
+Optional, if there is time. Press →: a second vote, this time over level.ts. The
+"more comfortable" option is the two half-pyramids from the Week 1 spec, with the gap;
+ask whether the duck can clear it under whatever gravity they just chose.
 -->
 
 ---

@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#a51c30">
+<title>Join · The Agentic Software Engineer · CS50</title>
+<!--
+  The audience page. One file, no build step, no dependencies: it has to load
+  on a phone over lecture-hall wifi while a few hundred other phones do the
+  same. Talks to /ws using the shapes in ../protocol.ts (mirrored by hand
+  here; keep them in step).
+-->
+<style>
+  :root {
+    --crimson: #a51c30;
+    --crimson-soft: rgba(165, 28, 48, 0.08);
+    --body: #212529;
+    --muted: #6c757d;
+    --border: #dee2e6;
+    --ok: #198754;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: #fff; color: var(--body); }
+  body {
+    font-family: 'PT Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.45;
+    padding: 0 0 max(1.5rem, env(safe-area-inset-bottom));
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  header {
+    background: var(--crimson);
+    color: #fff;
+    padding: calc(0.9rem + env(safe-area-inset-top)) 1.1rem 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  header h1 { margin: 0; font-size: 1.05rem; font-weight: 700; letter-spacing: 0.01em; }
+  header .sub { font-size: 0.78rem; opacity: 0.85; }
+  .status {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    font-size: 0.72rem; opacity: 0.9; white-space: nowrap;
+  }
+  .status::before {
+    content: ''; width: 0.55rem; height: 0.55rem; border-radius: 50%;
+    background: #ffc107;
+  }
+  .status.on::before { background: #75d6a1; }
+  .status.off::before { background: #f1aeb5; }
+
+  main { padding: 1.1rem; display: flex; flex-direction: column; gap: 1rem; flex: 1; max-width: 34rem; width: 100%; margin: 0 auto; }
+
+  .card {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem;
+    background: #fff;
+  }
+  .label {
+    font-size: 0.66rem; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--muted); font-weight: 700; margin-bottom: 0.4rem;
+  }
+  .label.accent { color: var(--crimson); }
+  .question { font-size: 1.15rem; font-weight: 700; margin: 0 0 0.8rem; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+
+  .options { display: grid; gap: 0.6rem; }
+  .opt {
+    appearance: none; width: 100%; text-align: left;
+    font: inherit; font-size: 1.05rem; font-weight: 700;
+    padding: 0.9rem 1rem; border-radius: 10px;
+    border: 2px solid var(--border); background: #fff; color: var(--body);
+    display: flex; align-items: center; gap: 0.75rem;
+    transition: border-color 120ms, background 120ms;
+    touch-action: manipulation;
+  }
+  .opt .key {
+    flex: none; width: 1.7rem; height: 1.7rem; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 0.8rem; background: #f1f3f5; color: var(--muted);
+  }
+  .opt:active { background: #f8f9fa; }
+  .opt.picked { border-color: var(--crimson); background: var(--crimson-soft); }
+  .opt.picked .key { background: var(--crimson); color: #fff; }
+  .opt:disabled { opacity: 0.6; }
+  .opt.winner { border-color: var(--ok); background: #d1e7dd; }
+  .opt .count { margin-left: auto; font-weight: 400; color: var(--muted); font-size: 0.9rem; }
+
+  .bar { height: 4px; border-radius: 2px; background: #e9ecef; margin-top: 0.35rem; overflow: hidden; }
+  .bar > i { display: block; height: 100%; background: var(--crimson); width: 0; transition: width 300ms; }
+
+  .countdown { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--crimson); }
+  .confirm { margin-top: 0.7rem; font-size: 0.9rem; color: var(--ok); font-weight: 700; min-height: 1.3em; }
+
+  .row { display: flex; gap: 0.6rem; align-items: stretch; }
+  input, textarea {
+    font: inherit; width: 100%; padding: 0.65rem 0.75rem;
+    border: 1px solid var(--border); border-radius: 8px; color: var(--body); background: #fff;
+  }
+  input:focus, textarea:focus { outline: 2px solid rgba(165, 28, 48, 0.35); border-color: var(--crimson); }
+  textarea { resize: vertical; min-height: 4.5rem; }
+  button.send {
+    font: inherit; font-weight: 700; padding: 0.65rem 1.1rem; border-radius: 8px;
+    border: 0; background: var(--crimson); color: #fff; flex: none;
+  }
+  button.send:disabled { opacity: 0.5; }
+  .hint { font-size: 0.8rem; color: var(--muted); margin-top: 0.5rem; min-height: 1.2em; }
+
+  a.follow {
+    display: block; text-align: center; padding: 0.85rem 1rem; border-radius: 10px;
+    border: 2px solid var(--crimson); color: var(--crimson); font-weight: 700; text-decoration: none;
+  }
+  footer { text-align: center; color: var(--muted); font-size: 0.75rem; padding: 0 1rem; }
+
+  .toast {
+    position: fixed; left: 50%; bottom: calc(1rem + env(safe-area-inset-bottom)); transform: translateX(-50%);
+    background: var(--body); color: #fff; padding: 0.55rem 0.9rem; border-radius: 8px;
+    font-size: 0.85rem; opacity: 0; pointer-events: none; transition: opacity 200ms; max-width: 90vw;
+  }
+  .toast.show { opacity: 1; }
+  [hidden] { display: none !important; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>The Agentic Software Engineer</h1>
+    <div class="sub">CS50 · you're in the room</div>
+  </div>
+  <span id="status" class="status">connecting</span>
+</header>
+
+<main>
+  <section id="poll" class="card" hidden>
+    <div class="label accent" id="poll-label">Live poll</div>
+    <p class="question" id="question"></p>
+    <div id="options" class="options" role="group"></div>
+    <div id="confirm" class="confirm"></div>
+  </section>
+
+  <section id="waiting" class="card">
+    <div class="label">Live poll</div>
+    <p class="muted" id="waiting-text">Nothing to vote on yet. When a poll opens, it shows up here.</p>
+  </section>
+
+  <section class="card">
+    <div class="label">Say something to the presenter</div>
+    <div class="row" style="margin-bottom:0.6rem">
+      <input id="name" type="text" maxlength="40" placeholder="Your name (optional)" autocomplete="nickname" autocapitalize="words">
+    </div>
+    <div class="row">
+      <textarea id="text" maxlength="500" placeholder="A question, a reaction, a prompt you'd try…"></textarea>
+    </div>
+    <div class="row" style="margin-top:0.6rem; justify-content:flex-end">
+      <button class="send" id="send" type="button">Send</button>
+    </div>
+    <div class="hint" id="hint">Only the presenter sees messages.</div>
+  </section>
+
+  <a class="follow" href="/">Follow the slides on this device →</a>
+</main>
+
+<footer id="footer"></footer>
+<div id="toast" class="toast" role="status"></div>
+
+<script>
+(() => {
+  'use strict'
+
+  // ---------------------------------------------------------------- identity
+  const store = window.localStorage
+  let clientId = store.getItem('hub:clientId')
+  if (!clientId) {
+    clientId = (crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2) + Date.now())
+    store.setItem('hub:clientId', clientId)
+  }
+  const nameInput = document.getElementById('name')
+  nameInput.value = store.getItem('hub:name') || ''
+
+  // --------------------------------------------------------------- elements
+  const $ = (id) => document.getElementById(id)
+  const statusEl = $('status'), pollEl = $('poll'), pollLabel = $('poll-label'), questionEl = $('question')
+  const optionsEl = $('options'), confirmEl = $('confirm'), waitingEl = $('waiting'), waitingText = $('waiting-text')
+  const textEl = $('text'), sendBtn = $('send'), hintEl = $('hint'), toastEl = $('toast'), footerEl = $('footer')
+
+  let toastTimer = 0
+  function toast(msg) {
+    toastEl.textContent = msg
+    toastEl.classList.add('show')
+    clearTimeout(toastTimer)
+    toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2400)
+  }
+
+  // ------------------------------------------------------------------ state
+  // Mirrors the server's StateMessage for the parts this page shows.
+  let poll = null        // { id, kind, question, options, open, closesAt }
+  let myVote = null      // option index
+  let tally = null       // { counts, total } once the poll has closed
+  let result = null      // { winner } for a closed choice poll
+  let countdownTimer = 0
+  // The server's clock minus ours, so the countdown reads the server's deadline.
+  let clockSkew = 0
+
+  function render() {
+    clearInterval(countdownTimer)
+    if (!poll) {
+      pollEl.hidden = true
+      waitingEl.hidden = false
+      return
+    }
+    pollEl.hidden = false
+    waitingEl.hidden = true
+    const choice = poll.kind === 'choice'
+    pollLabel.textContent = choice ? 'The room decides' : 'Live poll'
+    questionEl.textContent = poll.question
+
+    optionsEl.innerHTML = ''
+    poll.options.forEach((label, i) => {
+      const b = document.createElement('button')
+      b.type = 'button'
+      b.className = 'opt'
+      if (myVote === i) b.classList.add('picked')
+      if (!poll.open && result && result.winner === i) b.classList.add('winner')
+      b.disabled = !poll.open
+      const key = document.createElement('span')
+      key.className = 'key'
+      key.textContent = String.fromCharCode(65 + i)
+      b.append(key, document.createTextNode(label))
+      if (!poll.open && tally) {
+        const n = tally.counts[i] || 0
+        const pct = tally.total ? Math.round((100 * n) / tally.total) : 0
+        const count = document.createElement('span')
+        count.className = 'count'
+        count.textContent = `${n} · ${pct}%`
+        b.append(count)
+        const wrap = document.createElement('div')
+        wrap.append(b)
+        const bar = document.createElement('div')
+        bar.className = 'bar'
+        const fill = document.createElement('i')
+        requestAnimationFrame(() => (fill.style.width = pct + '%'))
+        bar.append(fill)
+        wrap.append(bar)
+        optionsEl.append(wrap)
+      } else {
+        b.addEventListener('click', () => vote(i))
+        optionsEl.append(b)
+      }
+    })
+
+    if (poll.open) {
+      if (choice && poll.closesAt) {
+        const tick = () => {
+          const left = Math.max(0, Math.ceil((poll.closesAt - (Date.now() + clockSkew)) / 1000))
+          confirmEl.innerHTML = (myVote === null ? 'Tap to choose · ' : 'Got it. You can still change it · ') +
+            `<span class="countdown">${left}s</span>`
+          if (left <= 0) clearInterval(countdownTimer)
+        }
+        tick()
+        countdownTimer = setInterval(tick, 250)
+      } else {
+        confirmEl.textContent = myVote === null ? '' : 'Vote recorded. Tap another option to change it.'
+      }
+    } else if (choice && result) {
+      const mine = myVote === null ? '' : `You picked ${poll.options[myVote]}. `
+      confirmEl.textContent = `${mine}The room chose ${poll.options[result.winner]}.`
+    } else {
+      confirmEl.textContent = 'This poll has closed.'
+    }
+  }
+
+  // ------------------------------------------------------------- websocket
+  let ws = null
+  let backoff = 1000
+  let everConnected = false
+
+  function setStatus(cls, text) {
+    statusEl.className = 'status ' + cls
+    statusEl.textContent = text
+  }
+
+  function hello() {
+    send({ type: 'hello', role: 'audience', clientId, name: nameInput.value.trim() || undefined })
+  }
+
+  function connect() {
+    const proto = location.protocol === 'https:' ? 'wss:' : 'ws:'
+    ws = new WebSocket(`${proto}//${location.host}/ws`)
+    ws.addEventListener('open', () => {
+      backoff = 1000
+      everConnected = true
+      setStatus('on', 'connected')
+      hello()
+    })
+    ws.addEventListener('message', (e) => {
+      let msg
+      try { msg = JSON.parse(e.data) } catch { return }
+      onMessage(msg)
+    })
+    ws.addEventListener('close', () => {
+      setStatus('off', everConnected ? 'reconnecting…' : 'connecting…')
+      setTimeout(connect, backoff)
+      backoff = Math.min(backoff * 2, 10_000)
+    })
+    ws.addEventListener('error', () => ws.close())
+  }
+
+  /** True when the message went out; false when the socket is down, so the caller can say so. */
+  function send(msg) {
+    if (!ws || ws.readyState !== WebSocket.OPEN) return false
+    ws.send(JSON.stringify(msg))
+    return true
+  }
+
+  function onMessage(msg) {
+    switch (msg.type) {
+      case 'state':
+        poll = msg.poll
+        myVote = msg.vote
+        tally = msg.tally
+        result = msg.result
+        clockSkew = msg.now - Date.now()
+        footerEl.textContent = msg.audienceCount > 1 ? `${msg.audienceCount} people in the room` : ''
+        render()
+        break
+      case 'poll:open':
+        poll = msg.poll
+        myVote = null
+        tally = null
+        result = null
+        // Server and phone clocks differ; measure once when a poll opens.
+        clockSkew = msg.poll.openedAt - Date.now()
+        render()
+        if (navigator.vibrate) navigator.vibrate(30)
+        break
+      case 'vote:ack':
+        if (poll && poll.id === msg.pollId) {
+          myVote = msg.option
+          render()
+        }
+        break
+      case 'poll:close':
+        if (poll && poll.id === msg.pollId) {
+          poll.open = false
+          tally = { counts: msg.counts, total: msg.total }
+          render()
+        }
+        break
+      case 'poll:result':
+        if (poll && poll.id === msg.pollId) {
+          poll.open = false
+          tally = { counts: msg.counts, total: msg.total }
+          result = { winner: msg.winner }
+          render()
+        }
+        break
+      case 'audience':
+        footerEl.textContent = msg.count > 1 ? `${msg.count} people in the room` : ''
+        break
+      case 'error':
+        toast(msg.reason)
+        break
+      // 'sync', 'live-source', 'tally' and 'message' are for the deck and the presenter.
+    }
+  }
+
+  function vote(i) {
+    if (!poll || !poll.open) return
+    if (!send({ type: 'vote', pollId: poll.id, option: i })) {
+      toast('Not connected. Try again in a moment.')
+      return
+    }
+    // Optimistic now that it is on the wire; the ack confirms it.
+    myVote = i
+    render()
+  }
+
+  // --------------------------------------------------------------- messages
+  function sendText() {
+    const text = textEl.value.trim()
+    if (!text) return
+    if (!send({ type: 'message', text })) {
+      toast('Not connected. Try again in a moment.')
+      return
+    }
+    textEl.value = ''
+    hintEl.textContent = 'Sent.'
+    setTimeout(() => (hintEl.textContent = 'Only the presenter sees messages.'), 1500)
+  }
+  sendBtn.addEventListener('click', sendText)
+  textEl.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) sendText()
+  })
+
+  nameInput.addEventListener('change', () => {
+    store.setItem('hub:name', nameInput.value.trim())
+    hello() // the server keeps the name per connection
+  })
+
+  connect()
+})()
+</script>
+</body>
+</html>

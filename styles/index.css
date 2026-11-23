@@ -270,6 +270,18 @@ body,
   margin-bottom: 0.9rem;
 }
 
+/* Step 8: the vote beside the game it changes */
+.slidev-layout .room-decides {
+  display: grid;
+  grid-template-columns: 1fr 1.25fr;
+  gap: 1.2rem;
+  align-items: start;
+  height: 360px;
+}
+.slidev-layout .room-decides .mg-root.compact {
+  --mg-max-h: 300px;
+}
+
 /* ---- Visualizations (components/viz) ------------------------------------- */
 
 .viz {
