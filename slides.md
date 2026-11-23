@@ -1021,13 +1021,14 @@ a minute, no more.
 Walk up the middle path to the Science Center. The glass doors are the Gym. Walking into
 them reads the sign; ✕ challenges.
 
-The battle. ✕ moves the text. Sloppyclaude uses a move; every move is a kind of AI slop:
-CONFIDENT NONSENSE, INFINITE LOOP, VIBE SPEC, WORKS ON MY MACHINE, YOU'RE ABSOLUTELY
-RIGHT. Each comes with a question, and the question opens on every phone as a
-fifteen-second vote on the hub. Read it aloud; watch the
-bars. When the clock runs out the room's answer lands: right, and the duck's counter hits
-the monster; wrong, and the slop hits the duck. The explanation shows either way, in one
-line. Five rounds, ten concepts, two per round. Four right answers win.
+The battle. ✕ moves the text. Sloppyclaude uses a move, and every move is something an AI
+says while being wrong: "You're absolutely right!", "Exactly!", "I've thoroughly tested
+this.", "Hope this helps!" Each comes with a question, and the question opens on every phone
+as a fifteen-second vote on the hub. Read it aloud; watch the bars. When the clock runs out
+the room's answer lands: right, and the move has no effect and the duck's counter takes ten
+points off Sloppyclaude; wrong, and the move hits the duck for a third of its health. The
+explanation shows either way, in one line. Ten hits win; three misses lose; fourteen
+questions cover the ten concepts, so the pool never runs out.
 
 If the room isn't connected (no hub, or nobody voted), the panel says so and the
 controller picks: ↑ ↓ then ✕. ✕ while a vote is open closes it early. Keyboard works
