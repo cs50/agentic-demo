@@ -800,99 +800,164 @@ run and jump across, with a real controller."
 -->
 
 ---
-src: ./demo/live.md
+layout: concept-viz
+kicker: Step 2
+title: "The First Prompt"
+caption: "Three presses. The agent asks before it builds."
 ---
 
----
-layout: default
----
-
-# Step 3 · Say What You Mean
-
-<div class="grid grid-cols-2 gap-6 mt-2">
-<div>
-
-### Draw the boundaries
-
-<v-clicks>
-
-- `controller.ts`: reads the gamepad. Knows that **Cross** means jump and the **left stick** means move. Knows nothing about Mario.
-- `engine.ts`: 60 frames per second, collisions, gravity of `0.8 px/frame²`, a jump of `-14 px/frame`. Knows nothing about controllers.
-- `level.ts`: the pyramid, as a loop inside a loop. The one file we'll keep editing.
-
-</v-clicks>
-
-</div>
-<div>
-
-### Verify before you build
-
-<v-clicks>
-
-- Ask for `test_controller` **first**: a program that prints every button and stick event as it happens.
-- Run it. Press **✕**. Look for `Button 0 (CROSS): DOWN`.
-- Only then ask for the game.
-
-</v-clicks>
-
-</div>
-</div>
+<AgentChat scene="ask" />
 
 <!--
-Step 3 (4–5 min). Hand the agent the actual specification. Contrast with Step 2: same
-goal, but now we give it module boundaries, numbers, and a verification step. The next
-slide is the verification artifact.
+Step 2 (2 min). The prompt is the one we'd all type. Press: the agent does not start
+coding. It names the three things it cannot infer, and getting any of them wrong wastes
+an hour. That is Concept 5 in one move: "simple", "Mario-style" and "a controller" are not
+a specification yet. Press: it picks the controller first, because that decides what is
+possible at all.
+-->
+
+---
+layout: concept-viz
+kicker: Step 3
+title: "What Kind of Controller?"
+caption: "Three presses. Hover an option to see whether the browser can read it."
+---
+
+<AgentChat scene="controller" />
+
+<!--
+Step 3 (3 min). Press: the question and the options. Let the room shout answers. Hover a
+few: the PS4 and Xbox pads are the same API with a fixed layout; the steering wheel is a
+gamepad without a standard mapping; the Wii Remote needs a helper program; the fork and
+the spoon are not input devices unless you wire them to a Makey Makey, at which point
+they are keyboard keys. The joke carries the point: the agent has to know what hardware
+you actually have before it can say what is feasible. Press: our answer. Press: the
+specification so far, written down.
+-->
+
+---
+layout: concept-viz
+kicker: Step 4
+title: "Language and Shape"
+caption: "Four presses. Hover a language for its cost; hover a module for what it knows."
+---
+
+<AgentChat scene="design" />
+
+<!--
+Step 4 (3 min). Press: the language options. All three can run in a browser; they differ
+in cost. Python needs Pyodide and a JavaScript bridge for the controller; C needs
+Emscripten and a rebuild per change. Press: we pick TypeScript, for the APIs we know and
+for live reload. Press: the shape, five modules with one job each; hover one to see what
+it knows and does not know. The fifth card is the one-file alternative, the shape you get
+when you only say "build it". Press: we pick modules and keep the level as the Week 1
+loop. These are Concepts 5 and 8 applied: say what each piece must do, and keep each
+piece small.
+-->
+
+---
+layout: concept-viz
+kicker: Step 5
+title: "The Riskiest Assumption"
+caption: "Three presses. Hover a dot for why it sits where it does."
+---
+
+<AgentChat scene="risk" />
+
+<!--
+Step 5 (2 min). Press: the scale. Four of the five tasks sit at the left: a canvas, key
+events, a velocity, a loop. They have done each of these in CS50. One sits at the far
+right: reading a PS4 controller in a browser. A new API, Bluetooth, an unknown mapping,
+and the browser does not even expose the pad until a button is pressed. This is why the
+fundamentals still matter: knowing JavaScript is what lets you see that moving a sprite
+is easy and the controller is not. Press: the room says it. Press: the agent's plan is
+not the game but a small page that prints every event the browser sees. If it prints
+"Button 0 (CROSS): DOWN", we build. If it prints nothing, nothing else matters. That is
+Concept 7 before a line of game code exists.
+-->
+
+---
+layout: concept-viz
+kicker: The specification, written down
+title: "What Must Hold, and How We Will Know"
+caption: "One press per requirement. The last press is what we left out."
+---
+
+<DemoSpec />
+
+<!--
+Step 5½ (2 min). Everything the conversation settled, as acceptance criteria. Each row is a requirement
+in the left column and the artifact that proves it in the middle: a line in a log, a
+number on a HUD, a count of rows on a canvas. Point out that every proof is something you
+look at, not code you read. Last press: what is deliberately not in the spec. Finance's
+spec did the same ("You don't need to worry about race conditions").
 -->
 
 ---
 layout: default
+transition: view-transition
 ---
 
-# Verify First: `test_controller`
+# Step 6 · The Experiment
 
 <div class="lede">
-Press <b>✕</b> on the controller and look for <code>Button 0 (CROSS): DOWN</code>.
+The small page the agent proposed. Press <b>✕</b>: the button lights up, the log says <code>Button 0 (CROSS): DOWN</code>, and the duck jumps.
 </div>
 
 <ControllerTest />
 
 <!--
-Run the diagnostic, press ✕, show the log. Nobody has read the controller code; everybody
-has seen it work. That's Concept 7.
+Step 6 (2 min). This is the experiment from the previous slide, not the game. Press a
+button so the browser exposes the controller; the status bar turns green and names it. Move the left stick: the stick on the drawing moves and the
+duck walks. Press ✕: the button lights, the log prints "Button 0 (CROSS): DOWN", and the
+duck jumps. Three views of one event. Nobody has read the controller code; everybody has
+seen it work. That's Concept 7, and it is rows 1 and 2 of the specification, checked.
+Only now do we build the rest.
+
+Press →: the duck shrinks and drops into the game on the next slide. (The View
+Transitions API; Chrome and Safari. Elsewhere the slides just change.)
 -->
 
 ---
 layout: default
 ---
 
-# Step 4 · Play, Then Change the Level
+# Step 7 · Play, Then Finish It
 
 <div class="lede">
-Ask the agent to edit <code>level.ts</code>, or click <b>Edit</b> and type. Either way, the level rebuilds under Mario without a reload.
+The agent built the engine, the controller and the world. Two things are missing: nothing pulls the duck down, and there is no pyramid.
 </div>
 
-<div class="grid grid-cols-[1.05fr_1fr] gap-4 items-start" style="height: 400px">
-  <LiveCode />
-  <MarioGame compact />
+<div style="height: 370px">
+  <LiveDemo />
 </div>
 
 <!--
-Step 4 (2 min). Pick up the controller and run Mario up and over the pyramid.
+Step 7 (5 min). The game, full width, nothing else. Pick up the controller: the duck
+runs. Press ✕: it flies straight up and out of the level, and a message says why. Let
+the room laugh, then ask them what is missing. They know: gravity. They wrote this
+arithmetic in Week 1.
 
-Then change level.ts, two ways:
+Press → (or "Show code"). The code panel opens with two files: level.ts, which returns
+no rows, and physics.ts, whose applyGravity() hands the speed straight back. Nothing is
+hidden; what is missing is visibly missing.
 
-  With the agent (leave the panel in Preview so the audience sees the diff animate):
-  1. "Make it 12 tall."
-  2. "Flip it: widest row on top."
-  3. "Make it the Mario 'more' version: two half-pyramids with a gap of two."
-  4. "Add a second, smaller pyramid to the right."
-  5. Break it on purpose so the error strip appears: the old level stays, the message
-     says why, and the agent reads the error and fixes it. That's Concept 3, live.
+Then, with the agent, in Preview so the room sees the diff animate:
+  1. "The duck flies off when I jump. Add gravity to physics.ts: 0.8 pixels per frame
+     squared, with a terminal velocity of 16."  → the duck comes back down and lands.
+  2. "Add the Week 1 pyramid to level.ts, eight rows, as a loop inside a loop."
+     → the pyramid appears under the duck.
+  3. Then the old favourites: "Make it 12 tall", "Flip it", "the Mario 'more' version",
+     and break it on purpose so the error strip appears and the agent fixes it.
 
-  Yourself (click Edit): change HEIGHT, pause, and watch the level rebuild. Edits
-  autosave after you stop typing; Cmd+S saves at once. If the agent edits the file
-  while you have unsaved changes, a bar asks whether to load theirs or keep yours.
-  Slide shortcuts are off while the editor has focus.
+Or type it yourself: click Edit, pick the file tab, and change it. Edits autosave after
+you stop typing; Cmd+S saves at once. If the agent writes the file while you have unsaved
+edits, a bar asks whether to load theirs or keep yours.
+
+If the agent is down or its code does not work, in a terminal:
+    pnpm demo solve physics      (or: level, or no argument for both)
+The solution file is copied over the live one; the game and the panel update at once,
+no reload. `pnpm demo reset` puts both files back to their starting state.
 
 If the controller isn't detected, click the canvas and use the arrow keys and space.
 -->

@@ -6,12 +6,14 @@ import { resolve } from 'node:path'
 // Slidev merges the exported object into its own Vite config.
 
 /**
- * The one file the slide-deck editor may write. Everything else is refused.
+ * The files the slide-deck editor may write. Everything else is refused.
  * Mirrors Slidev's own `{monaco-write}` mechanism, but for a component we
  * control, so disk changes can flow back into the editor without re-rendering
- * the slide (which would restart the game).
+ * the slide (which would restart the game). Kept in step with LIVE_FILES in
+ * demo/mario/liveSource.ts (this file cannot import it: Slidev loads the
+ * config with Node, before Vite is up).
  */
-const WRITABLE_FILE = 'demo/mario/level.ts'
+const WRITABLE_FILES = ['demo/mario/level.ts', 'demo/mario/physics.ts']
 
 /**
  * Only clients on this machine may write. Vite's own websocket guard checks a
@@ -24,12 +26,11 @@ function isLoopback(address: string | undefined): boolean {
   return address === '127.0.0.1' || address === '::1' || address === '::ffff:127.0.0.1'
 }
 
-function liveLevelWriter() {
+function liveFileWriter() {
   return {
-    name: 'lecture:live-level-writer',
+    name: 'lecture:live-file-writer',
     apply: 'serve' as const,
     configureServer(server: any) {
-      const target = resolve(server.config.root, WRITABLE_FILE)
       const localClients = new WeakSet<object>()
       // Writes are queued so two saves arriving within one write's latency
       // (autosave then Cmd+S, or the slide and presenter views) cannot
@@ -41,25 +42,30 @@ function liveLevelWriter() {
         if (isLoopback(req?.socket?.remoteAddress)) localClients.add(socket)
       })
 
-      server.ws.on('lecture:write-level', (data: { content?: unknown }, client: any) => {
+      server.ws.on('lecture:write-file', (data: { file?: unknown; content?: unknown }, client: any) => {
+        const file = typeof data?.file === 'string' ? data.file : ''
+        const reply = (result: { ok: boolean; error?: string }) =>
+          client.send('lecture:write-file:result', { file, ...result })
         if (!localClients.has(client.socket)) {
-          client.send('lecture:write-level:result', {
-            ok: false,
-            error: 'writes are only accepted from the machine running the dev server',
-          })
+          reply({ ok: false, error: 'writes are only accepted from the machine running the dev server' })
+          return
+        }
+        if (!WRITABLE_FILES.includes(file)) {
+          reply({ ok: false, error: `${file || '(no file)'} is not a writable file` })
           return
         }
         if (typeof data?.content !== 'string') {
-          client.send('lecture:write-level:result', { ok: false, error: 'content must be a string' })
+          reply({ ok: false, error: 'content must be a string' })
           return
         }
+        const target = resolve(server.config.root, file)
         const content = data.content
         queue = queue.then(async () => {
           try {
             await fs.writeFile(target, content, 'utf8')
-            client.send('lecture:write-level:result', { ok: true })
+            reply({ ok: true })
           } catch (e) {
-            client.send('lecture:write-level:result', { ok: false, error: String(e) })
+            reply({ ok: false, error: String(e) })
           }
         })
       })
@@ -68,11 +74,11 @@ function liveLevelWriter() {
 }
 
 export default {
-  plugins: [liveLevelWriter()],
+  plugins: [liveFileWriter()],
   server: {
     hmr: {
-      // A syntax error in level.ts should show up in the game's own error
-      // strip (see liveLevel.ts), not as a full-screen overlay mid-lecture.
+      // A syntax error in level.ts or physics.ts should show up in the game's
+      // own error strip (see liveModule.ts), not as a full-screen overlay mid-lecture.
       overlay: false,
     },
   },

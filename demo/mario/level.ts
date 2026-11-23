@@ -1,20 +1,12 @@
 /**
- * level.ts — THIS is the file the agent edits live.
- * CS50's classic mario.c in TypeScript: each string is one
- * row, each '#' a solid block, sitting on the ground.
+ * level.ts — the level, as rows of text. THIS file is edited live.
+ *
+ * Each string is one row and each '#' is a solid block. The rows are drawn
+ * bottom-aligned on the ground and centred, exactly as mario.c prints them.
+ *
+ * Right now there is no level: the duck has the ground and nothing else.
  */
 
-export const HEIGHT = 8
-
 export function buildLevel(): string[] {
-  const rows: string[] = []
-
-  // for each row i: (HEIGHT - i) spaces, then i hashes
-  for (let i = 1; i <= HEIGHT; i++) {
-    const spaces = ' '.repeat(HEIGHT - i)
-    const hashes = '#'.repeat(i)
-    rows.push(spaces + hashes)
-  }
-
-  return rows
+  return []
 }

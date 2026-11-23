@@ -1,12 +1,25 @@
 <script setup lang="ts">
 /**
- * ControllerTest — the "verification harness first" diagnostic from the spec.
- * Prints real-time button and axis events, e.g. `Button 0 (CROSS): DOWN`.
- * Only polls while this slide is the active one.
+ * ControllerTest — the "verify first" diagnostic from the spec, made visual.
+ *
+ * Left: a DualShock 4 whose buttons and sticks light up and move with the real
+ * controller. Right: the duck, acting on the same inputs (left stick or D-pad
+ * to walk, Cross to jump), so the audience sees input become action before any
+ * game code is trusted. Below: the event log the spec asks for,
+ * e.g. `Button 0 (CROSS): DOWN`.
+ *
+ * Polls the Gamepad API only while this slide is active. The duck preview uses
+ * the values the solution physics.ts will use, so what it previews is what the
+ * finished game does. (Deliberately not the live physics.ts: this experiment
+ * comes before the game in the story and must work whatever that file says.)
  */
 import { useIsSlideActive, useSlideContext } from '@slidev/client'
 import { onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
-import { Controller, DS4_AXES, DS4_BUTTONS, type ControllerEvent } from '../demo/mario/controller'
+import { Controller, type ControllerEvent } from '../demo/mario/controller'
+import { MOVE_SPEED } from '../demo/mario/engine'
+import { GRAVITY, JUMP_VELOCITY } from '../demo/mario/solutions/physics'
+import DualShock from './viz/DualShock.vue'
+import DuckSprite from './viz/DuckSprite.vue'
 
 const { $renderContext } = useSlideContext()
 const isLive = ['slide', 'presenter'].includes($renderContext.value)
@@ -19,10 +32,27 @@ const mapping = ref('')
 const buttons = reactive<boolean[]>(Array(18).fill(false))
 const axes = reactive<number[]>([0, 0, 0, 0])
 const log = ref<string[]>([])
-const MAX_LOG = 12
+const MAX_LOG = 3
+
+/** Which inputs the game uses: Cross (0) to jump, D-pad left/right (14/15) and the left stick to move. */
+const USED = [0, 14, 15]
+
+// --- duck preview: a strip 0..STAGE_W wide, ground at the bottom -------------
+const STAGE_W = 300
+const STAGE_H = 112
+const DUCK = 48 // rendered size, px
+const duck = reactive({ x: (STAGE_W - DUCK) / 2, y: 0, vy: 0, facing: 1 as 1 | -1, onGround: true })
+const action = ref<'idle' | 'left' | 'right' | 'jump'>('idle')
+const actionLabel: Record<typeof action.value, string> = {
+  idle: 'standing still',
+  left: '← walking left',
+  right: 'walking right →',
+  jump: '↑ jump',
+}
 
 let raf = 0
 let unsubscribe: (() => void) | null = null
+let lastT = 0
 
 function push(line: string) {
   log.value = [line, ...log.value].slice(0, MAX_LOG)
@@ -49,20 +79,52 @@ function onEvent(ev: ControllerEvent) {
       break
     case 'axis':
       axes[ev.index] = ev.value
-      if (Math.abs(ev.value) > 0.5 || Math.abs(ev.value) < 0.05)
-        push(`Axis ${ev.index} (${ev.name}): ${ev.value.toFixed(2)}`)
+      if (Math.abs(ev.value) > 0.5 || Math.abs(ev.value) < 0.05) push(`Axis ${ev.index} (${ev.name}): ${ev.value.toFixed(2)}`)
       break
   }
 }
 
-function loop() {
-  controller.poll()
+/** One 60 Hz physics step for the preview duck, using the finished game's constants (scaled to the small stage). */
+function stepDuck(state: ReturnType<Controller['poll']>) {
+  const k = 0.8 // the stage is smaller than the game canvas
+  duck.x = Math.max(0, Math.min(STAGE_W - DUCK, duck.x + state.moveX * MOVE_SPEED * k))
+  if (state.moveX !== 0) duck.facing = state.moveX > 0 ? 1 : -1
+  if (state.jumpPressed && duck.onGround) {
+    duck.vy = JUMP_VELOCITY * k
+    duck.onGround = false
+  }
+  duck.vy += GRAVITY * k
+  duck.y = Math.min(0, duck.y + duck.vy) // y is the lift above the ground, ≤ 0
+  if (duck.y === 0) {
+    duck.vy = 0
+    duck.onGround = true
+  }
+  action.value = !duck.onGround ? 'jump' : state.moveX < 0 ? 'left' : state.moveX > 0 ? 'right' : 'idle'
+}
+
+let pendingJump = false
+
+function loop(t: number) {
+  const state = controller.poll()
+  // jumpPressed is an edge: true for exactly one poll. Latch it so a frame that
+  // runs zero physics steps (less than 1/60 s elapsed) doesn't drop the press.
+  if (state.jumpPressed) pendingJump = true
+  // fixed 60 Hz steps regardless of display refresh
+  if (!lastT) lastT = t
+  let dt = Math.min(100, t - lastT)
+  while (dt >= 1000 / 60) {
+    stepDuck({ ...state, jumpPressed: pendingJump })
+    pendingJump = false
+    dt -= 1000 / 60
+    lastT += 1000 / 60
+  }
   raf = requestAnimationFrame(loop)
 }
 
 function start() {
   if (!isLive || raf) return
   unsubscribe = controller.subscribe(onEvent)
+  lastT = 0
   raf = requestAnimationFrame(loop)
 }
 
@@ -76,8 +138,6 @@ function stop() {
 onMounted(() => isActive.value && start())
 watch(isActive, (active) => (active ? start() : stop()))
 onBeforeUnmount(stop)
-
-const buttonOrder = [0, 1, 2, 3, 4, 5, 6, 7, 12, 13, 14, 15, 8, 9, 16]
 </script>
 
 <template>
@@ -88,35 +148,34 @@ const buttonOrder = [0, 1, 2, 3, 4, 5, 6, 7, 12, 13, 14, 15, 8, 9, 16]
         <b>{{ gamepadId }}</b>
         <span class="muted"> · mapping: {{ mapping }}</span>
       </span>
-      <span v-else>Waiting for controller — press any button on the DualShock 4…</span>
+      <span v-else>Waiting for the controller. Press any button on it.</span>
     </div>
 
     <div class="ct-grid">
-      <div class="ct-panel">
-        <div class="ct-title">Buttons</div>
-        <div class="ct-buttons">
-          <div v-for="i in buttonOrder" :key="i" class="btn" :class="{ on: buttons[i] }">
-            <span class="idx">{{ i }}</span>
-            <span class="name">{{ DS4_BUTTONS[i] }}</span>
+      <section class="ct-panel">
+        <div class="ct-title">What the browser sees</div>
+        <DualShock :buttons="buttons" :axes="axes" :connected="connected" :highlight="USED" />
+        <div class="legend">
+          <span><i class="sw used" /> used by the game: Cross jumps, left stick or D-pad moves</span>
+        </div>
+      </section>
+
+      <section class="ct-panel">
+        <div class="ct-title">What the duck does</div>
+        <div class="stage" :style="{ width: `${STAGE_W}px`, height: `${STAGE_H}px` }">
+          <div class="ground" />
+          <div class="duck" :style="{ transform: `translate(${duck.x}px, ${duck.y}px)` }">
+            <DuckSprite :facing="duck.facing" :size="DUCK" />
           </div>
         </div>
-
-        <div class="ct-title mt">Axes</div>
-        <div v-for="i in 4" :key="i" class="axis">
-          <span class="label">{{ i - 1 }} {{ DS4_AXES[i - 1] }}</span>
-          <div class="track">
-            <div class="center" />
-            <div class="thumb" :style="{ left: `${50 + axes[i - 1] * 50}%` }" />
-          </div>
-          <span class="val">{{ axes[i - 1].toFixed(2) }}</span>
-        </div>
-      </div>
-
-      <div class="ct-panel">
-        <div class="ct-title">stdout — test_controller</div>
-        <pre class="ct-log"><template v-if="log.length"><div v-for="(l, i) in log" :key="l + i" :class="{ newest: i === 0 }">{{ l }}</div></template><div v-else class="muted">// no events yet</div></pre>
-      </div>
+        <div class="action" :class="{ live: action !== 'idle' }">{{ actionLabel[action] }}</div>
+      </section>
     </div>
+
+    <section class="ct-panel log">
+      <div class="ct-title">event log</div>
+      <pre><template v-if="log.length"><div v-for="(l, i) in log" :key="l + i" :class="{ newest: i === 0 }">{{ l }}</div></template><div v-else class="muted">// no events yet</div></pre>
+    </section>
   </div>
 </template>
 
@@ -125,20 +184,26 @@ const buttonOrder = [0, 1, 2, 3, 4, 5, 6, 7, 12, 13, 14, 15, 8, 9, 16]
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.78rem;
   color: #212529;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.ct-root :deep(.ds4) {
+  max-height: 170px;
+  margin: 0 auto;
 }
 .ct-status {
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  padding: 0.5rem 0.8rem;
+  padding: 0.35rem 0.8rem;
   border-radius: 6px;
-  background: #fff3cd; /* Bootstrap alert-warning while waiting */
+  background: #fff3cd;
   border: 1px solid #ffe69c;
   color: #664d03;
-  margin-bottom: 0.8rem;
 }
 .ct-status.ok {
-  background: #d1e7dd; /* Bootstrap alert-success once connected */
+  background: #d1e7dd;
   border-color: #a3cfbb;
   color: #0a3622;
 }
@@ -156,15 +221,17 @@ const buttonOrder = [0, 1, 2, 3, 4, 5, 6, 7, 12, 13, 14, 15, 8, 9, 16]
 }
 .ct-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.8rem;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 0.6rem;
 }
 .ct-panel {
-  min-width: 0; /* allow grid children to shrink below content width */
+  min-width: 0;
   background: #fff;
   border: 1px solid #dee2e6;
   border-radius: 6px;
-  padding: 0.7rem 0.8rem;
+  padding: 0.6rem 0.8rem;
+  display: flex;
+  flex-direction: column;
 }
 .ct-title {
   color: #a51c30;
@@ -172,90 +239,81 @@ const buttonOrder = [0, 1, 2, 3, 4, 5, 6, 7, 12, 13, 14, 15, 8, 9, 16]
   letter-spacing: 0.08em;
   text-transform: uppercase;
   font-size: 0.65rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.4rem;
 }
-.ct-title.mt {
-  margin-top: 0.9rem;
-}
-.ct-buttons {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 0.3rem;
-}
-.btn {
+.legend {
+  margin-top: 0.3rem;
+  font-family: 'PT Sans', sans-serif;
+  font-size: 0.72rem;
+  color: #6c757d;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  padding: 0.25rem 0;
-  border-radius: 4px;
-  border: 1px solid #dee2e6;
-  color: #6c757d;
-  background: #f8f9fa;
-  transition: all 60ms linear;
+  gap: 0.4rem;
 }
-.btn .idx {
-  font-size: 0.6rem;
-  opacity: 0.7;
-}
-.btn .name {
-  font-size: 0.55rem;
-}
-.btn.on {
-  background: #a51c30;
-  border-color: #a51c30;
-  color: #fff;
-}
-.axis {
-  display: grid;
-  grid-template-columns: 5.5rem 1fr 3rem;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.35rem;
-}
-.axis .label {
-  color: #6c757d;
-  font-size: 0.65rem;
-}
-.axis .track {
-  position: relative;
-  height: 10px;
-  background: #e9ecef;
-  border-radius: 5px;
-}
-.axis .center {
-  position: absolute;
-  left: 50%;
-  top: 0;
-  bottom: 0;
-  width: 1px;
-  background: #adb5bd;
-}
-.axis .thumb {
-  position: absolute;
-  top: -3px;
-  width: 16px;
-  height: 16px;
-  margin-left: -8px;
+.sw {
+  display: inline-block;
+  width: 0.8rem;
+  height: 0.8rem;
   border-radius: 50%;
-  background: #a51c30;
-  transition: left 40ms linear;
+  border: 1.5px dashed #a51c30;
+  vertical-align: middle;
+  margin-right: 0.3rem;
 }
-.axis .val {
-  text-align: right;
-  color: #212529;
+.stage {
+  position: relative;
+  margin: 0 auto;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  background: #fff;
+  overflow: hidden;
+  background-image: linear-gradient(rgba(33, 37, 41, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(33, 37, 41, 0.05) 1px, transparent 1px);
+  background-size: 20px 20px;
 }
-.ct-log {
+.ground {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 14px;
+  background: #e9ecef;
+  border-top: 2px solid #adb5bd;
+}
+.duck {
+  position: absolute;
+  left: 0;
+  bottom: 14px;
+  line-height: 0;
+  will-change: transform;
+  /* Shared with the landing target in MarioGame: on the way to the next slide,
+     the browser morphs this duck into the one standing in the game. */
+  view-transition-name: duck;
+}
+.action {
+  margin-top: 0.4rem;
+  text-align: center;
+  font-family: 'PT Sans', sans-serif;
+  font-size: 0.9rem;
+  color: #6c757d;
+  transition: color 120ms;
+}
+.action.live {
+  color: #a51c30;
+  font-weight: 700;
+}
+.log pre {
   margin: 0;
   padding: 0;
   background: transparent;
-  line-height: 1.5;
-  min-height: 15rem;
+  border: 0;
+  line-height: 1.45;
+  min-height: 4.4em;
   color: #495057;
   white-space: pre-wrap;
   word-break: break-word;
   overflow: hidden;
+  font-size: 0.72rem;
 }
-.ct-log .newest {
+.log .newest {
   color: #a51c30;
   font-weight: 700;
 }

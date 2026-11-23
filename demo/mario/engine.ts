@@ -1,24 +1,35 @@
 /**
  * engine.ts — fixed-timestep 60 FPS game loop, AABB tile collision, rendering.
  *
- * Physics invariants (from the lecture spec):
- *   gravity:       0.8 px/frame²
- *   jump velocity: -14 px/frame
- *   frame rate:    60 FPS (fixed timestep, independent of display refresh)
+ * The engine owns the loop, the collision and the drawing. Two things are
+ * handed to it and can be swapped while it runs: the World (from level.ts via
+ * world.ts) and the Physics (from physics.ts). The frame rate is fixed at 60
+ * steps per second regardless of the display's refresh rate.
  */
 
 import { Controller, type ControllerState } from './controller'
+import { DUCK_COLS, DUCK_ROWS_N, drawDuck } from './duck'
 import { TILE, isSolid, type World } from './world'
 
 export const FPS = 60
 export const STEP_MS = 1000 / FPS
-export const GRAVITY = 0.8
-export const JUMP_VELOCITY = -14
 export const MOVE_SPEED = 4.5
-export const MAX_FALL = 16
 
-const PLAYER_W = 24
-const PLAYER_H = 30
+/** What physics.ts provides. See livePhysics.ts for how it is loaded and checked. */
+export interface Physics {
+  /** Called once per step with the vertical speed (px/frame, negative is up); returns the new one. */
+  applyGravity: (vy: number) => number
+  /** The vertical speed a jump starts with. */
+  jumpVelocity: number
+}
+
+/** How long the duck stays out of play after leaving the level, in steps. */
+export const HURT_STEPS = 150
+
+/** The player is the CS50 duck sprite at 2 device pixels per sprite pixel. */
+const DUCK_SCALE = 2
+const PLAYER_W = DUCK_COLS * DUCK_SCALE // 28
+const PLAYER_H = DUCK_ROWS_N * DUCK_SCALE // 28
 
 const COLORS = {
   bg: '#ffffff',
@@ -28,9 +39,6 @@ const COLORS = {
   blockFill: 'rgba(165, 28, 48, 0.08)',
   blockStroke: '#a51c30',
   blockGlyph: '#a51c30',
-  player: '#212529',
-  playerCap: '#a51c30',
-  playerEye: '#ffffff',
 }
 
 interface Player {
@@ -42,6 +50,14 @@ interface Player {
   facing: 1 | -1
 }
 
+/** The duck has left the level and is waiting to be put back. */
+interface Hurt {
+  /** Steps remaining before respawn. */
+  left: number
+  /** Which way it went. */
+  where: 'top' | 'bottom'
+}
+
 export interface EngineStats {
   fps: number
   frames: number
@@ -49,12 +65,24 @@ export interface EngineStats {
   /** Incremented every time the level is hot-swapped. */
   levelVersion: number
   levelWarnings: string[]
+  /** Incremented every time the physics is hot-swapped. */
+  physicsVersion: number
+  jumpVelocity: number
+  /** Non-null while the duck is out of play after leaving the level. */
+  hurt: Hurt | null
+  /** How many times the duck has left the level since the engine started. */
+  ouches: number
 }
 
 export class Engine {
   readonly controller = new Controller()
   world: World
+  physics: Physics
+  /** While true the duck is simulated but not drawn (a slide overlay stands in for it). */
+  hidePlayer = false
   private player: Player
+  private hurt: Hurt | null = null
+  private ouches = 0
   private ctx: CanvasRenderingContext2D | null = null
   private raf = 0
   private last = 0
@@ -62,6 +90,7 @@ export class Engine {
   private running = false
   private frames = 0
   private levelVersion = 0
+  private physicsVersion = 0
   private fpsCounter = { t: 0, n: 0, value: 0 }
   private lastState: ControllerState = {
     connected: false,
@@ -72,8 +101,9 @@ export class Engine {
   }
   private onStats?: (s: EngineStats) => void
 
-  constructor(world: World) {
+  constructor(world: World, physics: Physics) {
     this.world = world
+    this.physics = physics
     this.player = this.spawnPlayer()
   }
 
@@ -92,11 +122,20 @@ export class Engine {
     return null
   }
 
+  /** The highest y at or below `y` that puts the player's feet on something solid. */
+  private settle(x: number, y: number): number {
+    const limit = this.world.rows * TILE
+    while (y < limit && !this.collides(x, y + 1)) y++
+    return y
+  }
+
   private spawnPlayer(): Player {
     const { x, y } = this.world.spawn
     // A tall level can bury the fixed spawn point; lift it to the first free row.
     const safeY = this.collides(x, y) ? (this.findFreeYAbove(x, y) ?? 0) : y
-    return { x, y: safeY, vx: 0, vy: 0, onGround: false, facing: 1 }
+    // Start standing. Gravity would do this on its own, if there is any.
+    const floorY = this.settle(x, safeY)
+    return { x, y: floorY, vx: 0, vy: 0, onGround: true, facing: 1 }
   }
 
   /**
@@ -119,9 +158,19 @@ export class Engine {
     }
   }
 
+  /** Hot-swap the physics while the game is running. */
+  setPhysics(physics: Physics) {
+    this.physics = physics
+    this.physicsVersion++
+  }
+
   /** Read-only snapshot for diagnostics / tests. */
   get playerState() {
     return { ...this.player }
+  }
+
+  get hurtState() {
+    return this.hurt ? { ...this.hurt } : null
   }
 
   start(canvas: HTMLCanvasElement, onStats?: (s: EngineStats) => void) {
@@ -146,6 +195,7 @@ export class Engine {
 
   reset() {
     this.player = this.spawnPlayer()
+    this.hurt = null
   }
 
   private frame = (now: number) => {
@@ -160,7 +210,7 @@ export class Engine {
 
     while (this.acc >= STEP_MS) {
       this.lastState = this.controller.poll()
-      this.update(this.lastState)
+      this.step(this.lastState)
       this.acc -= STEP_MS
       this.frames++
       this.fpsCounter.n++ // count simulation steps, not display refreshes
@@ -180,23 +230,33 @@ export class Engine {
       controller: this.lastState,
       levelVersion: this.levelVersion,
       levelWarnings: this.world.warnings,
+      physicsVersion: this.physicsVersion,
+      jumpVelocity: this.physics.jumpVelocity,
+      hurt: this.hurt ? { ...this.hurt } : null,
+      ouches: this.ouches,
     })
   }
 
   // ---------------------------------------------------------------- physics
 
-  private update(input: ControllerState) {
+  /** One fixed step of simulation. Public so tests can drive it without a canvas. */
+  step(input: ControllerState) {
+    if (this.hurt) {
+      if (--this.hurt.left <= 0) this.reset()
+      return
+    }
+
     const p = this.player
 
     p.vx = input.moveX * MOVE_SPEED
     if (input.moveX !== 0) p.facing = input.moveX > 0 ? 1 : -1
 
     if (input.jumpPressed && p.onGround) {
-      p.vy = JUMP_VELOCITY
+      p.vy = this.physics.jumpVelocity
       p.onGround = false
     }
 
-    p.vy = Math.min(p.vy + GRAVITY, MAX_FALL)
+    p.vy = this.physics.applyGravity(p.vy)
 
     // Horizontal move + resolve
     p.x += p.vx
@@ -206,8 +266,16 @@ export class Engine {
     p.y += p.vy
     this.resolveY(p)
 
-    // Fell off the world? Respawn.
-    if (p.y > this.world.rows * TILE + 200) this.reset()
+    // Left the level? Out through the top happens when nothing pulls the duck
+    // back down; out through the bottom cannot happen with the ground in place,
+    // but a level is allowed to be wrong.
+    if (p.y + PLAYER_H < 0) this.ouch('top')
+    else if (p.y > this.world.rows * TILE + 200) this.ouch('bottom')
+  }
+
+  private ouch(where: Hurt['where']) {
+    this.ouches++
+    this.hurt = { left: HURT_STEPS, where }
   }
 
   /**
@@ -242,17 +310,20 @@ export class Engine {
   }
 
   private resolveY(p: Player) {
-    p.onGround = false
-    if (!this.collides(p.x, p.y)) return
-    if (p.vy > 0) {
-      const r = Math.ceil((p.y + PLAYER_H) / TILE) - 1
-      p.y = r * TILE - PLAYER_H
-      p.onGround = true
-    } else if (p.vy < 0) {
-      const r = Math.floor(p.y / TILE)
-      p.y = (r + 1) * TILE
+    if (this.collides(p.x, p.y)) {
+      if (p.vy > 0) {
+        const r = Math.ceil((p.y + PLAYER_H) / TILE) - 1
+        p.y = r * TILE - PLAYER_H
+      } else if (p.vy < 0) {
+        const r = Math.floor(p.y / TILE)
+        p.y = (r + 1) * TILE
+      }
+      p.vy = 0
     }
-    p.vy = 0
+    // "On the ground" means something solid is directly under the feet. Asking
+    // this, rather than "did I just land", also works when there is no gravity
+    // to keep pressing the duck into the floor.
+    p.onGround = p.vy >= 0 && this.collides(p.x, p.y + 1)
   }
 
   // -------------------------------------------------------------- rendering
@@ -310,16 +381,10 @@ export class Engine {
       }
     }
 
-    // Player
+    // Player: the CS50 duck, facing the way it last moved. Not while it is out
+    // of play, and not while a slide overlay is standing in for it.
+    if (this.hurt || this.hidePlayer) return
     const p = this.player
-    ctx.fillStyle = COLORS.player
-    ctx.fillRect(Math.round(p.x), Math.round(p.y), PLAYER_W, PLAYER_H)
-    // Cap
-    ctx.fillStyle = COLORS.playerCap
-    ctx.fillRect(Math.round(p.x) - 2, Math.round(p.y), PLAYER_W + 4, 6)
-    // Eye (shows facing direction)
-    ctx.fillStyle = COLORS.playerEye
-    const eyeX = p.facing === 1 ? p.x + PLAYER_W - 8 : p.x + 4
-    ctx.fillRect(Math.round(eyeX), Math.round(p.y) + 10, 4, 4)
+    drawDuck(ctx, p.x, p.y, p.facing, DUCK_SCALE)
   }
 }
