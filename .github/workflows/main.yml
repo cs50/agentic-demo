@@ -24,7 +24,7 @@ jobs:
     if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.repository }}
     # Queue deployments rather than cancel them: cancelling the job would not cancel the Elastic Beanstalk update
     concurrency:
-      group: deploy-agentic-cs50-io-staging
+      group: deploy-agentic-cs50-io
       cancel-in-progress: false
     steps:
       - uses: actions/checkout@v7
@@ -61,4 +61,4 @@ jobs:
           aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           app_name: agentic-cs50-io
-          env_name: agentic-cs50-io-staging
+          env_name: agentic-cs50-io
