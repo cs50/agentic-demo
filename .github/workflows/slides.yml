@@ -8,9 +8,9 @@
 # Each run also keeps its PDF as a workflow artifact for 90 days.
 #
 # The export renders every slide in a headless browser at its finished state
-# (what the visualizations show after their last →). The QR slide encodes
-# VITE_HUB_URL, so it is set to the hosted hub here, as .env.local is on the
-# presenting laptop.
+# (what the visualizations show after their last →), leaving out slides whose
+# frontmatter says `export: false` (the join slides; see scripts/export-range.ts).
+# VITE_HUB_URL is set to the hosted hub so anything that encodes it is right.
 
 name: slides
 
@@ -86,4 +86,4 @@ jobs:
           gh release create latest the-agentic-software-engineer.pdf \
             --target "$GITHUB_SHA" \
             --title "The Agentic Software Engineer (slides)" \
-            --notes "The deck as a PDF, built from \`${GITHUB_SHA::7}\` on $(date -u +%Y-%m-%d). Every slide at its finished state; the presenter notes and the live parts (the demo, the room, the finale) are in the repository. Direct link: https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/the-agentic-software-engineer.pdf"
+            --notes "The deck as a PDF, built from \`${GITHUB_SHA::7}\` on $(date -u +%Y-%m-%d). Every slide at its finished state, apart from the two join-the-room slides; the presenter notes and the live parts (the demo, the room, the finale) are in the repository. Direct link: https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/the-agentic-software-engineer.pdf"

@@ -40,6 +40,7 @@ longer the hard part.
 layout: concept-viz
 title: "Take Out Your Phone"
 caption: "Leave this up while people arrive. The count is live."
+export: false
 ---
 
 <AudienceQR />
@@ -990,6 +991,7 @@ git history is the receipt.
 layout: concept-viz
 title: "Join the Room"
 caption: "The last part is played from your phone."
+export: false
 ---
 
 <AudienceQR prompt="Scan to join, or type the address." />

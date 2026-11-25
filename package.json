@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "slidev --open",
     "build": "slidev build",
-    "export": "slidev export --output slides-export.pdf",
+    "export": "slidev export --output slides-export.pdf --per-slide --range \"$(node --experimental-strip-types scripts/export-range.ts --list)\"",
     "test": "vitest run",
     "demo": "node --experimental-strip-types scripts/demo.ts",
     "hub": "node --env-file-if-exists=.env.local --experimental-strip-types server/index.ts",
@@ -22,6 +22,7 @@
     "@fontsource/pt-sans": "^5.3.0",
     "@shikijs/magic-move": "4.6.0",
     "@slidev/cli": "^53.1.0",
+    "@slidev/parser": "53.1.0",
     "@slidev/theme-default": "^0.25.0",
     "@types/qrcode": "^1.5.6",
     "playwright-chromium": "^1.65.1",

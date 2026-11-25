@@ -72,7 +72,7 @@ If anything is off, the join slide tells you. *connecting to the hub…* that ne
 | `pnpm dev` | The deck at <http://localhost:3030>, as presenter if `.env.local` has a token. |
 | `pnpm hub` | The audience hub on `:8080`, reading `.env.local`. |
 | `pnpm build` | Builds the deck into `dist/`, which the hub serves. |
-| `pnpm export` | Writes `slides-export.pdf`, the offline backup. Uses the Chromium that `pnpm install` downloads (if it reports a missing browser, `pnpm exec playwright install chromium-headless-shell`). CI does the same on every push to `main` and publishes the file as the latest release (`.github/workflows/slides.yml`). |
+| `pnpm export` | Writes `slides-export.pdf`, the offline backup: every slide at its finished state, except those marked `export: false` in their frontmatter (the two join slides, whose QR code and headcount mean nothing on paper). Uses the Chromium that `pnpm install` downloads (if it reports a missing browser, `pnpm exec playwright install chromium-headless-shell`). CI does the same on every push to `main` and publishes the file as the latest release (`.github/workflows/slides.yml`). |
 | `pnpm test` | Unit tests: the hub's rules and its relay over real sockets, the editor's sync logic, the battle, the demo's start and solution files, the presets. |
 | `pnpm audit:layout` | Loads every slide at every click in a headless browser and fails if anything is clipped. Needs a dev server on `:3031` (`pnpm exec slidev --port 3031`); pass another port and a slide range as `pnpm audit:layout -- 3030 36-50`. Takes a few minutes. |
 | `pnpm demo status` | Whether the live demo's two files are at their start state. `pnpm demo reset` puts them there; `pnpm demo solve [level\|physics]` copies the solutions in. |
@@ -114,7 +114,9 @@ Every C$50 Finance example is taken from the Problem Set 9 specification (the `b
 
 Every slide carries presenter notes. On `concept-detail` slides the example appears on the first click and the takeaway on the second.
 
-Three things to know when editing `slides.md`:
+Four things to know when editing `slides.md`:
+
+- `export: false` in a slide's frontmatter keeps it out of the PDF.
 
 - Slidev reserves `title` in slide frontmatter (it drives the table of contents), so layouts read it from the `frontmatter` prop rather than as a direct prop.
 - If you insert or remove a slide *before* one that uses `<<<` snippet imports, Slidev 53.1 can render that snippet as raw text until the dev server restarts. Restart `pnpm dev` once after reordering.
@@ -217,6 +219,7 @@ With no hub connected, or when a vote closes with nobody having voted, the panel
 | `demo/mario/start/`, `demo/mario/solutions/` | The two known states of the live files. `pnpm demo reset` / `pnpm demo solve` copy them in; `pnpm test` checks both. |
 | `scripts/demo.ts` | The `pnpm demo` command: `status`, `reset`, `solve [level\|physics]`. |
 | `scripts/audit-layout.ts` | The `pnpm audit:layout` command. |
+| `scripts/export-range.ts` | Which slides `pnpm export` includes: all but those with `export: false`, as a `--range` for Slidev. |
 | `demo/mario/world.ts` | Pure placer: ASCII rows from `level.ts` → tile grid, bottom-aligned on the ground and centered. |
 | `demo/mario/engine.ts` | Fixed-timestep 60 FPS loop, AABB tile collision, rendering; `setWorld()` and `setPhysics()` for hot swaps; reports when the duck leaves the level. |
 | `demo/mario/controller.ts` | Gamepad API polling, DualShock 4 "standard" mapping, keyboard fallback. |
@@ -231,7 +234,7 @@ With no hub connected, or when a vote closes with nobody having voted, the panel
 | `components/MarioGame.vue` | Canvas game embedded in a slide; runs only while its slide is active. Shows the "ouch" when the duck leaves the level. `compact` prop for side-by-side layouts. |
 | `components/LiveCode.vue`, `LiveSource.vue`, `LiveEditor.vue` | The code panel on the demo slide: file tabs and a **Preview / Edit** toggle; Preview shows a live file with Shiki Magic Move, animating each save; Edit is a Monaco editor bound two ways to one live file. |
 | `components/ControllerTest.vue` | The "verify first" diagnostic: a DualShock 4 drawing (`viz/DualShock.vue`) whose buttons and sticks follow the real controller, the duck acting on the same inputs, and the event log. |
-| `components/GymGame.vue` | The finale on a slide: canvas plus HTML overlays (dialogue, HP, the question and its live bars). Opens each round as a hub `choice` poll; falls back to the controller. |
+| `components/GymGame.vue` | The finale on a slide: canvas plus HTML overlays (dialogue, HP, the question and its live bars). Opens each round as a hub `choice` poll; falls back to the controller. Where it is not being played (overview, preview, PDF) it draws one frame of the Yard instead. |
 | `components/AudienceQR.vue`, `LivePoll.vue`, `GameChoice.vue` | The join slide; a poll driven by `→`; a timed vote whose winner is written into the game. |
 | `components/FollowControl.vue`, `AudienceChoice.vue` | What a viewer sees: the Following / Unlocked pill, and a vote as an overlay wherever they are in the deck. |
 | `composables/useHub.ts` | The deck's one connection to the hub, as reactive state plus actions. |

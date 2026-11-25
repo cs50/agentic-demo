@@ -323,7 +323,25 @@ function stop() {
   if (import.meta.env.DEV) delete (window as any).__gym
 }
 
-onMounted(() => isActive.value && start())
+/**
+ * One frame of the Yard, for the overview, the next-slide preview and the PDF.
+ * The game itself runs only live (`start`), so without this the slide is a
+ * blank canvas wherever it is not being played.
+ */
+function still() {
+  const c = canvas.value
+  if (!c || live || mirroring.value) return
+  c.width = VIEW_W
+  c.height = VIEW_H
+  // A couple of seconds in: the fade from black is over and the people have moved off their marks.
+  for (let i = 0; i < 120; i++) world.tick({ dx: 0, dy: 0, interact: false })
+  drawOverworld(c.getContext('2d')!, world.state)
+}
+
+onMounted(() => {
+  if (!live) still()
+  else if (isActive.value) start()
+})
 watch(isActive, (a) => (a ? start() : stop()))
 watch(mirroring, (m) => (m ? stop() : isActive.value && start()))
 onBeforeUnmount(stop)
