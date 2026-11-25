@@ -10,7 +10,7 @@ The lecture is grounded in CS50 Finance and CS50 Mario, so a student who has fin
 - [Presenting](#presenting)
 - [How it is built](#how-it-is-built): [the deck](#the-deck), [the visualizations](#the-visualizations), [the live demo](#the-live-demo), [the room](#the-room), [the finale](#the-finale)
 - [Project map](#project-map)
-- [Contributing](#contributing)
+- [Working on the deck](#working-on-the-deck)
 - [Hosting](#hosting)
 - [License](#license)
 
@@ -246,9 +246,23 @@ With no hub connected, or when a vote closes with nobody having voted, the panel
 | `.github/workflows/slides.yml` | Builds the PDF on every push to `main` and publishes it as the `latest` release. |
 | `Dockerfile`, `.github/workflows/main.yml`, `.ebextensions/`, `.platform/`, `.elasticbeanstalk/` | Hosting (below). |
 
-## Contributing
+## Working on the deck
 
-Issues and pull requests are welcome: a fact to correct, a question for the battle, a line for an NPC, a visualization that could say more, a bug in the hub. [CONTRIBUTING.md](./CONTRIBUTING.md) has the conventions (the deck's voice and design tokens, what `pnpm test` and `pnpm audit:layout` must say, how the slides are numbered) and what to expect from a review. Security concerns should go through [SECURITY.md](./SECURITY.md) rather than a public issue, since the hub runs live during lectures.
+What to run and what to keep in mind when changing things, whether for a lecture of your own or to keep this one current.
+
+**Checks.** `pnpm test` covers the hub's rules, the battle (every combination of right and wrong answers), the live demo's start and solution files, the presets, and the editor's sync logic; add a test when you change behaviour in any of those. After touching a slide, a layout, a style or a visualization, run the layout audit: start a second dev server with `pnpm exec slidev --port 3031`, then `pnpm audit:layout` (or a range, `pnpm audit:layout -- 3031 40-50`). It loads every slide at every click and fails if anything is clipped; a glance at a slide's final state misses clipping at earlier clicks. After changing `slides.md`, the slide table above and the slide count in the opening paragraph should still match. Before committing, `pnpm demo status` should read `start` for both live files; `pnpm demo reset` puts them back.
+
+**Writing.** The slides and notes follow the CS50 website's voice: second person, plain words, short sentences, "notice how" and "recall that" rather than jargon. No filler, no hype. Every claim about CS50 Finance comes from the Problem Set 9 specification; every claim about a tool comes from that tool's current documentation.
+
+**Design.** One accent color, crimson `#a51c30`, for the term or sentence that matters on a slide; everything else is body text in the Bootstrap neutrals. The tokens are in `styles/index.css`. PT Sans is bundled; no other fonts. The deck makes no network requests at runtime beyond its own hub.
+
+**Visualizations.** Each one claims its click steps through `composables/useVizSteps.ts`, so `→` drives it like `v-click`. It has a finished state that reads well as a still image (that is what the PDF shows), respects `prefers-reduced-motion`, and keeps its on-slide hints behind `SHOW_HINTS` in `components/viz/config.ts`.
+
+**The finale's questions** live in `demo/gym/battle.ts` as data: a move Sloppyclaude uses (something an AI says while being wrong), a question, four options, the right one, and a one-line explanation. A question should be answerable from the lecture alone, and its wrong options should be the mistakes a student would actually make. The tests check the pool is large enough that a battle never runs out.
+
+**Code.** TypeScript throughout, no framework in `demo/`, Vue 3 with `<script setup>` in components. The hub's rules (`server/hub.ts`) do no I/O and return the messages to send, so they can be tested without sockets. Comments explain why, not what. Commit messages are short, lowercase, present tense, with a type prefix: `fix: the room follows whichever window the presenter drives from`.
+
+**Security.** The hub runs on the public internet during lectures. Anything about its security goes through [SECURITY.md](./SECURITY.md), privately.
 
 ## Hosting
 

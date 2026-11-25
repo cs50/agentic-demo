@@ -1,8 +1,6 @@
 # Security
 
-The audience hub (`server/`) runs on the public internet during lectures, with a room full of phones connected to it. If you find a way to present without the token, vote more than once per device, read what you should not, or take the hub down, please tell us privately rather than in a public issue.
-
-Use GitHub's private vulnerability reporting on this repository ("Report a vulnerability" under the Security tab). Include what you found, how to reproduce it, and what you think the impact is. We will acknowledge the report, fix what needs fixing, and credit you if you would like.
+The audience hub (`server/`) runs on the public internet during lectures, with a room full of phones connected to it. A way to present without the token, to vote more than once per device, to read what should not be readable, or to take the hub down is a security problem, and the place for it is GitHub's private vulnerability reporting on this repository ("Report a vulnerability" under the Security tab), not a public issue. Include what you found, how to reproduce it, and what you think the impact is.
 
 ## What is in scope
 
