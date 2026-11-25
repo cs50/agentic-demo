@@ -27,6 +27,8 @@ pnpm dev
 
 That opens the deck at <http://localhost:3030>. Arrow keys move through the slides; `→` also drives every visualization. Press `o` for the overview and `p` for the presenter view with notes.
 
+Just want to read the slides? Every push to `main` builds them as a PDF and publishes it as the [latest release](https://github.com/cs50/agentic-demo/releases/latest); the direct link is [the-agentic-software-engineer.pdf](https://github.com/cs50/agentic-demo/releases/latest/download/the-agentic-software-engineer.pdf). It shows each slide at its finished state; the notes, the demo, the room and the finale are only in the running deck.
+
 Without an audience hub the deck still works: the join slide says it cannot reach one, the finale's questions are answered with the keyboard or a controller, and nothing else changes. To run the hub too, read on.
 
 ## Running the whole thing locally
@@ -70,7 +72,7 @@ If anything is off, the join slide tells you. *connecting to the hub…* that ne
 | `pnpm dev` | The deck at <http://localhost:3030>, as presenter if `.env.local` has a token. |
 | `pnpm hub` | The audience hub on `:8080`, reading `.env.local`. |
 | `pnpm build` | Builds the deck into `dist/`, which the hub serves. |
-| `pnpm export` | Writes `slides-export.pdf`, the offline backup. Uses the Chromium that `pnpm install` downloads. |
+| `pnpm export` | Writes `slides-export.pdf`, the offline backup. Uses the Chromium that `pnpm install` downloads (if it reports a missing browser, `pnpm exec playwright install chromium-headless-shell`). CI does the same on every push to `main` and publishes the file as the latest release (`.github/workflows/slides.yml`). |
 | `pnpm test` | Unit tests: the hub's rules and its relay over real sockets, the editor's sync logic, the battle, the demo's start and solution files, the presets. |
 | `pnpm audit:layout` | Loads every slide at every click in a headless browser and fails if anything is clipped. Needs a dev server on `:3031` (`pnpm exec slidev --port 3031`); pass another port and a slide range as `pnpm audit:layout -- 3030 36-50`. Takes a few minutes. |
 | `pnpm demo status` | Whether the live demo's two files are at their start state. `pnpm demo reset` puts them there; `pnpm demo solve [level\|physics]` copies the solutions in. |
@@ -241,6 +243,7 @@ With no hub connected, or when a vote closes with nobody having voted, the panel
 | `vite.config.ts` | Dev-server channel that writes the two live files (and only those) for the editor, accepting writes only from this machine; the per-run session id; Vite's error overlay off in favor of the game's error strip. |
 | `styles/index.css` | Design tokens (crimson, Bootstrap neutrals), bundled PT Sans, shared banner/section/table styles. |
 | `pnpm-workspace.yaml` | Allows `playwright-chromium`'s install script (pnpm ≥ 10 blocks build scripts by default) so `pnpm export` works after a fresh install. |
+| `.github/workflows/slides.yml` | Builds the PDF on every push to `main` and publishes it as the `latest` release. |
 | `Dockerfile`, `.github/workflows/main.yml`, `.ebextensions/`, `.platform/`, `.elasticbeanstalk/` | Hosting (below). |
 
 ## Contributing

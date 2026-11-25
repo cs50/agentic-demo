@@ -1,0 +1,89 @@
+# Builds the deck as a PDF and publishes it as the repository's "latest"
+# release, so the slides can be read without running anything.
+#
+# Runs on every push to main. The release is a rolling one: its tag, `latest`,
+# is moved to the commit that built it and the file is replaced, so there is
+# one stable address for the current slides:
+#   https://github.com/cs50/agentic-demo/releases/latest/download/the-agentic-software-engineer.pdf
+# Each run also keeps its PDF as a workflow artifact for 90 days.
+#
+# The export renders every slide in a headless browser at its finished state
+# (what the visualizations show after their last →). The QR slide encodes
+# VITE_HUB_URL, so it is set to the hosted hub here, as .env.local is on the
+# presenting laptop.
+
+name: slides
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: "Publish the release (off: only build and keep the artifact)"
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: slides-release
+  cancel-in-progress: true
+
+jobs:
+  pdf:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: install
+        run: pnpm install --frozen-lockfile
+        env:
+          # Only the headless shell is needed, installed with its system libraries below.
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
+
+      - name: browser for the exporter
+        run: pnpm exec playwright install --with-deps chromium-headless-shell
+
+      - name: export
+        run: pnpm export
+        env:
+          VITE_HUB_URL: wss://agentic.cs50.io
+
+      - name: check the file
+        run: |
+          test "$(head -c 5 slides-export.pdf)" = "%PDF-" || { echo "not a PDF"; exit 1; }
+          size=$(stat -c %s slides-export.pdf)
+          test "$size" -gt 500000 || { echo "suspiciously small: $size bytes"; exit 1; }
+          mv slides-export.pdf the-agentic-software-engineer.pdf
+          ls -l the-agentic-software-engineer.pdf
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: the-agentic-software-engineer.pdf
+          path: the-agentic-software-engineer.pdf
+          retention-days: 90
+
+      - name: release
+        # Only from main: a manual run of another branch can build, never publish.
+        if: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'push' || inputs.publish) }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # One rolling release: drop the previous one and its tag, create the new
+          # one at this commit. `releases/latest` then points here.
+          gh release delete latest --cleanup-tag --yes || true
+          gh release create latest the-agentic-software-engineer.pdf \
+            --target "$GITHUB_SHA" \
+            --title "The Agentic Software Engineer (slides)" \
+            --notes "The deck as a PDF, built from \`${GITHUB_SHA::7}\` on $(date -u +%Y-%m-%d). Every slide at its finished state; the presenter notes and the live parts (the demo, the room, the finale) are in the repository. Direct link: https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/the-agentic-software-engineer.pdf"
