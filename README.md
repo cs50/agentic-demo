@@ -73,4 +73,4 @@ If slide 2 says *presenter token rejected*, the deck and the hub disagree on the
 
 ## License
 
-The code is MIT; the lecture content (slides and notes, the Prompt Index, the spec, the finale's questions and dialogue, the artwork) is [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/), as CS50's course materials are. Details in [LICENSE](./LICENSE).
+The code is MIT; the lecture content (slides and notes, the Prompt Index, the finale's questions and dialogue, the artwork) is [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/), as CS50's course materials are. Details in [LICENSE](./LICENSE).

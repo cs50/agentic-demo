@@ -4,9 +4,9 @@ The code (everything except the files listed under "Lecture content" below)
 is licensed under the MIT License.
 
 The lecture content (slides.md, including its presenter notes; prompt_index.md;
-agentic-coding-lecture-spec.md; demo/live.md; the text of the finale's
-questions, moves and explanations in demo/gym/battle.ts and its dialogue in
-demo/gym/npcs.ts; and the artwork in ddb50.svg and the pixel maps in demo/)
+demo/live.md; the text of the finale's questions, moves and explanations in
+demo/gym/battle.ts and its dialogue in demo/gym/npcs.ts; and the artwork in
+ddb50.svg and the pixel maps in demo/)
 is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0
 International License (CC BY-NC-SA 4.0), the license CS50 uses for its course
 materials: https://creativecommons.org/licenses/by-nc-sa/4.0/
