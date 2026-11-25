@@ -7,8 +7,10 @@
  * `calculateSince` + `register` on the slide's clicks context). It returns a
  * reactive `step` from 0 (nothing yet) to `n` (complete), plus helpers.
  *
- * In contexts without clicks (overview grid, export, presenter "next slide"
- * preview) `step` is `n`, so the visualization shows its finished state.
+ * In contexts without clicks (overview grid, presenter "next slide" preview)
+ * `step` is `n`, so the visualization shows its finished state. Print follows
+ * the clicks it is given: the plain export fixes them at their maximum, so the
+ * finished state again; an export with clicks renders each step in turn.
  */
 import { useSlideContext } from '@slidev/client'
 import { computed, onUnmounted } from 'vue'
@@ -22,7 +24,7 @@ export function useVizSteps(count: number) {
   if (info) ctx.register(key, info)
   onUnmounted(() => ctx.unregister(key))
 
-  const interactive = ['slide', 'presenter'].includes($renderContext.value)
+  const interactive = ['slide', 'presenter', 'print'].includes($renderContext.value)
 
   const step = computed(() => {
     if (!info || !interactive) return count

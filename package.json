@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "slidev --open",
     "build": "slidev build",
-    "export": "slidev export --output slides-export.pdf --per-slide --range \"$(node --experimental-strip-types scripts/export-range.ts --list)\"",
+    "export": "node --experimental-strip-types scripts/export.ts",
     "test": "vitest run",
     "demo": "node --experimental-strip-types scripts/demo.ts",
     "hub": "node --env-file-if-exists=.env.local --experimental-strip-types server/index.ts",
@@ -25,6 +25,7 @@
     "@slidev/parser": "53.1.0",
     "@slidev/theme-default": "^0.25.0",
     "@types/qrcode": "^1.5.6",
+    "pdf-lib": "1.17.1",
     "playwright-chromium": "^1.65.1",
     "qrcode": "^1.5.4",
     "shiki": "4.6.0",

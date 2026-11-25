@@ -54,6 +54,7 @@ loads on anything. From here they can vote, or follow the slides on their own sc
 layout: concept-viz
 title: "What Should You Learn Next?"
 caption: "Four presses. Hover a line or a label."
+exportClicks: [0, 2, 4]
 ---
 
 <LanguageIndex />
